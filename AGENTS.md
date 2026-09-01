@@ -575,6 +575,15 @@ Readability is a visual-system requirement:
 * Color is never the only state cue; preserve labels, outlines, status text and keyboard focus treatment.
 * The canonical cross-component rules and breakpoint QA live in `rollbound/design/readability-contract-v1.md`.
 
+Dice presentation uses a dedicated interaction grammar:
+
+* The primary D6 body is a standalone blank-face `64 × 64` transparent pixel asset; all six pip layouts are deterministic UI overlays.
+* A Roll and a Reroll use the same short anticipation → tumble → impact → reveal sequence.
+* Dice animation belongs entirely to the UI layer. It may preview the next value from the seeded RNG cursor, but must dispatch the original reducer action and must never add or consume randomness.
+* Possible destinations appear only after the final face has locked. A Reroll starts movement after the reveal.
+* Rapid intermediate faces are decorative and hidden from assistive technology. Preserve the reduced-motion fallback.
+* The canonical asset, timing, pip and architecture rules live in `rollbound/design/dice-roll-visual-contract-v1.md`.
+
 ## Long-Term Direction
 
 The linear track is only the first proof of concept.

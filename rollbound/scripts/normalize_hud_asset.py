@@ -1,4 +1,4 @@
-"""Normalize a transparent HUD sprite onto Rollbound's canonical 48×48 canvas."""
+"""Normalize a transparent UI sprite onto a canonical Rollbound pixel canvas."""
 
 from __future__ import annotations
 
@@ -8,7 +8,13 @@ from pathlib import Path
 from PIL import Image
 
 
-def normalize(source: Path, destination: Path, max_visible: int = 36, alpha_floor: int = 8) -> tuple[int, int, int, int]:
+def normalize(
+    source: Path,
+    destination: Path,
+    max_visible: int = 36,
+    alpha_floor: int = 8,
+    canvas_size: int = 48,
+) -> tuple[int, int, int, int]:
     image = Image.open(source).convert("RGBA")
     alpha = image.getchannel("A")
     meaningful_alpha = alpha.point(lambda value: value if value >= alpha_floor else 0)
@@ -24,8 +30,8 @@ def normalize(source: Path, destination: Path, max_visible: int = 36, alpha_floo
         max(1, round(cropped.height * scale)),
     )
     sprite = cropped.resize(target_size, Image.Resampling.NEAREST)
-    canvas = Image.new("RGBA", (48, 48), (0, 0, 0, 0))
-    offset = ((48 - sprite.width) // 2, (48 - sprite.height) // 2)
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    offset = ((canvas_size - sprite.width) // 2, (canvas_size - sprite.height) // 2)
     canvas.alpha_composite(sprite, offset)
 
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -42,8 +48,9 @@ def main() -> None:
     parser.add_argument("destination", type=Path)
     parser.add_argument("--max-visible", type=int, default=36)
     parser.add_argument("--alpha-floor", type=int, default=8)
+    parser.add_argument("--canvas-size", type=int, default=48)
     args = parser.parse_args()
-    bounds = normalize(args.source, args.destination, args.max_visible, args.alpha_floor)
+    bounds = normalize(args.source, args.destination, args.max_visible, args.alpha_floor, args.canvas_size)
     print(f"saved {args.destination} with alpha bounds {bounds}")
 
 

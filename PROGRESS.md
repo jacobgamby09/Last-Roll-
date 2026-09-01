@@ -57,6 +57,8 @@ Latest verification:
 - Seed 0 verifies real Treasure choices: Weapon rewards use the upgrade asset, while Nudge uses its separate resource asset.
 - Seed 15 verifies the Shop row with Weapon and Armor upgrade assets plus separate resource assets for healing, Nudge and Reroll.
 - Seed 2 shows dedicated Damage, Armor, Life, Gold, Nudge and Reroll assets in the HUD without replacing the three equipment slots.
+- Seed 2 verifies the new D6 anticipation/tumble/impact sequence resolves to the same deterministic face as the reducer and reveals destinations only afterward.
+- A real Reroll verifies the same D6 effect plays before movement, consumes exactly one Reroll and resolves the previewed value.
 - Seed 0 maps Gold and Nudge Treasure rewards to resource assets while Weapon remains an equipment asset.
 - Seed 15 maps Heal, Nudge and Reroll Shop rows to resource assets while Weapon and Armor remain equipment assets.
 - Rolled destination outlines follow transparent asset silhouettes.
@@ -91,6 +93,7 @@ Latest verification:
 Important files:
 
 - `rollbound/src/pixel/PixelGame.tsx` — pixel UI composition.
+- `rollbound/src/pixel/PixelDie.tsx` — deterministic pip renderer for the blank-face D6 body.
 - `rollbound/src/pixel/PixelBoard.tsx` — winding visible board layout.
 - `rollbound/src/pixel/PixelTile.tsx` — logical tile cell, metadata overlays and hero anchor.
 - `rollbound/src/pixel/PixelTileArt.tsx` — generated-asset renderer plus an explicit missing-manifest fallback.
@@ -109,6 +112,7 @@ Important files:
 - `rollbound/design/equipment-asset-contract-v1.md` — canonical equipment production, mapping and normalization contract.
 - `rollbound/design/resource-asset-contract-v1.md` — canonical resource production, semantic mapping and QA contract.
 - `rollbound/design/readability-contract-v1.md` — canonical typography, responsive, disabled-state and accessibility contract.
+- `rollbound/design/dice-roll-visual-contract-v1.md` — canonical D6 asset, pip, animation, reduced-motion and RNG-boundary contract.
 
 Current normalized `64 × 64` RGBA tile assets:
 
@@ -147,6 +151,8 @@ Current normalized `48 × 48` RGBA non-equipment resource assets:
 - `gold-coins-v1.png`
 - `nudge-die-v1.png`
 - `reroll-die-v1.png`
+
+The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`, a normalized blank-face `64 × 64` RGBA body. Runtime pips are code-generated and are not baked into the bitmap.
 
 ## Most recent completed work
 
@@ -192,6 +198,12 @@ Current normalized `48 × 48` RGBA non-equipment resource assets:
 40. Added responsive `3 / 2 / 1` Shop columns, stacked mobile destinations, compact full-width boss readiness and a denser mobile HUD/header layout.
 41. Added progressbar, list/current-step, focus and descriptive-label semantics without changing the game reducer.
 42. Verified desktop seed 2, real Treasure/equipment and Shop states, Resource Lab `6/6`, and a `390 × 844` viewport with no global overflow or browser errors.
+43. Generated and normalized a dedicated blank-face 64×64 D6 body in the approved plum, ivory, cyan and magenta pixel palette.
+44. Rebuilt `PixelDie` around the asset with deterministic, accessible pip layouts for all six faces.
+45. Reworked the idle Roll area as a compact dice altar with a stronger interaction hierarchy and native mobile layout.
+46. Added the UI-only anticipation, stepped tumble, impact, particle and delayed destination-reveal sequence to both Roll and Reroll.
+47. Added action locking, old-target suppression and a 150 ms reduced-motion fallback while preserving reducer and seeded RNG behavior.
+48. Verified normal Roll, Reroll, deterministic result matching and the new roll area at desktop and `390 × 844` without global overflow.
 
 The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` mentions visible tile frames. Treat it only as the origin mockup. The newer rules in `AGENTS.md` and `tile-asset-contract-v1.md` supersede that part of the prompt.
 
@@ -226,6 +238,7 @@ Why this comes next: equipment now has truthful semantics and a complete acquisi
 - Do not turn the current Equip/Keep flow into a broad inventory or rarity system without explicit approval.
 - Do not reintroduce whole-board responsive scaling; preserve native pixel scale and internal board scrolling.
 - Do not reduce runtime functional text below the tiers in `readability-contract-v1.md` or hide disabled reasons through low opacity.
+- Do not move dice animation state into the reducer, add visual randomness to the RNG stream or bake pips into the D6 body asset.
 - Never map a Nudge resource directly to the Boots slot; Stivinderstøvler's separate charge is the explicit item effect.
 - Never apply equipment-slot frames or colors to non-equipment resource icons.
 - Preserve true alpha transparency and nearest-neighbor downsampling.

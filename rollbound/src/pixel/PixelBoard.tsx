@@ -31,11 +31,11 @@ const PATH_SLOTS: PathSlot[] = [
   { column: 5, row: 1 },
 ];
 
-export function PixelBoard({ state, displayPos = state.pos, moving = false }: { state: GameState; displayPos?: number; moving?: boolean }) {
+export function PixelBoard({ state, displayPos = state.pos, moving = false, suppressTargets = false }: { state: GameState; displayPos?: number; moving?: boolean; suppressTargets?: boolean }) {
   const start = Math.max(0, state.pos - 2);
   const end = Math.min(CONFIG.trackLength, state.pos + CONFIG.visibility, start + PATH_SLOTS.length - 1);
   const positions = Array.from({ length: end - start + 1 }, (_, index) => start + index);
-  const rolledPhase = !moving && state.phase.t === 'rolled' ? state.phase : null;
+  const rolledPhase = !moving && !suppressTargets && state.phase.t === 'rolled' ? state.phase : null;
   const roll = rolledPhase?.roll ?? null;
   const primaryTarget = roll === null ? -1 : Math.min(state.pos + roll, CONFIG.trackLength);
   const altTargets = new Set<number>();

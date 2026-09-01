@@ -7,6 +7,7 @@
   --px-muted: #8f7f9a;
   --px-copy: #cbbdd2;
   --px-red: #ff3b4d;
+  --px-magenta: #ff4bd8;
   --px-cyan: #25d9ff;
   --px-green: #39ff88;
   --px-gold: #ffd84a;
@@ -903,7 +904,7 @@
 
 .pixel-action-panel.is-idle {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
   align-items: center;
   gap: 18px;
 }
@@ -972,57 +973,289 @@
 }
 
 .pixel-roll-button {
-  min-width: 252px;
-  min-height: 84px;
-  padding: 9px 18px;
+  position: relative;
+  isolation: isolate;
+  min-width: 360px;
+  min-height: 112px;
+  padding: 10px 24px 12px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 17px;
+  gap: 24px;
   color: var(--px-ivory);
-  background: #1a1020;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(#211128, #120a18);
   border: 3px solid #08050d;
-  box-shadow: 0 0 0 3px var(--px-gold), 5px 5px 0 #050307, inset 0 -8px #110a15;
+  box-shadow:
+    0 0 0 3px #704463,
+    0 0 0 5px #1b1022,
+    6px 6px 0 #050307,
+    inset 0 -10px #0c0710,
+    inset 0 2px #47274b;
   font-family: inherit;
   cursor: pointer;
+}
+
+.pixel-roll-button::before,
+.pixel-roll-button::after {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  content: "";
+  pointer-events: none;
+}
+
+.pixel-roll-button::before {
+  top: 7px;
+  left: 7px;
+  border-top: 2px solid var(--px-cyan);
+  border-left: 2px solid var(--px-cyan);
+}
+
+.pixel-roll-button::after {
+  right: 7px;
+  bottom: 7px;
+  border-right: 2px solid var(--px-magenta);
+  border-bottom: 2px solid var(--px-magenta);
 }
 
 .pixel-roll-button:hover,
 .pixel-roll-button:focus-visible {
   transform: translateY(-2px);
   filter: brightness(1.18);
-  outline: none;
+  outline: 2px solid var(--px-ivory);
+  outline-offset: 5px;
 }
 
-.pixel-roll-button > span {
+.pixel-roll-button-copy {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   text-align: left;
 }
 
 .pixel-roll-button small { color: var(--px-copy); font-size: var(--text-label); font-weight: 900; }
-.pixel-roll-button b { font-size: 16px; letter-spacing: 1px; }
+.pixel-roll-button b { color: #fff8e9; font-size: 17px; letter-spacing: 1.5px; text-shadow: 2px 2px #4c234c; }
+.pixel-roll-button em { color: #8edfed; font-size: var(--text-micro); font-style: normal; letter-spacing: 1px; }
+
+.pixel-roll-rule {
+  justify-self: center;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: var(--px-copy);
+  text-align: center;
+}
+
+.pixel-roll-rule small {
+  color: var(--px-gold);
+  font-size: var(--text-label);
+  letter-spacing: 2px;
+}
+
+.pixel-roll-rule b {
+  font-size: var(--text-micro);
+  line-height: 1.45;
+  letter-spacing: 1px;
+}
+
+.pixel-roll-altar {
+  position: relative;
+  width: 94px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.pixel-roll-sigil {
+  position: absolute;
+  inset: 11px 14px;
+  border: 2px solid #3a2340;
+  box-shadow: 0 0 0 2px #0b0710, inset 0 0 0 2px #201128;
+  transform: rotate(45deg);
+}
+
+.pixel-roll-sigil::before,
+.pixel-roll-sigil::after {
+  position: absolute;
+  inset: 7px;
+  border: 1px solid #533057;
+  content: "";
+}
+
+.pixel-roll-sigil::after {
+  inset: 16px -12px;
+  border-color: #245767;
+}
 
 .pixel-die {
-  width: 54px;
-  min-width: 54px;
-  height: 54px;
-  padding: 8px;
+  position: relative;
+  z-index: 2;
+  width: 64px;
+  min-width: 64px;
+  height: 64px;
+  display: block;
+  filter: drop-shadow(4px 5px 0 #050307);
+  transform-origin: center;
+}
+
+.pixel-die > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.pixel-die-pips {
+  position: absolute;
+  inset: 14px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 4px;
-  background: var(--px-ivory);
-  border: 4px solid #1b1022;
-  box-shadow: inset -7px -7px #cbb9ad, 4px 4px #08050d;
+  gap: 3px;
 }
 
-.pixel-die .pip { width: 7px; height: 7px; place-self: center; background: transparent; }
-.pixel-die .pip.visible { background: #130b18; box-shadow: 1px 1px #4e3d54; }
+.pixel-die .pip {
+  width: 7px;
+  height: 7px;
+  place-self: center;
+  background: transparent;
+}
+
+.pixel-die .pip.visible {
+  background: #fff5d9;
+  box-shadow: 2px 0 #c891b5, 0 2px #603660, 2px 2px #110817;
+}
+
+.pixel-roll-button .pixel-die {
+  animation: die-idle 1300ms steps(2, end) infinite;
+}
+
+.pixel-roll-particles {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pixel-roll-particles i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  opacity: 0;
+  background: var(--px-cyan);
+  box-shadow: 2px 2px #163945;
+}
+
+.pixel-roll-particles i:nth-child(2n) { background: var(--px-magenta); box-shadow: 2px 2px #4b173f; }
+.pixel-roll-particles i:nth-child(1) { --particle-x: -41px; --particle-y: -27px; }
+.pixel-roll-particles i:nth-child(2) { --particle-x: 38px; --particle-y: -31px; }
+.pixel-roll-particles i:nth-child(3) { --particle-x: -47px; --particle-y: 13px; }
+.pixel-roll-particles i:nth-child(4) { --particle-x: 42px; --particle-y: 19px; }
+.pixel-roll-particles i:nth-child(5) { --particle-x: -22px; --particle-y: 37px; }
+.pixel-roll-particles i:nth-child(6) { --particle-x: 25px; --particle-y: 39px; }
+
+.pixel-roll-stage {
+  position: relative;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 45% 50%, rgba(84, 39, 85, 0.22), transparent 32%),
+    #0c0811;
+}
+
+.pixel-roll-stage::before {
+  position: absolute;
+  inset: 8px;
+  border: 1px dashed #3c2845;
+  content: "";
+  pointer-events: none;
+}
+
+.pixel-roll-stage .pixel-roll-altar { width: 118px; height: 106px; }
+.pixel-roll-stage .pixel-die { width: 76px; min-width: 76px; height: 76px; }
+.pixel-roll-stage .pixel-die-pips { inset: 17px; }
+.pixel-roll-stage .pixel-die .pip { width: 8px; height: 8px; }
+
+.pixel-roll-stage-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pixel-roll-stage-copy small { color: var(--px-cyan); font-size: var(--text-label); letter-spacing: 2px; }
+.pixel-roll-stage-copy b { color: #fff8e9; font-size: 18px; letter-spacing: 2px; text-shadow: 2px 2px #4c234c; }
+.pixel-roll-stage-copy span { color: var(--px-copy); font-size: var(--text-body); }
+
+.pixel-roll-stage.is-anticipation .pixel-die { animation: die-anticipation 120ms steps(2, end) both; }
+.pixel-roll-stage.is-tumble .pixel-die { animation: die-tumble 220ms steps(4, end) infinite; }
+.pixel-roll-stage.is-tumble .pixel-roll-sigil { animation: roll-sigil-charge 330ms steps(3, end) infinite; }
+.pixel-roll-stage.is-impact { animation: roll-panel-impact 180ms steps(2, end) both; }
+.pixel-roll-stage.is-impact .pixel-die { animation: die-impact 190ms steps(4, end) both; }
+.pixel-roll-stage.is-impact .pixel-roll-sigil { border-color: var(--px-cyan); box-shadow: 0 0 0 2px #0b0710, 0 0 14px rgba(54, 216, 255, 0.4), inset 0 0 0 2px #5f2758; }
+.pixel-roll-stage.is-impact .pixel-roll-particles i { animation: roll-particle 190ms steps(3, end) both; }
+
+@keyframes die-idle {
+  0%, 49% { transform: translateY(0); }
+  50%, 100% { transform: translateY(-2px); }
+}
+
+@keyframes die-anticipation {
+  0% { transform: translateY(0) scale(1); filter: drop-shadow(4px 5px 0 #050307) brightness(1); }
+  100% { transform: translateY(7px) scale(0.9); filter: drop-shadow(2px 2px 0 #050307) brightness(1.35); }
+}
+
+@keyframes die-tumble {
+  0% { transform: translate(-11px, 4px) rotate(0deg); }
+  25% { transform: translate(5px, -13px) rotate(90deg); }
+  50% { transform: translate(13px, -2px) rotate(180deg); }
+  75% { transform: translate(-4px, -16px) rotate(270deg); }
+  100% { transform: translate(-11px, 4px) rotate(360deg); }
+}
+
+@keyframes die-impact {
+  0% { transform: translateY(-13px) scale(1.08); filter: drop-shadow(4px 10px 0 #050307) brightness(1.4); }
+  45% { transform: translateY(6px) scale(0.92, 1.08); }
+  72% { transform: translateY(-3px) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1); filter: drop-shadow(4px 5px 0 #050307) brightness(1.12); }
+}
+
+@keyframes roll-sigil-charge {
+  0% { border-color: #3a2340; }
+  34% { border-color: var(--px-magenta); }
+  67%, 100% { border-color: var(--px-cyan); }
+}
+
+@keyframes roll-panel-impact {
+  0%, 100% { transform: translate(0); }
+  40% { transform: translate(-2px, 1px); }
+  70% { transform: translate(2px, -1px); }
+}
+
+@keyframes roll-particle {
+  0% { opacity: 1; transform: translate(-50%, -50%); }
+  55% { opacity: 1; transform: translate(var(--particle-x), var(--particle-y)); }
+  100% { opacity: 0; transform: translate(var(--particle-x), var(--particle-y)) scale(0.5); }
+}
 
 .is-rolled {
   display: grid;
-  grid-template-columns: 94px 1fr;
+  grid-template-columns: 110px 1fr;
   grid-template-rows: auto auto;
   gap: 8px 14px;
 }
@@ -1310,6 +1543,10 @@
   .pixel-board-panel { overflow-x: auto; }
   .pixel-path-grid { width: 688px; transform: none; margin: 0 auto; }
   .pixel-action-panel.is-idle { grid-template-columns: 1fr; }
+  .pixel-roll-button { width: 100%; min-width: 0; }
+  .pixel-roll-rule { min-width: 0; }
+  .pixel-roll-stage { gap: 12px; }
+  .pixel-roll-stage-copy { min-width: 0; }
   .is-rolled { grid-template-columns: 1fr; }
   .pixel-roll-result { grid-row: auto; flex-direction: row; }
   .pixel-destinations { grid-template-columns: 1fr; }
@@ -1326,6 +1563,10 @@
   .pixel-choice-grid,
   .pixel-shop-grid { grid-template-columns: 1fr; }
   .pixel-shop-grid button.pixel-shop-item { min-height: 82px; }
+  .pixel-roll-button { min-height: 106px; padding-inline: 10px; gap: 12px; }
+  .pixel-roll-button .pixel-roll-altar { width: 82px; }
+  .pixel-roll-stage { flex-direction: column; gap: 2px; text-align: center; }
+  .pixel-roll-stage-copy { align-items: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1333,6 +1574,11 @@
   .pixel-hero,
   .hero-frame,
   .pixel-movement-track i,
+  .pixel-roll-button .pixel-die,
+  .pixel-roll-stage,
+  .pixel-roll-stage .pixel-die,
+  .pixel-roll-stage .pixel-roll-sigil,
+  .pixel-roll-stage .pixel-roll-particles i,
   .pixel-bar > i {
     animation: none;
     transition: none;

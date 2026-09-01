@@ -5,7 +5,7 @@ import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
 import type { GameState, LevelPick } from '../core/types';
 import { describeDest } from '../ui/preview';
-import { PixelDie } from './PixelDie';
+import { PixelDie, type DiceRollFx } from './PixelDie';
 import { EquipmentIcon } from './EquipmentIcon';
 import { equipmentAssetIdForTreasure, type EquipmentAssetId } from './equipmentAssets';
 import { PIXEL_TILE_META } from './pixelMeta';
@@ -16,7 +16,24 @@ import { resourceAssetIdForTreasure, type ResourceAssetId } from './resourceAsse
 interface Props {
   dispatch: (action: Action) => void;
   movementSteps?: number | null;
+  rollFx: DiceRollFx;
   state: GameState;
+}
+
+const ROLL_STAGE_COPY: Record<Exclude<DiceRollFx['stage'], 'idle'>, { eyebrow: string; detail: string }> = {
+  anticipation: { eyebrow: 'KASTET LADES', detail: 'Terningen samler momentum' },
+  tumble: { eyebrow: 'I BEVÆGELSE', detail: 'Udfaldet er endnu skjult' },
+  impact: { eyebrow: 'RESULTATET LÅSES', detail: 'Mulige destinationer afsløres' },
+};
+
+function RollAltar({ fx }: { fx: DiceRollFx }) {
+  return (
+    <span className={`pixel-roll-altar is-${fx.stage}`} aria-hidden="true">
+      <i className="pixel-roll-sigil" />
+      <PixelDie rolling={fx.stage !== 'idle'} value={fx.value} />
+      <span className="pixel-roll-particles"><i /><i /><i /><i /><i /><i /></span>
+    </span>
+  );
 }
 
 function DestinationCard({ disabled, disabledReason, onSelect, primary, state, steps, tag }: {
@@ -69,7 +86,7 @@ function goldStatus(gold: number, cost: number): string | undefined {
   return gold < cost ? `MANGLER ${cost - gold} GULD` : undefined;
 }
 
-export function PixelActionPanel({ dispatch, movementSteps = null, state }: Props) {
+export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state }: Props) {
   const { hero, phase } = state;
 
   if (movementSteps !== null) {
@@ -85,14 +102,29 @@ export function PixelActionPanel({ dispatch, movementSteps = null, state }: Prop
     );
   }
 
+  if (rollFx.stage !== 'idle') {
+    const copy = ROLL_STAGE_COPY[rollFx.stage];
+    return (
+      <section className={`pixel-action-panel pixel-roll-stage is-${rollFx.stage}`} aria-live="polite">
+        <RollAltar fx={rollFx} />
+        <div className="pixel-roll-stage-copy">
+          <small>{copy.eyebrow}</small>
+          <b>SKÆBNEN RULLER</b>
+          <span>{copy.detail}</span>
+        </div>
+      </section>
+    );
+  }
+
   if (phase.t === 'idle') {
     return (
       <section className="pixel-action-panel is-idle">
         <div className="pixel-last-event"><small>SENESTE</small><span>{state.log.at(-1)?.text}</span></div>
-        <button className="pixel-roll-button" onClick={() => dispatch({ type: 'ROLL' })} type="button">
-          <PixelDie value={state.rolls % 6 + 1} />
-          <span><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b></span>
+        <button aria-label="Rul en sekssidet terning" className="pixel-roll-button" onClick={() => dispatch({ type: 'ROLL' })} type="button">
+          <RollAltar fx={{ stage: 'idle', value: state.rolls % 6 + 1 }} />
+          <span className="pixel-roll-button-copy"><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b><em>KLIK FOR AT KASTE</em></span>
         </button>
+        <div className="pixel-roll-rule"><small>1 × D6</small><b>RUL · VURDÉR · MANIPULÉR</b></div>
       </section>
     );
   }

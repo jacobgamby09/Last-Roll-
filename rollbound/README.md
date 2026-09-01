@@ -39,10 +39,12 @@ Et run kan reproduceres fra sit seed (vises i UI).
 - Damage, Armor, HP, Gold, Nudge og Reroll har nu en separat familie af seks 48×48 HUD-symboler. De bruges i HUD, Treasure og Shop uden equipment-slotbehandling.
 - En samlet readability-pass har hævet funktionel tekst til mindst 9 px, gjort Shop- og reward-tekster wrap-bare, tilføjet eksplicitte disabled-årsager og bevaret boardets native pixelskala med intern scroll på smalle skærme.
 - Bevægelse afspilles felt for felt i UI-laget; reduceren opløser stadig hele trækket deterministisk som én action.
+- Roll-området bruger nu en fysisk 64×64 pixelterning med kodegenererede korrekte pips og en firefaset anticipation → tumble → impact → reveal-effekt. Roll og Reroll deler effekten uden ændringer i reducer eller RNG.
 - Genererings- og alpha-prompts er gemt i `design/sprite-production-prompts-v1.md`, så næste asset-batch kan følge samme visuelle kontrakt.
 - Normaliserede enkelt-assets ligger i `src/assets/pixel/tiles/`, `src/assets/pixel/equipment/` og `src/assets/pixel/hero/`; runtime-mappingen bor i `src/pixel/tileAssets.ts`, `src/pixel/equipmentAssets.ts` og `src/pixel/heroAssets.ts`.
 - Den deterministiske asset-testside findes på `?ui=tiles`. Kontrakt og normaliseringsprompts er dokumenteret i `design/tile-asset-contract-v1.md`.
 - Equipment-testen findes på `?ui=equipment`; kontrakten og prompts findes i `design/equipment-asset-contract-v1.md`.
 - Resource-testen findes på `?ui=resources`; kontrakten og prompts findes i `design/resource-asset-contract-v1.md`.
 - Den tværgående typografi-, responsive- og accessibility-kontrakt findes i `design/readability-contract-v1.md`.
+- Terningens asset-, pip-, timing- og determinismekontrakt findes i `design/dice-roll-visual-contract-v1.md`.
 - `../PROGRESS.md` er den aktuelle agent-handoff og skal opdateres efter større implementationer eller designbeslutninger.
