@@ -1,14 +1,27 @@
-// Rollbound balance-config v0.8 — sim-verificeret 2026-08-31
-// (balanced bot 63,7% win, ~20 rolls, HP→XP ≈ 0,39 — se ../sim/FINDINGS.md)
+// Rollbound board/combat-baseline v0.8 — sim-verificeret 2026-08-31.
+// Equipment blev gjort ikke-stakkende efter denne sim; samlet winrate skal genverificeres.
+// Historisk baseline: balanced bot 63,7%, ~20 rolls, HP→XP ≈ 0,39 — se ../sim/FINDINGS.md.
 // ALLE balance-tal bor her. Ingen tal hardcodes i engine eller UI.
 
-import type { EnemyDef, TreasureItem } from './types';
+import type { EnemyDef, EquipmentId, EquipmentKind, EquipmentLoadout, TreasureItem } from './types';
 
 export const CONFIG = {
   trackLength: 70, // felt 70 = boss
   visibility: 12,  // synlige felter forud
 
   hero: { hp: 50, dmg: 10, armor: 0, nudges: 2, rerolls: 1, gold: 0 },
+
+  equipment: {
+    starters: { weapon: 'wood-club', armor: 'cloth-shirt', boots: 'worn-sandals' } satisfies EquipmentLoadout,
+    items: {
+      'wood-club': { kind: 'weapon', dmg: 0, armor: 0, freeNudges: 0 },
+      'rusted-sword': { kind: 'weapon', dmg: 3, armor: 0, freeNudges: 0 },
+      'cloth-shirt': { kind: 'armor', dmg: 0, armor: 0, freeNudges: 0 },
+      'worn-plate': { kind: 'armor', dmg: 0, armor: 1, freeNudges: 0 },
+      'worn-sandals': { kind: 'boots', dmg: 0, armor: 0, freeNudges: 0 },
+      'trail-boots': { kind: 'boots', dmg: 0, armor: 0, freeNudges: 1 },
+    } satisfies Record<EquipmentId, { kind: EquipmentKind; dmg: number; armor: number; freeNudges: number }>,
+  },
 
   // 'rotation': ATK → HP → Armor, intet valg. 'choice': vælg 1 af 3.
   levelUpMode: 'rotation' as 'rotation' | 'choice',
@@ -40,8 +53,9 @@ export const CONFIG = {
   event: { gold: 10, hpLoss: 6 },     // 50/50 (placeholder for rigtige events)
 
   shop: {
-    weapon: { dmg: 4, cost: 25 },
-    armorItem: { armor: 2, cost: 20 },
+    weapon: { cost: 25 },
+    armorItem: { cost: 20 },
+    boots: { cost: 18 },
     heal: { hp: 15, cost: 8 },
     nudge: 8,
     reroll: 6,
@@ -54,8 +68,9 @@ export const CONFIG = {
 };
 
 export const TREASURE_POOL: TreasureItem[] = [
-  { key: 'dmg',   name: 'Slebet klinge',    desc: '+3 Damage' },
-  { key: 'armor', name: 'Jernplade',        desc: '+1 Armor' },
+  { key: 'weapon', name: 'Slebet klinge',    desc: `+${CONFIG.equipment.items['rusted-sword'].dmg} Damage`, equipmentId: 'rusted-sword' },
+  { key: 'armor',  name: 'Jernplade',        desc: `+${CONFIG.equipment.items['worn-plate'].armor} Armor`, equipmentId: 'worn-plate' },
+  { key: 'boots',  name: 'Stivinderstøvler', desc: `${CONFIG.equipment.items['trail-boots'].freeNudges} gratis Nudge`, equipmentId: 'trail-boots' },
   { key: 'maxhp', name: 'Livskraft-amulet', desc: '+10 Max HP' },
   { key: 'nudge', name: 'Heldig terning',   desc: '+1 Nudge' },
   { key: 'gold',  name: 'Guldpung',         desc: '+12 Guld' },

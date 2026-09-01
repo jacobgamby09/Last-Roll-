@@ -269,6 +269,20 @@ Examples:
 
 This slot helps connect RPG progression with board gameplay.
 
+### Current prototype equipment rules
+
+The first functional equipment slice uses exactly one starter and one upgrade per slot:
+
+* Weapon: Trækølle → Slebet klinge (`+3 Damage`)
+* Armor: Stoftunika → Jernplade (`+1 Armor`)
+* Boots / Utility: Slidte sandaler → Stivinderstøvler (`1 free Nudge charge`)
+
+Treasure, combat drops, and Shops present equipment as an offer. The player compares the equipped item with the new item and explicitly chooses whether to equip it or keep the current item. Shop Gold is spent only when the player confirms `Buy & Equip`.
+
+Equipment effects are fixed per item and are not permanent stat consumables. Equipping replaces the effect in that slot. An already equipped upgrade is removed from future Treasure and drop pools and disabled in Shops; the prototype therefore needs no inventory or duplicate-conversion rule.
+
+The Stivinderstøvler charge pays for the next valid Nudge before the normal Nudge resource is spent. The Boots asset and charge are displayed in the equipment slot, while the normal Nudge count remains a separate resource.
+
 ## Spells
 
 Current target:
@@ -502,6 +516,64 @@ The board and current movement decision are the primary visual focus.
 Avoid UI clutter.
 
 Information hierarchy matters more than visual polish during the prototype.
+
+## Current Visual Direction
+
+The approved presentation is crisp dark-fantasy pixel art with a near-black plum background and sharp, restrained neon category colors.
+
+Board tiles use an **asset-as-tile** model:
+
+* The visible tile is a frameless miniature diorama on an irregular ground platform.
+* Do not place the diorama inside a visible square card, tile frame, or dark rectangular container.
+* An invisible `88 × 88` logical cell remains behind each asset for layout, path connections, hit targets, movement, and accessibility.
+* Source tile assets use a `64 × 64` transparent RGBA canvas and a shared baseline.
+* Tile numbers, labels, costs, rewards, selection states, and accessibility text belong to the UI layer and must not be baked into bitmap assets.
+* Candidate and selected destinations should outline or glow around the diorama silhouette rather than display a rectangular selection frame.
+
+Current category colors:
+
+* Enemy — neon red
+* Elite — magenta
+* Gold — yellow
+* Treasure — amber
+* Camp — green
+* Shop — cyan
+* Event — violet
+* Trap — purple
+* Blank — muted slate
+* Boss — ivory and red
+
+Color must not be the only identifier. Every tile family should also have a readable silhouette and a compact text label or consequence chip where necessary.
+
+The board remains the primary visual focus. Decorative effects must not obscure the upcoming path, the hero, possible destinations, or visible HP costs and rewards.
+
+Equipment presentation uses a separate icon grammar:
+
+* Source equipment assets use a `48 × 48` transparent RGBA canvas, a maximum `36 × 36` visible silhouette, and a shared baseline.
+* Equipment icons inherit the board palette and hard pixel density, but never use a ground platform or tile frame.
+* Weapon, Armor, and Boots / Utility must have distinct silhouettes; color remains a secondary identifier.
+* The HUD stores and displays the equipped Weapon, Armor, and Boots / Utility assets. Equipment offers compare current and new items before the player equips or keeps the current item.
+* Boots / Utility and Nudge are separate concepts. Stivinderstøvler currently provide one visible free Nudge charge, but a Nudge resource reward must never be presented as Boots or silently replace equipped Boots.
+* Item names, effects, prices, comparison states, and rarity treatment belong to the UI layer and must not be baked into bitmap assets.
+* The canonical production rules live in `rollbound/design/equipment-asset-contract-v1.md`.
+
+Non-equipment resources use a separate icon grammar:
+
+* Damage, Armor, Life / HP, Gold, Nudge, and Reroll use standalone `48 × 48` transparent HUD assets.
+* Damage and Armor stat assets communicate the current numeric stats; they must not reuse the currently equipped Weapon or Armor item art.
+* Resource icons never occupy an equipment slot and must not imply that a resource is an equippable item.
+* Nudge and Reroll may share a D6 motif, but their arrow silhouettes must remain distinguishable without relying only on color.
+* Resource icons have no platform, tile frame, label, number, price, or equipment-slot treatment baked into the bitmap.
+* The canonical production and semantic mapping rules live in `rollbound/design/resource-asset-contract-v1.md`.
+
+Readability is a visual-system requirement:
+
+* Runtime functional text must remain at least `9 px`; descriptions use at least `11 px` and item/destination names use at least `12 px`.
+* Never scale the complete board with a CSS transform. Narrow layouts preserve the native pixel scale and scroll inside the board panel.
+* Disabled choices must state why they are disabled, and only their artwork may be dimmed enough to lose contrast.
+* Names, effects, prices and consequences wrap rather than clip or ellipsize.
+* Color is never the only state cue; preserve labels, outlines, status text and keyboard focus treatment.
+* The canonical cross-component rules and breakpoint QA live in `rollbound/design/readability-contract-v1.md`.
 
 ## Long-Term Direction
 

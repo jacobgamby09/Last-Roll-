@@ -3,10 +3,11 @@
 // så et run kan reproduceres fra sit seed.
 
 import { CONFIG, TREASURE_POOL } from './config';
+import { EQUIPMENT_DEFS, equipItem, ownsEquipment } from './equipment';
 import { cursor, type RngCursor } from './rng';
 import { generateTrack } from './track';
 import { enemyForTile, fightOutcome } from './combat';
-import type { GameState, LevelPick, LogEntry, TileType, TreasureItem } from './types';
+import type { EquipmentId, EquipmentKind, EquipmentResumePhase, GameState, LevelPick, LogEntry, TileType, TreasureItem } from './types';
 
 export type Action =
   | { type: 'ROLL' }
@@ -15,7 +16,9 @@ export type Action =
   | { type: 'ACCEPT' }
   | { type: 'PICK_LEVELUP'; pick: LevelPick }
   | { type: 'PICK_TREASURE'; index: number }
-  | { type: 'BUY'; item: 'weapon' | 'armor' | 'heal' | 'nudge' | 'reroll' }
+  | { type: 'BUY'; item: 'weapon' | 'armor' | 'boots' | 'heal' | 'nudge' | 'reroll' }
+  | { type: 'EQUIP_OFFER' }
+  | { type: 'KEEP_EQUIPMENT' }
   | { type: 'LEAVE_SHOP' }
   | { type: 'RESTART'; seed?: number };
 
@@ -36,7 +39,9 @@ export function newGame(seed: number): GameState {
       xp: 0,
       gold: CONFIG.hero.gold,
       nudges: CONFIG.hero.nudges,
+      bootsNudgeCharges: 0,
       rerolls: CONFIG.hero.rerolls,
+      loadout: { ...CONFIG.equipment.starters },
     },
     phase: { t: 'idle' },
     pendingLevelUps: 0,
@@ -89,14 +94,34 @@ function applyLevelPick(s: GameState, pick: LevelPick) {
   }
 }
 
-function applyTreasure(s: GameState, item: TreasureItem) {
+function applyImmediateTreasure(s: GameState, item: TreasureItem) {
   switch (item.key) {
-    case 'dmg': s.hero.dmg += 3; break;
-    case 'armor': s.hero.armor += 1; break;
     case 'maxhp': s.hero.maxHp += 10; s.hero.hp += 10; break;
     case 'nudge': s.hero.nudges += 1; break;
     case 'gold': s.hero.gold += 12; break;
+    case 'weapon':
+    case 'armor':
+    case 'boots':
+      break;
   }
+}
+
+function availableTreasure(hero: GameState['hero']): TreasureItem[] {
+  return TREASURE_POOL.filter(item => !item.equipmentId || !ownsEquipment(hero, item.equipmentId));
+}
+
+function resumeAfterReward(s: GameState): EquipmentResumePhase {
+  return s.pendingLevelUps > 0 ? { t: 'levelup' } : { t: 'idle' };
+}
+
+function offerEquipment(
+  s: GameState,
+  itemId: EquipmentId,
+  source: 'treasure' | 'drop' | 'shop',
+  resume: EquipmentResumePhase,
+  cost = 0,
+) {
+  s.phase = { t: 'equipment', itemId, source, cost, resume };
 }
 
 function gainXp(s: GameState, xp: number) {
@@ -132,13 +157,22 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
     'combat',
   );
   const dropChance = type === 'elite' ? CONFIG.drops.elite : CONFIG.drops.normal;
+  let equipmentDrop: EquipmentId | null = null;
   if (dropChance > 0 && rng.rand() < dropChance) {
-    const item = TREASURE_POOL[Math.floor(rng.rand() * TREASURE_POOL.length)];
-    applyTreasure(s, item);
-    log(s, `${enemy.name} dropper ${item.name} (${item.desc})!`, 'good');
+    const pool = availableTreasure(s.hero);
+    const item = pool[Math.floor(rng.rand() * pool.length)];
+    if (item.equipmentId) {
+      equipmentDrop = item.equipmentId;
+      log(s, `${enemy.name} dropper ${item.name}. Vurdér det nye udstyr.`, 'good');
+    } else {
+      applyImmediateTreasure(s, item);
+      log(s, `${enemy.name} dropper ${item.name} (${item.desc})!`, 'good');
+    }
   }
   gainXp(s, enemy.xp);
-  s.phase = s.pendingLevelUps > 0 ? { t: 'levelup' } : { t: 'idle' };
+  const resume = resumeAfterReward(s);
+  if (equipmentDrop) offerEquipment(s, equipmentDrop, 'drop', resume);
+  else s.phase = resume;
 }
 
 function bossFight(s: GameState) {
@@ -207,14 +241,14 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     }
     case 'treasure': {
-      const options = rng.shuffle([...TREASURE_POOL]).slice(0, 3);
+      const options = rng.shuffle(availableTreasure(s.hero)).slice(0, 3);
       log(s, 'En skattekiste! Vælg 1 af 3.');
       s.phase = { t: 'treasure', options };
       break;
     }
     case 'shop': {
       log(s, 'Du træder ind i shoppen.');
-      s.phase = { t: 'shop', boughtWeapon: false, boughtArmor: false };
+      s.phase = { t: 'shop', boughtWeapon: false, boughtArmor: false, boughtBoots: false };
       break;
     }
     case 'enemy':
@@ -260,9 +294,11 @@ export function reducer(prev: GameState, action: Action): GameState {
     case 'NUDGE': {
       if (s.phase.t !== 'rolled' || s.phase.wasReroll) break;
       const target = s.phase.roll + action.dir;
-      if (s.hero.nudges <= 0 || target < 1 || target > 6) break;
-      s.hero.nudges--;
-      log(s, `Nudge: ${s.phase.roll} → ${target}.`);
+      if (s.hero.nudges + s.hero.bootsNudgeCharges <= 0 || target < 1 || target > 6) break;
+      const paidByBoots = s.hero.bootsNudgeCharges > 0;
+      if (paidByBoots) s.hero.bootsNudgeCharges--;
+      else s.hero.nudges--;
+      log(s, `${paidByBoots ? 'Boots-Nudge' : 'Nudge'}: ${s.phase.roll} → ${target}.`);
       move(s, rng, target);
       break;
     }
@@ -286,25 +322,30 @@ export function reducer(prev: GameState, action: Action): GameState {
       if (s.phase.t !== 'treasure') break;
       const item = s.phase.options[action.index];
       if (!item) break;
-      applyTreasure(s, item);
-      log(s, `Du tager ${item.name} (${item.desc}).`, 'good');
-      s.phase = { t: 'idle' };
+      if (item.equipmentId) {
+        log(s, `Du finder ${item.name}. Vurdér det mod dit nuværende udstyr.`, 'good');
+        offerEquipment(s, item.equipmentId, 'treasure', { t: 'idle' });
+      } else {
+        applyImmediateTreasure(s, item);
+        log(s, `Du tager ${item.name} (${item.desc}).`, 'good');
+        s.phase = { t: 'idle' };
+      }
       break;
     }
     case 'BUY': {
       if (s.phase.t !== 'shop') break;
       const sh = CONFIG.shop;
       const h = s.hero;
-      if (action.item === 'weapon' && !s.phase.boughtWeapon && h.gold >= sh.weapon.cost) {
-        h.gold -= sh.weapon.cost;
-        h.dmg += sh.weapon.dmg;
-        s.phase.boughtWeapon = true;
-        log(s, `Købt: våben-opgradering (+${sh.weapon.dmg} Damage).`, 'good');
-      } else if (action.item === 'armor' && !s.phase.boughtArmor && h.gold >= sh.armorItem.cost) {
-        h.gold -= sh.armorItem.cost;
-        h.armor += sh.armorItem.armor;
-        s.phase.boughtArmor = true;
-        log(s, `Købt: rustnings-opgradering (+${sh.armorItem.armor} Armor).`, 'good');
+      const offers: Partial<Record<EquipmentKind, { id: EquipmentId; cost: number; bought: boolean }>> = {
+        weapon: { id: 'rusted-sword', cost: sh.weapon.cost, bought: s.phase.boughtWeapon },
+        armor: { id: 'worn-plate', cost: sh.armorItem.cost, bought: s.phase.boughtArmor },
+        boots: { id: 'trail-boots', cost: sh.boots.cost, bought: s.phase.boughtBoots },
+      };
+      if (action.item === 'weapon' || action.item === 'armor' || action.item === 'boots') {
+        const offer = offers[action.item];
+        if (offer && !offer.bought && !ownsEquipment(h, offer.id) && h.gold >= offer.cost) {
+          offerEquipment(s, offer.id, 'shop', { ...s.phase }, offer.cost);
+        }
       } else if (action.item === 'heal' && h.gold >= sh.heal.cost && h.hp < h.maxHp) {
         h.gold -= sh.heal.cost;
         const gained = heal(s, sh.heal.hp);
@@ -318,6 +359,28 @@ export function reducer(prev: GameState, action: Action): GameState {
         h.rerolls++;
         log(s, 'Købt: +1 Reroll.', 'good');
       }
+      break;
+    }
+    case 'EQUIP_OFFER': {
+      if (s.phase.t !== 'equipment' || s.hero.gold < s.phase.cost) break;
+      const { cost, itemId, resume, source } = s.phase;
+      const item = EQUIPMENT_DEFS[itemId];
+      s.hero.gold -= cost;
+      equipItem(s.hero, itemId);
+      if (resume.t === 'shop') {
+        if (item.kind === 'weapon') resume.boughtWeapon = true;
+        if (item.kind === 'armor') resume.boughtArmor = true;
+        if (item.kind === 'boots') resume.boughtBoots = true;
+      }
+      log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${item.effect.dmg ? `+${item.effect.dmg} Damage` : item.effect.armor ? `+${item.effect.armor} Armor` : `${item.effect.freeNudges} gratis Nudge`}).`, 'good');
+      s.phase = resume;
+      break;
+    }
+    case 'KEEP_EQUIPMENT': {
+      if (s.phase.t !== 'equipment') break;
+      const item = EQUIPMENT_DEFS[s.phase.itemId];
+      log(s, `Du beholder dit nuværende udstyr og efterlader ${item.name}.`);
+      s.phase = s.phase.resume;
       break;
     }
     case 'LEAVE_SHOP': {

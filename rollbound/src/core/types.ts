@@ -20,23 +20,44 @@ export interface Hero {
   xp: number;
   gold: number;
   nudges: number;
+  bootsNudgeCharges: number;
   rerolls: number;
+  loadout: EquipmentLoadout;
+}
+
+export type WeaponVisualId = 'wood-club' | 'rusted-sword';
+export type ArmorVisualId = 'cloth-shirt' | 'worn-plate';
+export type BootsVisualId = 'worn-sandals' | 'trail-boots';
+export type EquipmentId = WeaponVisualId | ArmorVisualId | BootsVisualId;
+export type EquipmentKind = 'weapon' | 'armor' | 'boots';
+
+export interface EquipmentLoadout {
+  weapon: WeaponVisualId;
+  armor: ArmorVisualId;
+  boots: BootsVisualId;
 }
 
 export interface TreasureItem {
-  key: 'dmg' | 'armor' | 'maxhp' | 'nudge' | 'gold';
+  key: 'weapon' | 'armor' | 'boots' | 'maxhp' | 'nudge' | 'gold';
   name: string;
   desc: string;
+  equipmentId?: EquipmentId;
 }
 
 export type LevelPick = 'dmg' | 'hp' | 'armor';
+
+export type EquipmentResumePhase =
+  | { t: 'idle' }
+  | { t: 'levelup' }
+  | { t: 'shop'; boughtWeapon: boolean; boughtArmor: boolean; boughtBoots: boolean };
 
 export type Phase =
   | { t: 'idle' }
   | { t: 'rolled'; roll: number; wasReroll: boolean }
   | { t: 'levelup' }
   | { t: 'treasure'; options: TreasureItem[] }
-  | { t: 'shop'; boughtWeapon: boolean; boughtArmor: boolean }
+  | { t: 'shop'; boughtWeapon: boolean; boughtArmor: boolean; boughtBoots: boolean }
+  | { t: 'equipment'; itemId: EquipmentId; source: 'treasure' | 'drop' | 'shop'; cost: number; resume: EquipmentResumePhase }
   | { t: 'over'; won: boolean; cause: string };
 
 export interface LogEntry {

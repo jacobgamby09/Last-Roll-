@@ -1,4 +1,5 @@
 import { CONFIG } from '../core/config';
+import { availableNudges, EQUIPMENT_DEFS, equippedIdForKind, equipmentEffectText } from '../core/equipment';
 import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
 import type { GameState, LevelPick } from '../core/types';
@@ -25,10 +26,12 @@ export function ActionPanel({ state, dispatch }: Props) {
 
   if (phase.t === 'rolled') {
     const roll = phase.roll;
+    const nudgeCount = availableNudges(hero);
+    const nudgeTag = hero.bootsNudgeCharges > 0 ? 'Boots-Nudge' : 'Nudge';
     const candidates = [
-      { dir: -1 as const, r: roll - 1, tag: `Nudge −1`, ok: roll - 1 >= 1 && hero.nudges > 0 && !phase.wasReroll },
+      { dir: -1 as const, r: roll - 1, tag: `${nudgeTag} −1`, ok: roll - 1 >= 1 && nudgeCount > 0 && !phase.wasReroll },
       { dir: 0 as const, r: roll, tag: 'Accepter', ok: true },
-      { dir: 1 as const, r: roll + 1, tag: `Nudge +1`, ok: roll + 1 <= 6 && hero.nudges > 0 && !phase.wasReroll },
+      { dir: 1 as const, r: roll + 1, tag: `${nudgeTag} +1`, ok: roll + 1 <= 6 && nudgeCount > 0 && !phase.wasReroll },
     ];
     return (
       <div className="panel">
@@ -51,7 +54,7 @@ export function ActionPanel({ state, dispatch }: Props) {
                     <span className="dest-detail">{info.detail}</span>
                   </>
                 ) : (
-                  <span className="dest-detail">{c.dir !== 0 && hero.nudges <= 0 ? 'Ingen nudges' : 'Ikke muligt'}</span>
+                  <span className="dest-detail">{c.dir !== 0 && nudgeCount <= 0 ? 'Ingen nudges' : 'Ikke muligt'}</span>
                 )}
               </button>
             );
@@ -100,11 +103,28 @@ export function ActionPanel({ state, dispatch }: Props) {
     );
   }
 
+  if (phase.t === 'equipment') {
+    const offered = EQUIPMENT_DEFS[phase.itemId];
+    const currentId = equippedIdForKind(hero, offered.kind);
+    return (
+      <div className="panel">
+        <div className="panel-title">Nyt udstyr: {offered.name}</div>
+        <div className="dest-row">
+          <div className="dest-card"><span className="dest-tag">Nuværende</span><span className="dest-title">{EQUIPMENT_DEFS[currentId].name}</span><span className="dest-detail">{equipmentEffectText(currentId)}</span></div>
+          <div className="dest-card"><span className="dest-tag">Nyt</span><span className="dest-title">{offered.name}</span><span className="dest-detail">{equipmentEffectText(phase.itemId)}</span></div>
+        </div>
+        <button className="btn btn-roll" disabled={hero.gold < phase.cost} onClick={() => dispatch({ type: 'EQUIP_OFFER' })}>{phase.cost > 0 ? `Køb og udstyr (${phase.cost} guld)` : 'Udstyr'}</button>
+        <button className="btn" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })}>Behold nuværende</button>
+      </div>
+    );
+  }
+
   if (phase.t === 'shop') {
     const sh = CONFIG.shop;
-    const rows: { key: 'weapon' | 'armor' | 'heal' | 'nudge' | 'reroll'; label: string; cost: number; ok: boolean }[] = [
-      { key: 'weapon', label: `Våben-opgradering (+${sh.weapon.dmg} DMG)`, cost: sh.weapon.cost, ok: !phase.boughtWeapon && hero.gold >= sh.weapon.cost },
-      { key: 'armor', label: `Rustning (+${sh.armorItem.armor} ARMOR)`, cost: sh.armorItem.cost, ok: !phase.boughtArmor && hero.gold >= sh.armorItem.cost },
+    const rows: { key: 'weapon' | 'armor' | 'boots' | 'heal' | 'nudge' | 'reroll'; label: string; cost: number; ok: boolean }[] = [
+      { key: 'weapon', label: `Slebet klinge (${equipmentEffectText('rusted-sword')})`, cost: sh.weapon.cost, ok: !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= sh.weapon.cost },
+      { key: 'armor', label: `Jernplade (${equipmentEffectText('worn-plate')})`, cost: sh.armorItem.cost, ok: !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= sh.armorItem.cost },
+      { key: 'boots', label: `Stivinderstøvler (${equipmentEffectText('trail-boots')})`, cost: sh.boots.cost, ok: !phase.boughtBoots && hero.loadout.boots !== 'trail-boots' && hero.gold >= sh.boots.cost },
       { key: 'heal', label: `Heling (+${sh.heal.hp} HP)`, cost: sh.heal.cost, ok: hero.gold >= sh.heal.cost && hero.hp < hero.maxHp },
       { key: 'nudge', label: '+1 Nudge', cost: sh.nudge, ok: hero.gold >= sh.nudge },
       { key: 'reroll', label: '+1 Reroll', cost: sh.reroll, ok: hero.gold >= sh.reroll },
@@ -127,7 +147,8 @@ export function ActionPanel({ state, dispatch }: Props) {
     );
   }
 
-  // over
+  if (phase.t !== 'over') return null;
+
   return (
     <div className="panel">
       <div className={`over ${phase.won ? 'won' : 'lost'}`}>

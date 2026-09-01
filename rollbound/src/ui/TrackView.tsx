@@ -1,4 +1,5 @@
 import { CONFIG } from '../core/config';
+import { availableNudges } from '../core/equipment';
 import type { GameState } from '../core/types';
 import { TILE_META } from './tileMeta';
 import { tileChip } from './preview';
@@ -9,7 +10,7 @@ export function TrackView({ state }: { state: GameState }) {
   const to = Math.min(L, state.pos + CONFIG.visibility);
 
   const landing = state.phase.t === 'rolled' ? Math.min(state.pos + state.phase.roll, L) : -1;
-  const canNudge = state.phase.t === 'rolled' && !state.phase.wasReroll && state.hero.nudges > 0;
+  const canNudge = state.phase.t === 'rolled' && !state.phase.wasReroll && availableNudges(state.hero) > 0;
   const alts: number[] = [];
   if (state.phase.t === 'rolled' && canNudge) {
     const r = state.phase.roll;
