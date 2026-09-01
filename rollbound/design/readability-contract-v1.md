@@ -56,5 +56,5 @@ Use `--px-copy: #cbbdd2` for secondary functional text. `--px-muted` is reserved
 - Treasure/equipment: seed 0 for choice text and current-versus-new comparison.
 - Shop: verify all six rows, explicit disabled reasons and a `3 / 2 / 1` column progression.
 - Narrow viewport: verify at `390 × 844`, including no global horizontal overflow and an internally scrolling unscaled board.
-- Resource Lab: `?ui=resources` must show `6/6 ASSETS MAPPED` at lab, HUD and card sizes.
+- Resource Lab: `?ui=resources` must show `7/7 ASSETS MAPPED` at lab, HUD and card sizes.
 - Finish with lint, production build and a browser-console check.

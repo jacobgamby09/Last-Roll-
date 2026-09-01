@@ -9,6 +9,7 @@ Current family:
 - `damage` — the hero's current attack strength.
 - `armor` — the hero's current damage reduction.
 - `life` — HP, Max HP and healing.
+- `xp` — experience progress toward the next Level.
 - `gold` — currency and Gold rewards.
 - `nudge` — the limited ±1 movement resource.
 - `reroll` — the limited forced-new-roll resource.
@@ -31,6 +32,7 @@ Current family:
 - `damage-sword-v1.png` — diagonal sword with an angular red impact slash.
 - `armor-shield-v1.png` — compact frontal cyan shield with a strong symmetrical silhouette.
 - `life-heart-v1.png` — chunky crimson life heart with an ivory highlight.
+- `xp-essence-v1.png` — four-point cyan-violet essence star for experience progress.
 - `gold-coins-v1.png` — compact stack of three gold coins.
 - `nudge-die-v1.png` — dark D6 with two short opposing arrows; wide silhouette.
 - `reroll-die-v1.png` — dark D6 wrapped by one circular arrow; round silhouette.
@@ -41,6 +43,7 @@ Nudge and Reroll intentionally share a dark D6 center but must remain distinguis
 
 - HUD Damage and Armor stats → `damage` and `armor`; never use equipped Weapon or Armor item art for these values.
 - HUD HP bar → `life` at mini size.
+- HUD XP bar → `xp` at mini size.
 - HUD Gold, Nudge and Reroll stats → their matching resource assets.
 - Treasure `maxhp`, `gold` and `nudge` → `life`, `gold` and `nudge` respectively.
 - Shop `heal`, `nudge` and `reroll` → `life`, `nudge` and `reroll` respectively.
@@ -66,6 +69,7 @@ Subject prompts:
 - Damage: diagonal steel sword with a chunky angular red impact slash and two small red sparks.
 - Armor: frontal compact cyan-and-steel shield with a bright center ridge and deep navy shadow.
 - Life: classic chunky crimson heart silhouette, ivory highlight, deep-red shadow.
+- XP: compact four-point faceted arcane essence star, cyan center, violet facets and one ivory highlight.
 - Gold: exactly three stacked coins, golden-yellow faces and orange shadows; no bag or chest.
 - Nudge: dark D6 with one ivory pip and two short mint-green arrows pointing outward left/right.
 - Reroll: dark D6 with one ivory pip wrapped by one chunky cyan clockwise circular arrow.
@@ -74,8 +78,8 @@ If ImageGen returns a raster checkerboard, use a background-extraction pass that
 
 ## QA
 
-- Resource Lab must report `6/6 ASSETS MAPPED` and show all icons at HUD and card sizes.
-- All six IDs must appear without missing-asset fallbacks.
+- Resource Lab must report `7/7 ASSETS MAPPED` and show all icons at HUD and card sizes.
+- All seven IDs must appear without missing-asset fallbacks.
 - Damage and Armor must remain visually distinct from the currently equipped Weapon and Armor icons.
 - Nudge and Reroll must remain distinguishable at their final HUD sizes and must not collide with labels or neighboring stats.
 - Seeded Treasure and Shop states must use resource IDs for non-equipment rewards and equipment IDs only for actual gear rewards.

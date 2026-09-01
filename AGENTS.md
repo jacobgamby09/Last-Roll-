@@ -559,12 +559,21 @@ Equipment presentation uses a separate icon grammar:
 
 Non-equipment resources use a separate icon grammar:
 
-* Damage, Armor, Life / HP, Gold, Nudge, and Reroll use standalone `48 × 48` transparent HUD assets.
+* Damage, Armor, Life / HP, XP, Gold, Nudge, and Reroll use standalone `48 × 48` transparent HUD assets.
 * Damage and Armor stat assets communicate the current numeric stats; they must not reuse the currently equipped Weapon or Armor item art.
 * Resource icons never occupy an equipment slot and must not imply that a resource is an equippable item.
 * Nudge and Reroll may share a D6 motif, but their arrow silhouettes must remain distinguishable without relying only on color.
 * Resource icons have no platform, tile frame, label, number, price, or equipment-slot treatment baked into the bitmap.
 * The canonical production and semantic mapping rules live in `rollbound/design/resource-asset-contract-v1.md`.
+
+Hero Status presentation uses a dedicated grammar:
+
+* The HUD portrait uses a standalone `80 × 80` transparent bust asset that matches the existing board hero identity.
+* Level is a separate UI plate attached to the portrait frame; it must not obscure the hero's face or be baked into the portrait bitmap.
+* HP and XP use consistent notched, segmented pixel housings with stable `current/max` values and their own Life/XP assets.
+* Damage, healing, XP gain and level-up may trigger short UI-only feedback. These effects compare previous and current reducer state and must never change or delay game logic.
+* Damage and XP feedback may appear simultaneously after combat. Preserve the ghost-damage bar and reduced-motion fallback.
+* The canonical portrait, bar, feedback and responsive rules live in `rollbound/design/hero-status-visual-contract-v1.md`.
 
 Readability is a visual-system requirement:
 

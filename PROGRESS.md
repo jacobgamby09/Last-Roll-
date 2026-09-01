@@ -42,7 +42,7 @@ Useful routes:
 - `/?seed=2` — deterministic board containing Blank, Combat, Camp, Gold and Treasure in the first visible section.
 - `/?ui=tiles` — Tile Lab for all tile families, normalized assets, hero scale and manifest coverage.
 - `/?ui=equipment` — Gear Lab for the Weapon, Armor and Boots/Utility icon contract at lab, card and HUD sizes.
-- `/?ui=resources` — Resource Lab for Damage, Armor, Life/HP, Gold, Nudge and Reroll at lab, card and HUD sizes.
+- `/?ui=resources` — Resource Lab for Damage, Armor, Life/HP, XP, Gold, Nudge and Reroll at lab, card and HUD sizes.
 - `/?ui=classic` — original prototype UI retained as a behavioral reference and fallback.
 
 Latest verification:
@@ -51,7 +51,7 @@ Latest verification:
 - `npm run build` passes.
 - Tile Lab reports `13/13 ASSETS MAPPED`.
 - Gear Lab reports `6/6 ASSETS MAPPED`.
-- Resource Lab reports `6/6 ASSETS MAPPED`.
+- Resource Lab reports `7/7 ASSETS MAPPED`.
 - Resource Lab verifies enlarged control-resource presentation: Nudge `38/46 px` and Reroll `36/44 px` at HUD/card sizes.
 - Seed 2 renders Camp, Gold, Treasure and Trap correctly from the asset manifest.
 - Seed 0 verifies real Treasure choices: Weapon rewards use the upgrade asset, while Nudge uses its separate resource asset.
@@ -59,6 +59,9 @@ Latest verification:
 - Seed 2 shows dedicated Damage, Armor, Life, Gold, Nudge and Reroll assets in the HUD without replacing the three equipment slots.
 - Seed 2 verifies the new D6 anticipation/tumble/impact sequence resolves to the same deterministic face as the reducer and reveals destinations only afterward.
 - A real Reroll verifies the same D6 effect plays before movement, consumes exactly one Reroll and resolves the previewed value.
+- Hero Status uses the dedicated 80×80 bust, separate Level plate, segmented HP/XP bars and a dedicated XP essence asset.
+- A real seed 2 Goblin result verifies simultaneous HP ghost-damage and XP gain feedback (`50 → 44 HP`, `0 → 15 XP`).
+- A later real seed 2 Goblin verifies Level `1 → 2`, retained `10/30 XP`, Level feedback and the updated next-level reward.
 - Seed 0 maps Gold and Nudge Treasure rewards to resource assets while Weapon remains an equipment asset.
 - Seed 15 maps Heal, Nudge and Reroll Shop rows to resource assets while Weapon and Armor remain equipment assets.
 - Rolled destination outlines follow transparent asset silhouettes.
@@ -93,6 +96,7 @@ Latest verification:
 Important files:
 
 - `rollbound/src/pixel/PixelGame.tsx` — pixel UI composition.
+- `rollbound/src/pixel/PixelHud.tsx` — hero-status composition and reducer-derived visual feedback.
 - `rollbound/src/pixel/PixelDie.tsx` — deterministic pip renderer for the blank-face D6 body.
 - `rollbound/src/pixel/PixelBoard.tsx` — winding visible board layout.
 - `rollbound/src/pixel/PixelTile.tsx` — logical tile cell, metadata overlays and hero anchor.
@@ -113,6 +117,7 @@ Important files:
 - `rollbound/design/resource-asset-contract-v1.md` — canonical resource production, semantic mapping and QA contract.
 - `rollbound/design/readability-contract-v1.md` — canonical typography, responsive, disabled-state and accessibility contract.
 - `rollbound/design/dice-roll-visual-contract-v1.md` — canonical D6 asset, pip, animation, reduced-motion and RNG-boundary contract.
+- `rollbound/design/hero-status-visual-contract-v1.md` — canonical portrait, Level, HP/XP, feedback and responsive contract.
 
 Current normalized `64 × 64` RGBA tile assets:
 
@@ -132,6 +137,8 @@ Current normalized `64 × 64` RGBA tile assets:
 
 Hero assets are four normalized `32 × 48` RGBA frames in `rollbound/src/assets/pixel/hero/`.
 
+The HUD also uses `hero-portrait-v1.png`, a dedicated normalized `80 × 80` RGBA bust matching the board hero.
+
 Current normalized `48 × 48` RGBA equipment assets:
 
 - `wood-club-v1.png`
@@ -148,6 +155,7 @@ Current normalized `48 × 48` RGBA non-equipment resource assets:
 - `damage-sword-v1.png`
 - `armor-shield-v1.png`
 - `life-heart-v1.png`
+- `xp-essence-v1.png`
 - `gold-coins-v1.png`
 - `nudge-die-v1.png`
 - `reroll-die-v1.png`
@@ -204,6 +212,12 @@ The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`,
 46. Added the UI-only anticipation, stepped tumble, impact, particle and delayed destination-reveal sequence to both Roll and Reroll.
 47. Added action locking, old-target suppression and a 150 ms reduced-motion fallback while preserving reducer and seeded RNG behavior.
 48. Verified normal Roll, Reroll, deterministic result matching and the new roll area at desktop and `390 × 844` without global overflow.
+49. Generated and normalized a dedicated 80×80 hooded hero bust matching the existing board-sprite identity.
+50. Generated and mapped a cyan-violet 48×48 XP essence asset, expanding Resource Lab to `7/7`.
+51. Rebuilt the portrait frame and moved Level into a separate gold/cyan plate outside the hero's face.
+52. Replaced the white prototype bars with shared notched, segmented, three-tone HP and XP housings.
+53. Added reducer-derived ghost damage, heal, XP and level-up feedback with simultaneous combat damage/XP handling.
+54. Verified initial, real combat and real level-up states plus a `390 × 844` layout without global overflow or browser errors.
 
 The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` mentions visible tile frames. Treat it only as the origin mockup. The newer rules in `AGENTS.md` and `tile-asset-contract-v1.md` supersede that part of the prompt.
 
@@ -239,6 +253,7 @@ Why this comes next: equipment now has truthful semantics and a complete acquisi
 - Do not reintroduce whole-board responsive scaling; preserve native pixel scale and internal board scrolling.
 - Do not reduce runtime functional text below the tiers in `readability-contract-v1.md` or hide disabled reasons through low opacity.
 - Do not move dice animation state into the reducer, add visual randomness to the RNG stream or bake pips into the D6 body asset.
+- Do not bake the Level plate or feedback states into the hero portrait, and do not let HUD feedback mutate reducer-owned HP, XP or Level.
 - Never map a Nudge resource directly to the Boots slot; Stivinderstøvler's separate charge is the explicit item effect.
 - Never apply equipment-slot frames or colors to non-equipment resource icons.
 - Preserve true alpha transparency and nearest-neighbor downsampling.

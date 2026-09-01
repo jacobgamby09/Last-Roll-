@@ -4,8 +4,9 @@ import goldCoins from '../assets/pixel/resources/gold-coins-v1.png';
 import lifeHeart from '../assets/pixel/resources/life-heart-v1.png';
 import nudgeDie from '../assets/pixel/resources/nudge-die-v1.png';
 import rerollDie from '../assets/pixel/resources/reroll-die-v1.png';
+import xpEssence from '../assets/pixel/resources/xp-essence-v1.png';
 
-export type ResourceAssetId = 'life' | 'gold' | 'nudge' | 'reroll' | 'damage' | 'armor';
+export type ResourceAssetId = 'life' | 'xp' | 'gold' | 'nudge' | 'reroll' | 'damage' | 'armor';
 
 export interface ResourceAsset {
   alt: string;
@@ -32,6 +33,12 @@ export const RESOURCE_ASSETS: Record<ResourceAssetId, ResourceAsset> = {
     id: 'life',
     name: 'Liv / HP',
     src: lifeHeart,
+  },
+  xp: {
+    alt: 'Cyan-violet essensstjerne for erfaring',
+    id: 'xp',
+    name: 'Erfaring / XP',
+    src: xpEssence,
   },
   gold: {
     alt: 'Tre stablede guldmønter',

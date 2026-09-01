@@ -6,6 +6,7 @@ const RESOURCE_USAGE = {
   damage: 'ANGREBSSTYRKE',
   armor: 'SKADEREDUKTION',
   life: 'HP · MAX HP · HEALING',
+  xp: 'ERFARING · LEVEL',
   gold: 'GULD · PRISER',
   nudge: '±1 MOVEMENT',
   reroll: 'NYT TERNINGEKAST',
@@ -21,7 +22,7 @@ export function ResourceLab() {
         </header>
 
         <section className="resource-lab-contract" aria-label="Resource asset-kontrakt">
-          <b>6 HUD-SYMBOLER</b><span>4 RESSOURCER · 2 STATS</span><span>INGEN EQUIPMENT-SLOTS</span><span>UNIK SILHUET</span>
+          <b>7 HUD-SYMBOLER</b><span>5 RESSOURCER · 2 STATS</span><span>INGEN EQUIPMENT-SLOTS</span><span>UNIK SILHUET</span>
         </section>
 
         <section className="resource-lab-grid" aria-label="Resource assets">
@@ -37,7 +38,7 @@ export function ResourceLab() {
         <section className="resource-lab-sizes" aria-label="Resource størrelsestest">
           <div><small>HUD · 28–38 PX</small>{RESOURCE_LAB_ASSETS.map(asset => <ResourceIcon assetId={asset.id} key={asset.id} size="hud" />)}</div>
           <div><small>CARD · 40–46 PX</small>{RESOURCE_LAB_ASSETS.map(asset => <ResourceIcon assetId={asset.id} key={asset.id} size="card" />)}</div>
-          <div><small>MANIFEST</small><b>{RESOURCE_LAB_ASSETS.length}/6 ASSETS MAPPED</b></div>
+          <div><small>MANIFEST</small><b>{RESOURCE_LAB_ASSETS.length}/7 ASSETS MAPPED</b></div>
         </section>
       </div>
     </main>
