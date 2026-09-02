@@ -54,10 +54,14 @@ export function itemStats(def: ItemDef): ItemStats {
   return stats;
 }
 
+function loadoutIds(loadout: EquipmentLoadout): EquipmentId[] {
+  return [loadout.weapon, loadout.armor, loadout.boots];
+}
+
 // Kamp-modifiers fra hele loadoutet — sendes ind i simulateFight
 export function combatModsFor(loadout: EquipmentLoadout): CombatMods {
   const mods: CombatMods = {};
-  for (const id of Object.values(loadout)) {
+  for (const id of loadoutIds(loadout)) {
     for (const e of ITEMS[id].effects) {
       if (e.kind === 'firstStrike') mods.firstStrikeMult = e.mult;
       else if (e.kind === 'doubleHit') mods.doubleHit = true;
@@ -76,7 +80,7 @@ export function loadoutEffect<K extends ItemEffect['kind']>(
   loadout: EquipmentLoadout,
   kind: K,
 ): Extract<ItemEffect, { kind: K }> | null {
-  for (const id of Object.values(loadout)) {
+  for (const id of loadoutIds(loadout)) {
     for (const e of ITEMS[id].effects) {
       if (e.kind === kind) return e as Extract<ItemEffect, { kind: K }>;
     }
