@@ -226,8 +226,11 @@ export function itemsBySlot(slot: EquipmentKind): ItemDef[] {
 // ---------- Consumables (batch C) — samme status: balance-data ----------
 
 export const CONSUMABLES: Record<ConsumableId, ConsumableDef> = {
-  'elixir': { id: 'elixir', tier: 1, name: 'Healing Elixir', cost: 8, effect: { kind: 'heal', amount: 20 } },
-  'grand-elixir': { id: 'grand-elixir', tier: 2, name: 'Grand Elixir', cost: 14, effect: { kind: 'heal', amount: 40 } },
+  // Fleksibilitets-præmie: shop-urten (8g/+15, bruges NU) er bedste HP/guld;
+  // eliksirer healer mere pr. flaske men koster mere pr. HP, fordi de kan
+  // times frit (ingen overheal-spild) — se GDD-changelog 2026-09-02.
+  'elixir': { id: 'elixir', tier: 1, name: 'Healing Elixir', cost: 12, effect: { kind: 'heal', amount: 20 } },
+  'grand-elixir': { id: 'grand-elixir', tier: 2, name: 'Grand Elixir', cost: 20, effect: { kind: 'heal', amount: 40 } },
   'bomb': { id: 'bomb', tier: 1, name: 'Bomb', cost: 9, effect: { kind: 'bomb', damage: 12 } },
   'thunder-flask': { id: 'thunder-flask', tier: 2, name: 'Thunder Flask', cost: 15, effect: { kind: 'bomb', damage: 20 } },
   'smoke-bomb': { id: 'smoke-bomb', tier: 1, name: 'Smoke Bomb', cost: 12, effect: { kind: 'flee' } },

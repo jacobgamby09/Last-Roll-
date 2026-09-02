@@ -6,11 +6,13 @@ This file is the current operational handoff for Claude, Codex, or another contr
 
 ## Current status
 
-Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. Combat sprites, simulation on the real engine, damage ranges, the 30-item gear roster and 10 consumables with 2 slots are implemented. The icon batch is complete: **30/30 gear + 10/10 consumables mapped**, including 34 new PNGs and the six preserved approved equipment icons. **The playtest gate is reached; the next milestone is 5–10 human runs**, not another content or balance batch.
+Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. Combat sprites, simulation on the real engine, damage ranges, the 30-item gear roster and 12 consumables with 2 slots are implemented. Icon coverage is complete: **30/30 gear + 12/12 consumables mapped**. The two latest additions are Armor Solder and Wool Lining; all previously approved icons are unchanged. **The playtest gate is reached; the next milestone is 5–10 human runs**, not another content or balance batch.
 
 **The game language is English (2026-09-02):** all player-facing strings — item/enemy names, effect texts, engine log, every scene, HUD, board labels, tooltips, aria/alt texts and labs — are direct English strings (no i18n framework). Code comments and dev tooling (sim output, test names) stay Danish. Danish → English name map examples: Slibesten → Whetstone, Panserlod → Armor Solder, Uldfór → Wool Lining, Skæbneterning → Fate Die, Røgbombe → Smoke Bomb. New player-facing text must be written in English.
 
 This icon batch changes presentation only. Claude's upstream Batch C calibration is balanced **56.4%** / aggressive **41.8%** / cautious **38.4%** over 10,000 engine-sim runs, with boss HP 85 / DMG 8–12 / ARM 2. Those are the upstream results, not a new simulation or balance change made during icon production.
+
+Balance tweak 2026-09-02: **flexibility premium on healing elixirs** — Healing Elixir 8 → 12 g, Grand Elixir 14 → 20 g (heal amounts unchanged). The shop's Healing Herb (8 g / +15 HP, instant) is now the best HP-per-gold when you need healing immediately; elixirs pay a premium for free timing. Sim-verified (10k runs): balanced 56.0% / aggressive 40.6% / cautious 37.8% — within 0.6 pp of Batch C, no recalibration. See the GDD changelog.
 
 The current visual direction has been approved by the user:
 
@@ -28,7 +30,7 @@ Design decision 2026-09-02 (IMPLEMENTED same day): **the exact HP-cost preview f
 
 - Branch: `main`
 - Remote: `https://github.com/jacobgamby09/Last-Roll-.git`
-- Upstream baseline for the item-icon batch: `374f575` (Claude's completed Batch C consumables and pre-combat flow).
+- Latest icon follow-up baseline: `f14b960` (English UI), incorporating `31e2538` (buff-icon brief) and `c587ce0` (item-bound buffs and inventory). The original 34-icon batch used `374f575`.
 - Combat sprites, engine simulation, damage ranges and the gear/consumable rules are already upstream history. This batch adds 34 item PNGs, full manifests/component integration, scoped readability corrections, icon regression checks and handoff documentation. It does not change `src/core/` or balance.
 - Preserve all existing local changes. Do not reset or overwrite the worktree.
 
@@ -58,7 +60,15 @@ Useful routes:
 - `/?ui=resources` — Resource Lab for Damage, Armor, Life/HP, XP, Gold, Nudge and Reroll at lab, card and HUD sizes.
 - `/?ui=classic` — original prototype UI retained as a behavioral reference and fallback.
 
-Latest item-icon batch verification (2026-09-02):
+Latest buff-icon follow-up (2026-09-02):
+
+- Armor Solder and Wool Lining now have their own 48×48 RGBA assets, registered through the existing manifest. `pendingIcons: string[] = []` restores full consumable coverage; unique URL expectations derive from the catalogs (42 items).
+- The PNG verifier covers 42/42 assets, including both new icons' binary alpha, maximum 36×36 art and bottom-exclusive baseline y=42.
+- Lint, build and all 21 tests pass. The brief said 22 tests; the checked-in suite contains 21. Build has a non-blocking >500 kB chunk-size warning; no bundling settings were changed.
+- Gear Lab displays 12/12 consumables. Both icons were checked at HUD/card/lab sizes on desktop and mobile and obtained through real Treasure runs: seed 20 → Armor Solder; seed 738 → Wool Lining. Inventory previews remain owned by the existing scene.
+- No core, scene logic, UI wording or buff rules changed in this batch. Production prompts, raw paths and verification evidence: `rollbound/design/buff-icon-batch-v1.md`.
+
+Original 34-icon batch verification (historical, before item buffs/inventory and the English conversion):
 
 - `npm run lint` passes.
 - `npm run build` passes.
@@ -138,7 +148,7 @@ Important files:
 - `rollbound/design/combat-sprite-batch-v1.md` — generation provenance, exact prompts, normalization settings, live QA and layout observations.
 - `rollbound/src/pixel/equipmentAssets.ts` — 30-item equipment icon manifest and semantic mapping; an explicit ID allowlist registers only the intended versioned art.
 - `rollbound/src/pixel/EquipmentIcon.tsx` — shared icon renderer with source-keyed error fallback.
-- `rollbound/src/pixel/consumableAssets.ts` — separate 10-item consumable manifest.
+- `rollbound/src/pixel/consumableAssets.ts` — separate 12-item consumable manifest.
 - `rollbound/src/pixel/ConsumableIcon.tsx` — shared consumable renderer for HUD, idle-use, Shop, Treasure and pre-combat, with explicit glyph fallback.
 - `rollbound/src/pixel/ConsumableGlyph.tsx` — the existing glyph implementation moved unchanged to avoid a component import cycle; `ScenePhases.tsx` keeps its re-export.
 - `rollbound/src/pixel/EquipmentLoadout.tsx` — three-slot HUD renderer driven by the hero's visual loadout IDs.
@@ -149,7 +159,7 @@ Important files:
 - `rollbound/src/pixel/ResourceLab.tsx` — deterministic resource silhouette and scale QA.
 - `rollbound/scripts/normalize_hud_asset.py` — deterministic nearest-neighbor normalization for `48 × 48` HUD assets.
 - `rollbound/scripts/normalize_item_asset.py` — targeted alpha cleanup, nearest-neighbor item normalization and shared equipment/consumable baseline.
-- `rollbound/scripts/verify_item_assets.py` — all 40 item PNGs' dimensions, alpha, silhouette and baseline regression checks.
+- `rollbound/scripts/verify_item_assets.py` — all 42 item PNGs' dimensions, alpha, silhouette and baseline regression checks.
 - `rollbound/src/pixel/pixel.css` — visual system and asset-as-tile states.
 - `rollbound/design/tile-asset-contract-v1.md` — canonical production and alpha-pass contract.
 - `rollbound/design/equipment-asset-contract-v1.md` — canonical equipment production, mapping and normalization contract.
@@ -192,7 +202,7 @@ Current normalized `48 × 48` RGBA equipment assets: **30/30**, stored as `src/a
 
 The original six approved starter/upgrade PNGs are preserved unchanged. The 24 additions use binary alpha, maximum `36 × 36` visible silhouettes and shared bottom-exclusive `y=42` alignment; no per-item CSS resizing.
 
-Current consumable assets: **10/10**, stored as `src/assets/pixel/consumables/<id>-v1.png`: `elixir`, `grand-elixir`, `bomb`, `thunder-flask`, `smoke-bomb`, `whetstone`, `fate-stone`, `gold-pouch`, `fate-die`, `teleport-scroll`. They share the `48 × 48` technical contract but remain a separate icon family from equipment and resource counters. Skæbneterning uses hard colored pixel highlights, not baked external glow.
+Current consumable assets: **12/12**, stored as `src/assets/pixel/consumables/<id>-v1.png`: `elixir`, `grand-elixir`, `bomb`, `thunder-flask`, `smoke-bomb`, `whetstone`, `armor-solder`, `wool-lining`, `fate-stone`, `gold-pouch`, `fate-die`, `teleport-scroll`. They share the `48 × 48` technical contract but remain a separate icon family from equipment and resource counters. Fate Die uses hard colored pixel highlights, not baked external glow.
 
 Important: the core now owns one real equipped item per slot plus a separate Boots Nudge charge. It has comparison and replacement choices, but deliberately still has no inventory, rarity, or duplicate-conversion system.
 
@@ -298,6 +308,8 @@ These are completed upstream milestones, not a future-work list. The intermediat
 - Passed lint, production build, all 20 tests in four files and the 40/40 item-PNG contract check. Broad actual-component fixtures are distinguished from real gameplay in the gear and consumable QA records. No temporary fixture/debug hook was added to production source.
 
 ## Recommended next work
+
+Since the original icon batch, Claude added the readability v2 font/scale pass, HUD inspection, item-bound buffs and the Inventory scene. Whetstone, Armor Solder and Wool Lining improve the currently equipped item and their bonuses are lost on replacement. Inventory opens with I or the ITEMS control; it replaces the old idle-use buttons. These features are already upstream, not new scope for the icon work. The two previously pending buff icons are now complete.
 
 **The playtest gate is reached:** combat screen + item batch + consumables are implemented and their production icons are mapped.
 

@@ -11,6 +11,10 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Fleksibilitets-præmie på heal-eliksirer (IMPLEMENTERET)
+
+Healing Elixir (+20 HP) dominerede shoppens Healing Herb (+15 HP for samme 8 guld): billigere pr. HP **og** frit timbar (ingen overheal-spild), kun modvægtet af consumable-slottet. Prissætningen var inverteret — fleksibilitet skal koste, ikke belønnes. **Healing-mængderne er uændrede (item-identitet); priserne er justeret:** Healing Elixir 8 → **12 g** (1,67 HP/g), Grand Elixir 14 → **20 g** (2,0 HP/g). Urten (8 g / +15, 1,88 HP/g) er nu bedste HP pr. guld, når du har brug for healing *nu*; eliksirer betaler præmie for timing. Sim-verificeret (10k runs): balanced 56,0 % / aggressive 40,6 % / cautious 37,8 % — ≤0,6 pp fra Batch C-kalibreringen, ingen rekalibrering.
+
 ### 2026-09-02 · Spillets sprog er engelsk (IMPLEMENTERET)
 
 Alle spiller-vendte tekster er konverteret til engelsk: item-/enemy-navne, effekt-tekster, engine-log, alle scener (combat, shop, treasure, equipment, level-up, inventory, pre-combat, game over), HUD, board-labels, tooltips, aria-labels/alt-tekster og labs. Ingen i18n-framework — direkte engelske strenge (guideline 13: simpleste version). Danske navne → engelske: fx Slibesten → Whetstone, Panserlod → Armor Solder, Uldfór → Wool Lining, Skæbneterning → Fate Die, Røgbombe → Smoke Bomb, Elverstøvler → Elven Boots. Kode-kommentarer og dev-tooling (sim-output, testnavne) forbliver danske. `index.html` er `lang="en"`. EV-neutral pr. definition; sim-sanity 2000 runs: balanced 56,1 %.
