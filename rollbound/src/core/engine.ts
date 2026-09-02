@@ -389,9 +389,9 @@ export function reducer(prev: GameState, action: Action): GameState {
       s.hero.gold -= cost;
       equipItem(s.hero, itemId);
       if (resume.t === 'shop') {
-        if (item.kind === 'weapon') resume.boughtWeapon = true;
-        if (item.kind === 'armor') resume.boughtArmor = true;
-        if (item.kind === 'boots') resume.boughtBoots = true;
+        if (item.slot === 'weapon') resume.boughtWeapon = true;
+        if (item.slot === 'armor') resume.boughtArmor = true;
+        if (item.slot === 'boots') resume.boughtBoots = true;
       }
       log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
       s.phase = resume;
