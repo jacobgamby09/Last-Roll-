@@ -2,6 +2,8 @@
 
 Handoff-prompt til Codex, 2026-09-02. Lille, afgrænset batch. Læs `AGENTS.md` → `PROGRESS.md` og genbrug præcis samme pipeline som `item-icon-batch-v1.md`.
 
+**Udført 2026-09-02:** begge ikoner er registreret, `pendingIcons` er tom, og Gear Lab viser 12/12. Se `buff-icon-batch-v1.md` for prompts, normalisering og QA. Opgaveteksten nedenfor bevares som brief.
+
 ## Status siden ikon-batchen (alt committet og pushet til `main`, seneste `c587ce0`)
 
 Claude har bygget videre efter playtest-feedback:
