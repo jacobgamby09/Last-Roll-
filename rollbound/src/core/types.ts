@@ -28,6 +28,7 @@ export interface Hero {
   bootsNudgeCharges: number;
   rerolls: number;
   loadout: EquipmentLoadout;
+  consumables: ConsumableId[]; // max CONFIG.consumableSlots
 }
 
 export type WeaponVisualId =
@@ -74,6 +75,30 @@ export interface ItemDef {
   effects: ItemEffect[];
 }
 
+// Consumables (batch C): 2 slots, single-use, taktiske ressourcer.
+// 'bomb'/'flee' bruges i pre-combat-beatet; resten i idle på boardet.
+export type ConsumableId =
+  | 'elixir' | 'grand-elixir' | 'bomb' | 'thunder-flask' | 'smoke-bomb'
+  | 'whetstone' | 'fate-stone' | 'gold-pouch' | 'fate-die' | 'teleport-scroll';
+
+export type ConsumableEffect =
+  | { kind: 'heal'; amount: number }
+  | { kind: 'bomb'; damage: number }                       // pre-combat: åbningsskade
+  | { kind: 'flee' }                                       // pre-combat: undgå kampen (ikke bossen)
+  | { kind: 'permDmg'; amount: number }                    // permanent skift af hele rangen
+  | { kind: 'grant'; nudges: number; rerolls: number }
+  | { kind: 'gold'; amount: number }
+  | { kind: 'twinRoll' }                                   // næste kast: rul to, vælg én
+  | { kind: 'teleport' };                                  // flyt 1-6 efter eget valg
+
+export interface ConsumableDef {
+  id: ConsumableId;
+  tier: 1 | 2;
+  name: string;
+  cost: number; // shoppris; 0 = sælges ikke
+  effect: ConsumableEffect;
+}
+
 // Kamp-modifiers afledt af heroens loadout — sendes ind i simulateFight
 export interface CombatMods {
   firstStrikeMult?: number;
@@ -83,6 +108,7 @@ export interface CombatMods {
   killHeal?: number;
   thorns?: number;
   firstHitBlock?: boolean;
+  openingDamage?: number; // bomber kastet i pre-combat-beatet
 }
 
 export interface EquipmentLoadout {
@@ -92,10 +118,11 @@ export interface EquipmentLoadout {
 }
 
 export interface TreasureItem {
-  key: 'weapon' | 'armor' | 'boots' | 'maxhp' | 'nudge' | 'gold';
+  key: 'weapon' | 'armor' | 'boots' | 'maxhp' | 'nudge' | 'gold' | 'consumable';
   name: string;
   desc: string;
   equipmentId?: EquipmentId;
+  consumableId?: ConsumableId;
 }
 
 export type LevelPick = 'dmg' | 'hp' | 'armor';
@@ -105,6 +132,7 @@ export type LevelPick = 'dmg' | 'hp' | 'armor';
 export type ShopService = 'heal' | 'nudge' | 'reroll';
 export type ShopOffer =
   | { kind: 'gear'; itemId: EquipmentId; cost: number; sold: boolean }
+  | { kind: 'consumable'; consumableId: ConsumableId; cost: number; sold: boolean }
   | { kind: 'service'; service: ShopService; cost: number; sold: boolean };
 
 export type EquipmentResumePhase =
@@ -115,6 +143,9 @@ export type EquipmentResumePhase =
 export type Phase =
   | { t: 'idle' }
   | { t: 'rolled'; roll: number; wasReroll: boolean }
+  | { t: 'chooseRoll'; rolls: [number, number] }           // Skæbneterning: rul to, vælg én
+  | { t: 'teleport' }                                      // Teleport-rulle: vælg 1-6
+  | { t: 'preCombat'; tile: 'enemy' | 'elite' | 'boss'; openingDamage: number } // brug bomber/røgbombe før kampen
   | { t: 'levelup' }
   | { t: 'treasure'; options: TreasureItem[] }
   | { t: 'shop'; offers: ShopOffer[] }
@@ -139,6 +170,7 @@ export interface GameState {
   log: LogEntry[];
   lastCombat: CombatScript | null; // seneste kamp, klar til UI-playback
   combatSeq: number; // tælles op pr. kamp — UI'et bruger den til at opdage NYE kampe (referencer overlever ikke structuredClone)
+  twinRollArmed: boolean; // Skæbneterning aktiveret: næste kast ruller to terninger
 }
 
 export interface FightPreview {
@@ -155,9 +187,9 @@ export interface FightPreview {
 export interface CombatEvent {
   turn: number;
   actor: 'hero' | 'enemy';
-  kind: 'attack' | 'thorns' | 'lifesteal' | 'block';
+  kind: 'attack' | 'thorns' | 'lifesteal' | 'block' | 'cast';
   damage: number; // efter armor (heal-mængde for 'lifesteal', 0 for 'block')
-  targetHpAfter: number;
+  targetHpAfter: number; // 'lifesteal' targeter HELTEN; alle andre hero-events targeter fjenden
   note?: 'firstStrike' | 'execute'; // markerer særlige attack-events til UI'et
 }
 

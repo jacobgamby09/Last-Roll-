@@ -4,7 +4,7 @@
 // changeloggen. Hvert item har ÉN tydelig identitet; nogle er rene
 // stat-varianter (bevidst), effekterne bærer resten.
 
-import type { CombatMods, EquipmentId, EquipmentKind, EquipmentLoadout, ItemDef, ItemEffect } from './types';
+import type { CombatMods, ConsumableDef, ConsumableId, EquipmentId, EquipmentKind, EquipmentLoadout, ItemDef, ItemEffect } from './types';
 
 export const ITEMS: Record<EquipmentId, ItemDef> = {
   // ---------- Våben: akserne er EV, bredde og effekt ----------
@@ -220,4 +220,39 @@ export function itemEffectText(id: EquipmentId): string {
 
 export function itemsBySlot(slot: EquipmentKind): ItemDef[] {
   return Object.values(ITEMS).filter(def => def.slot === slot);
+}
+
+// ---------- Consumables (batch C) — samme status: balance-data ----------
+
+export const CONSUMABLES: Record<ConsumableId, ConsumableDef> = {
+  'elixir': { id: 'elixir', tier: 1, name: 'Helbredende eliksir', cost: 8, effect: { kind: 'heal', amount: 20 } },
+  'grand-elixir': { id: 'grand-elixir', tier: 2, name: 'Stor eliksir', cost: 14, effect: { kind: 'heal', amount: 40 } },
+  'bomb': { id: 'bomb', tier: 1, name: 'Bombe', cost: 9, effect: { kind: 'bomb', damage: 12 } },
+  'thunder-flask': { id: 'thunder-flask', tier: 2, name: 'Tordenkolbe', cost: 15, effect: { kind: 'bomb', damage: 20 } },
+  'smoke-bomb': { id: 'smoke-bomb', tier: 1, name: 'Røgbombe', cost: 12, effect: { kind: 'flee' } },
+  'whetstone': { id: 'whetstone', tier: 2, name: 'Slibesten', cost: 14, effect: { kind: 'permDmg', amount: 1 } },
+  'fate-stone': { id: 'fate-stone', tier: 1, name: 'Skæbnesten', cost: 10, effect: { kind: 'grant', nudges: 1, rerolls: 1 } },
+  'gold-pouch': { id: 'gold-pouch', tier: 1, name: 'Guldpose', cost: 0, effect: { kind: 'gold', amount: 15 } }, // sælges ikke (arbitrage)
+  'fate-die': { id: 'fate-die', tier: 1, name: 'Skæbneterning', cost: 10, effect: { kind: 'twinRoll' } },
+  'teleport-scroll': { id: 'teleport-scroll', tier: 2, name: 'Teleport-rulle', cost: 14, effect: { kind: 'teleport' } },
+};
+
+// Bruges FØR en kamp (i pre-combat-beatet) frem for i idle
+export function isPreCombatConsumable(id: ConsumableId): boolean {
+  const kind = CONSUMABLES[id].effect.kind;
+  return kind === 'bomb' || kind === 'flee';
+}
+
+export function consumableEffectText(id: ConsumableId): string {
+  const e = CONSUMABLES[id].effect;
+  switch (e.kind) {
+    case 'heal': return `+${e.amount} HP`;
+    case 'bomb': return `${e.damage} SKADE FØR KAMPEN`;
+    case 'flee': return 'UNDGÅ KAMPEN (IKKE BOSSEN)';
+    case 'permDmg': return `PERMANENT +${e.amount} DMG`;
+    case 'grant': return `+${e.nudges} NUDGE & +${e.rerolls} REROLL`;
+    case 'gold': return `+${e.amount} GULD`;
+    case 'twinRoll': return 'NÆSTE KAST: RUL TO, VÆLG ÉN';
+    case 'teleport': return 'FLYT 1-6 EFTER EGET VALG';
+  }
 }

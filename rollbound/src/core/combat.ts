@@ -31,6 +31,19 @@ export function simulateFight(hero: Combatant, enemy: EnemyDef, rng: RngCursor, 
   let heroAttacksMade = 0;
   let enemyAttacksMade = 0;
 
+  // Bomber fra pre-combat-beatet rammer som åbning, før udvekslingen begynder
+  if (mods.openingDamage && mods.openingDamage > 0) {
+    enemyHp -= mods.openingDamage;
+    events.push({ turn: 0, actor: 'hero', kind: 'cast', damage: mods.openingDamage, targetHpAfter: Math.max(0, enemyHp) });
+    if (enemyHp <= 0) {
+      return {
+        enemy,
+        events,
+        result: { winner: 'hero', heroHpAfter: heroHp, turns: 0 },
+      };
+    }
+  }
+
   // Ét hero-hug: rul, multiplicér (firstStrike/execute rammer FØR armor), træk armor
   const heroBlow = (): { damage: number; note?: CombatEvent['note'] } => {
     let roll = rng.int(hero.dmgMin, hero.dmgMax);

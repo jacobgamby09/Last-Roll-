@@ -114,18 +114,39 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
     let last = null;
     for (let i = 0; i <= shown && i < events.length; i++) {
       const e = events[i];
-      if (e.actor === 'hero') eHp = e.targetHpAfter;
+      // 'lifesteal' targeter HELTEN uanset actor; alle andre hero-events targeter fjenden
+      if (e.kind === 'lifesteal') hHp = e.targetHpAfter;
+      else if (e.actor === 'hero') eHp = e.targetHpAfter;
       else hHp = e.targetHpAfter;
       last = e;
     }
     return { enemyHp: eHp, heroHp: hHp, lastEvent: last };
   }, [shown, events, heroBefore.hp, script.enemy.hp]);
 
+  const tickerFor = (e: NonNullable<typeof lastEvent>): string => {
+    switch (e.kind) {
+      case 'cast': return `Bomben rammer ${script.enemy.name} for ${e.damage}!`;
+      case 'thorns': return `TUR ${e.turn} · Tornene flænser ${script.enemy.name} for ${e.damage}`;
+      case 'lifesteal': return `TUR ${e.turn} · Du suger ${e.damage} HP`;
+      case 'block': return `TUR ${e.turn} · Du blokerer ${script.enemy.name}s angreb!`;
+      default:
+        return `TUR ${e.turn} · ${e.actor === 'hero'
+          ? `Du rammer ${script.enemy.name} for ${e.damage}${e.note === 'firstStrike' ? ' (FØRSTE HUG!)' : e.note === 'execute' ? ' (NÅDESTØD!)' : ''}`
+          : `${script.enemy.name} rammer dig for ${e.damage}`}`;
+    }
+  };
+
   const ticker = stage === 'payout'
     ? (won ? `${script.enemy.name} falder!` : `${script.enemy.name} fælder dig.`)
     : lastEvent
-      ? `TUR ${lastEvent.turn} · ${lastEvent.actor === 'hero' ? `Du rammer ${script.enemy.name} for ${lastEvent.damage}` : `${script.enemy.name} rammer dig for ${lastEvent.damage}`}`
+      ? tickerFor(lastEvent)
       : isBoss ? 'Den endelige prøve …' : 'Kampen begynder …';
+
+  // Flydende tal: skade på fjenden (hero-events undtagen lifesteal),
+  // skade på helten (enemy attack), heal på helten (lifesteal)
+  const enemyFloat = stage === 'play' && lastEvent && lastEvent.actor === 'hero' && lastEvent.kind !== 'lifesteal' && lastEvent.damage > 0 ? lastEvent : null;
+  const heroDamageFloat = stage === 'play' && lastEvent && lastEvent.actor === 'enemy' && lastEvent.kind === 'attack' ? lastEvent : null;
+  const heroHealFloat = stage === 'play' && lastEvent && lastEvent.kind === 'lifesteal' ? lastEvent : null;
 
   // Payout-data: deltas fra reducer-state, ingen gen-beregning
   const goldDelta = state.hero.gold - heroBefore.gold;
@@ -155,8 +176,11 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
             <img alt="" className="combat-hero-a" draggable={false} src={HERO_FRAMES.idleA} />
             <img alt="" className="combat-hero-b" draggable={false} src={HERO_FRAMES.idleB} />
           </span>
-          {stage === 'play' && lastEvent?.actor === 'enemy' ? (
-            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + lastEvent.damage * 1.5)}px` }}>−{lastEvent.damage}</span>
+          {heroDamageFloat ? (
+            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + heroDamageFloat.damage * 1.5)}px` }}>−{heroDamageFloat.damage}</span>
+          ) : null}
+          {heroHealFloat ? (
+            <span className="combat-float is-heal" key={`heal-${shown}`}>+{heroHealFloat.damage}</span>
           ) : null}
         </div>
         <span className="combat-clash" aria-hidden="true">⚔</span>
@@ -169,8 +193,8 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
             statline={`DMG ${script.enemy.dmgMin}-${script.enemy.dmgMax} · ARM ${script.enemy.armor}`}
           />
           <EnemyArt view={view} />
-          {stage === 'play' && lastEvent?.actor === 'hero' ? (
-            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + lastEvent.damage * 1.5)}px` }}>−{lastEvent.damage}</span>
+          {enemyFloat ? (
+            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + enemyFloat.damage * 1.5)}px` }}>−{enemyFloat.damage}</span>
           ) : null}
         </div>
       </div>

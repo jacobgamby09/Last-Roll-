@@ -11,6 +11,16 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Consumables + pre-combat-beat (IMPLEMENTERET) — playtest-gaten er nået
+
+**10 consumables, 2 slots** (balance-data i items.ts): Helbredende eliksir (+20), Stor eliksir (+40), Bombe (12 åbningsskade), Tordenkolbe (20), Røgbombe (undgå kampen — gratis flugt i v1, virker ikke på bossen), Slibesten (permanent +1 dmg), Skæbnesten (+1 nudge & +1 reroll), Guldpose (+15, sælges ikke — arbitrage), Skæbneterning (næste kast: rul to, vælg én), Teleport-rulle (flyt 1-6 valgfrit).
+
+- **Pre-combat-beatet:** landing på kamp-felt MED brugbare combat-consumables åbner et forbered-dig-beat (fullscreen-scene: fjende, ca. stats, bombe/røgbombe-knapper, KÆMP). Bomber lander som `cast`-åbningsevent i combat-scriptet — kampen er stadig deterministisk afgjort af reduceren. Uden relevante consumables springes beatet over (ingen rytme-omkostning). Spells genbruger dette beat senere.
+- Skæbneterning og Teleport-rulle tilføjer to nye board-faser (chooseRoll/teleport) med destination-preview.
+- Shop-slots ruller nu **tredjedele**: gear / consumable / service. Consumable-køb kræver frit slot ("SLOTS FULDE" som disabled-grund). Normale mob-drops: 50/50 utility/consumable.
+- **Kalibrering (10k engine-sim):** balanced **56,4 %** / aggressive 41,8 % / cautious 38,4 % — boss 85 står uændret; consumables løfter alle arketyper let.
+- **Playtest-gaten (combat screen + item-batch + consumables) er hermed nået.**
+
 ### 2026-09-02 · Item-system med 30 items + 5-slots random shop (IMPLEMENTERET)
 
 Godkendt roster: **10 våben, 10 armor, 10 boots** — hver med unik identitet (effekter eller distinkte stats). Kataloget er balance-data i `rollbound/src/core/items.ts`; effekt-vokabular på 18 kinds (dmgRange, armorPen, firstStrike, doubleHit, executeBonus, killHeal, thorns, firstHitBlock, bootsCharges±camp-recharge, dieTransform, visibility, campHeal/campNudge, goldBonus, trapImmune, freeRerollOn1 m.fl.), alle datadrevne.

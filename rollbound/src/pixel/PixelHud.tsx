@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { CONFIG } from '../core/config';
+import { CONSUMABLES, consumableEffectText } from '../core/items';
 import { PICK_LABEL, rotationPick, xpToNext } from '../core/engine';
 import type { GameState } from '../core/types';
 import { approxEnemyStats } from '../ui/preview';
+import { ConsumableGlyph } from './ScenePhases';
 import { EquipmentLoadout } from './EquipmentLoadout';
 import { HERO_FRAMES } from './heroAssets';
 import { ResourceIcon } from './ResourceIcon';
@@ -100,6 +102,19 @@ export function PixelHud({ state }: { state: GameState }) {
         </div>
       </div>
       <EquipmentLoadout bootsNudgeCharges={hero.bootsNudgeCharges} loadout={hero.loadout} />
+      <div aria-label={`Consumables: ${hero.consumables.length} af ${CONFIG.consumableSlots}`} className="pixel-consumable-slots">
+        <small>ITEMS {hero.consumables.length}/{CONFIG.consumableSlots}</small>
+        <div>
+          {hero.consumables.length === 0
+            ? <span className="pixel-consumable-empty">—</span>
+            : hero.consumables.map((id, i) => (
+              <span className="pixel-consumable-held" key={`${id}-${i}`} title={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`}>
+                <ConsumableGlyph id={id} />
+                {CONSUMABLES[id].name.split(' ')[0].toUpperCase()}
+              </span>
+            ))}
+        </div>
+      </div>
       <div className="pixel-stats-grid">
         <StatBlock icon={<ResourceIcon assetId="damage" size="hud" />} label="DMG" value={`${hero.dmgMin}-${hero.dmgMax}`} />
         <StatBlock icon={<ResourceIcon assetId="armor" size="hud" />} label="ARM" value={hero.armor} />

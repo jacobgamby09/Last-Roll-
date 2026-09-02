@@ -4,6 +4,7 @@
 // af PixelGame — se SceneShell/ScenePhases/CombatScene.
 
 import { availableNudges } from '../core/equipment';
+import { CONSUMABLES, consumableEffectText, isPreCombatConsumable } from '../core/items';
 import type { Action } from '../core/engine';
 import type { CSSProperties } from 'react';
 import type { GameState } from '../core/types';
@@ -11,6 +12,7 @@ import { describeDest } from '../ui/preview';
 import { PixelDie, type DiceRollFx } from './PixelDie';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { PixelTileArt } from './PixelTileArt';
+import { ConsumableGlyph } from './ScenePhases';
 
 interface Props {
   dispatch: (action: Action) => void;
@@ -100,9 +102,73 @@ export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state
         <div className="pixel-last-event"><small>SENESTE</small><span>{state.log.at(-1)?.text}</span></div>
         <button aria-label="Rul en sekssidet terning" className="pixel-roll-button" onClick={() => dispatch({ type: 'ROLL' })} type="button">
           <RollAltar fx={{ stage: 'idle', value: state.rolls % 6 + 1 }} />
-          <span className="pixel-roll-button-copy"><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b><em>KLIK FOR AT KASTE</em></span>
+          <span className="pixel-roll-button-copy"><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b><em>{state.twinRollArmed ? 'SKÆBNETERNING AKTIV: RUL TO, VÆLG ÉN' : 'KLIK FOR AT KASTE'}</em></span>
         </button>
+        {hero.consumables.length > 0 ? (
+          <div className="pixel-consumable-row" aria-label="Brug consumable">
+            {hero.consumables.map((id, slot) => {
+              const preCombat = isPreCombatConsumable(id);
+              return (
+                <button
+                  className="pixel-consumable-use"
+                  disabled={preCombat}
+                  key={`${id}-${slot}`}
+                  onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}
+                  title={consumableEffectText(id)}
+                  type="button"
+                >
+                  <ConsumableGlyph id={id} />
+                  <span><b>{CONSUMABLES[id].name.toUpperCase()}</b><small>{preCombat ? 'BRUGES FØR KAMP' : consumableEffectText(id)}</small></span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <div className="pixel-roll-rule"><small>1 × D6</small><b>RUL · VURDÉR · MANIPULÉR</b></div>
+      </section>
+    );
+  }
+
+  if (phase.t === 'chooseRoll') {
+    return (
+      <section className="pixel-action-panel is-rolled">
+        <div className="pixel-roll-result"><span>SKÆBNETERNINGEN · <b>VÆLG ÉN</b></span></div>
+        <div className="pixel-destinations">
+          {phase.rolls.map((roll, index) => {
+            const info = describeDest(state, roll);
+            const meta = PIXEL_TILE_META[info.type];
+            return (
+              <button className="pixel-destination" key={index} onClick={() => dispatch({ type: 'CHOOSE_ROLL', index: index as 0 | 1 })} style={{ '--card-accent': meta.color } as CSSProperties} type="button">
+                <small>TERNING {index + 1}</small>
+                <PixelDie value={roll} />
+                <b>{info.title}</b>
+                <span>{info.detail}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  if (phase.t === 'teleport') {
+    return (
+      <section className="pixel-action-panel is-rolled">
+        <div className="pixel-roll-result"><span>TELEPORT-RULLEN · <b>VÆLG DESTINATION</b></span></div>
+        <div className="pixel-destinations pixel-teleport-grid">
+          {[1, 2, 3, 4, 5, 6].map(steps => {
+            const info = describeDest(state, steps);
+            const meta = PIXEL_TILE_META[info.type];
+            return (
+              <button className="pixel-destination" key={steps} onClick={() => dispatch({ type: 'TELEPORT_MOVE', steps })} style={{ '--card-accent': meta.color } as CSSProperties} type="button">
+                <small>FLYT {steps}</small>
+                <PixelTileArt type={info.type} variant={info.posTo} />
+                <b>{info.title}</b>
+                <span>{info.detail}</span>
+              </button>
+            );
+          })}
+        </div>
       </section>
     );
   }

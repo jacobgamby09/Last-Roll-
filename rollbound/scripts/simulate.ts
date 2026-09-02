@@ -12,9 +12,9 @@
 import { CONFIG } from '../src/core/config';
 import { enemyForTile, fightOutcome } from '../src/core/combat';
 import { availableNudges } from '../src/core/equipment';
-import { ITEMS, itemStats } from '../src/core/items';
+import { CONSUMABLES, isPreCombatConsumable, ITEMS, itemStats } from '../src/core/items';
 import { newGame, reducer, type Action } from '../src/core/engine';
-import type { EquipmentId, GameState, ItemDef, LevelPick } from '../src/core/types';
+import type { ConsumableId, EquipmentId, GameState, ItemDef, LevelPick } from '../src/core/types';
 
 interface Strategy {
   name: string;
@@ -131,6 +131,22 @@ function gearDelta(s: GameState, id: EquipmentId, strat: Strategy): number {
   return gearScore(def, strat) - gearScore(ITEMS[s.hero.loadout[def.slot]], strat);
 }
 
+// Heuristisk consumable-værdi (bruges i treasure/shop-beslutninger)
+function consumableValue(id: ConsumableId, s: GameState): number {
+  const e = CONSUMABLES[id].effect;
+  const lowHp = s.hero.hp / s.hero.maxHp < 0.6;
+  switch (e.kind) {
+    case 'heal': return (lowHp ? 8 : 5) + (e.amount >= 40 ? 2 : 0);
+    case 'bomb': return e.damage >= 20 ? 7 : 5;
+    case 'flee': return 6;
+    case 'permDmg': return 8;
+    case 'grant': return 7;
+    case 'gold': return 4;
+    case 'twinRoll': return 6;
+    case 'teleport': return 7;
+  }
+}
+
 function treasureAction(s: GameState, strat: Strategy): Action {
   if (s.phase.t !== 'treasure') throw new Error('treasureAction uden treasure-fase');
   const lowHp = s.hero.hp / s.hero.maxHp < 0.5;
@@ -139,6 +155,8 @@ function treasureAction(s: GameState, strat: Strategy): Action {
   s.phase.options.forEach((option, index) => {
     const value = option.equipmentId
       ? gearDelta(s, option.equipmentId, strat)
+      : option.consumableId
+      ? consumableValue(option.consumableId, s)
       : option.key === 'maxhp' ? 5 + (lowHp ? 3 : 0)
       : option.key === 'nudge' ? 6
       : 4; // gold
@@ -172,13 +190,55 @@ function shopAction(s: GameState, strat: Strategy): Action {
     }
   });
   if (bestGear >= 0) return { type: 'BUY', index: bestGear };
-  // 3) Board-ressourcer og top-up
+  // 3) Consumables (kræver frit slot og overskud)
+  if (hero.consumables.length < CONFIG.consumableSlots) {
+    let bestCons = -1;
+    let bestConsValue = 5; // kræver reel værdi
+    phase.offers.forEach((offer, index) => {
+      if (offer.kind === 'consumable' && buyable(index)) {
+        const value = consumableValue(offer.consumableId, s) - offer.cost * 0.15;
+        if (value > bestConsValue) { bestConsValue = value; bestCons = index; }
+      }
+    });
+    if (bestCons >= 0) return { type: 'BUY', index: bestCons };
+  }
+  // 4) Board-ressourcer og top-up
   const nudgeIdx = findService('nudge');
   if (hero.nudges < 2 && nudgeIdx >= 0 && buyable(nudgeIdx)) return { type: 'BUY', index: nudgeIdx };
   const rerollIdx = findService('reroll');
   if (hero.rerolls < 1 && rerollIdx >= 0 && buyable(rerollIdx)) return { type: 'BUY', index: rerollIdx };
   if (hero.hp < hero.maxHp - 10 && healIdx >= 0 && buyable(healIdx)) return { type: 'BUY', index: healIdx };
   return { type: 'LEAVE_SHOP' };
+}
+
+// Pre-combat: brug bomber mod elites/boss; flygt fra dødelige kampe
+function preCombatAction(s: GameState): Action {
+  if (s.phase.t !== 'preCombat') throw new Error('preCombatAction uden preCombat-fase');
+  const { tile, openingDamage } = s.phase;
+  const enemy = tile === 'boss' ? CONFIG.boss : enemyForTile(s.pos, tile);
+  const preview = fightOutcome(s.hero, enemy);
+  const deadly = !preview.survives;
+  const fleeSlot = s.hero.consumables.findIndex(id => CONSUMABLES[id].effect.kind === 'flee');
+  if (deadly && fleeSlot >= 0 && tile !== 'boss') return { type: 'USE_CONSUMABLE', slot: fleeSlot };
+  const bombSlot = s.hero.consumables.findIndex(id => CONSUMABLES[id].effect.kind === 'bomb');
+  const worthBombing = tile !== 'enemy' || deadly; // gem bomber til elites/boss
+  if (bombSlot >= 0 && worthBombing && openingDamage < enemy.hp) return { type: 'USE_CONSUMABLE', slot: bombSlot };
+  return { type: 'FIGHT' };
+}
+
+// Idle-consumables: brug det oplagte med det samme
+function idleConsumableAction(s: GameState): Action | null {
+  for (let slot = 0; slot < s.hero.consumables.length; slot++) {
+    const id = s.hero.consumables[slot];
+    if (isPreCombatConsumable(id)) continue;
+    const e = CONSUMABLES[id].effect;
+    if (e.kind === 'heal' && s.hero.hp / s.hero.maxHp < 0.55) return { type: 'USE_CONSUMABLE', slot };
+    if (e.kind === 'permDmg' || e.kind === 'grant' || e.kind === 'gold') return { type: 'USE_CONSUMABLE', slot };
+    // twinRoll/teleport gemmes ikke i denne simple bot: aktiver straks
+    if (e.kind === 'twinRoll' && !s.twinRollArmed) return { type: 'USE_CONSUMABLE', slot };
+    if (e.kind === 'teleport') return { type: 'USE_CONSUMABLE', slot };
+  }
+  return null;
 }
 
 function levelPickAction(s: GameState, strat: Strategy): Action {
@@ -192,8 +252,25 @@ function levelPickAction(s: GameState, strat: Strategy): Action {
 
 function botAction(s: GameState, strat: Strategy): Action {
   switch (s.phase.t) {
-    case 'idle': return { type: 'ROLL' };
+    case 'idle': return idleConsumableAction(s) ?? { type: 'ROLL' };
     case 'rolled': return rolledAction(s, strat);
+    case 'chooseRoll': {
+      // Skæbneterning: vælg destinationen med højest værdi
+      const [a, b] = s.phase.rolls;
+      const va = tileValue(s, Math.min(s.pos + a, CONFIG.trackLength), strat);
+      const vb = tileValue(s, Math.min(s.pos + b, CONFIG.trackLength), strat);
+      return { type: 'CHOOSE_ROLL', index: va >= vb ? 0 : 1 };
+    }
+    case 'teleport': {
+      let bestSteps = 1;
+      let bestValue = -Infinity;
+      for (let steps = 1; steps <= 6; steps++) {
+        const value = tileValue(s, Math.min(s.pos + steps, CONFIG.trackLength), strat);
+        if (value > bestValue) { bestValue = value; bestSteps = steps; }
+      }
+      return { type: 'TELEPORT_MOVE', steps: bestSteps };
+    }
+    case 'preCombat': return preCombatAction(s);
     case 'treasure': return treasureAction(s, strat);
     case 'equipment': {
       // Vurdér tilbuddet mod det udstyrede — 30 items er ikke strengt bedre

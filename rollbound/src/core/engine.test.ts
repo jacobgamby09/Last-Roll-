@@ -11,6 +11,9 @@ function policyAction(s: GameState): Action | null {
   switch (s.phase.t) {
     case 'idle': return { type: 'ROLL' };
     case 'rolled': return { type: 'ACCEPT' };
+    case 'chooseRoll': return { type: 'CHOOSE_ROLL', index: 0 };
+    case 'teleport': return { type: 'TELEPORT_MOVE', steps: 6 };
+    case 'preCombat': return { type: 'FIGHT' };
     case 'levelup': return { type: 'PICK_LEVELUP', pick: 'dmg' };
     case 'treasure': return { type: 'PICK_TREASURE', index: 0 };
     case 'equipment': return s.hero.gold >= s.phase.cost ? { type: 'EQUIP_OFFER' } : { type: 'KEEP_EQUIPMENT' };

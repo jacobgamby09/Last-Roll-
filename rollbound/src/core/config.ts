@@ -62,6 +62,8 @@ export const CONFIG = {
   // Loot: chance for 1 tilfældigt treasure-item ved kill
   drops: { normal: 0.25, elite: 1.0 },
 
+  consumableSlots: 2,
+
   minDamage: 1,
 };
 

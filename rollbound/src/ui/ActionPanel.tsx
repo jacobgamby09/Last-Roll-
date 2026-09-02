@@ -1,6 +1,8 @@
 import { CONFIG } from '../core/config';
+import { enemyForTile } from '../core/combat';
 import { availableNudges, EQUIPMENT_DEFS, equippedIdForKind, equipmentEffectText } from '../core/equipment';
-import { ITEMS } from '../core/items';
+import { CONSUMABLES, consumableEffectText, isPreCombatConsumable, ITEMS } from '../core/items';
+import { approxEnemyStats } from './preview';
 import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
 import type { GameState, LevelPick } from '../core/types';
@@ -19,8 +21,78 @@ export function ActionPanel({ state, dispatch }: Props) {
     return (
       <div className="panel">
         <button className="btn btn-roll" onClick={() => dispatch({ type: 'ROLL' })}>
-          🎲 Rul terningen
+          🎲 Rul terningen{state.twinRollArmed ? ' (Skæbneterning: rul to, vælg én)' : ''}
         </button>
+        {hero.consumables.length > 0 && (
+          <div className="dest-row">
+            {hero.consumables.map((id, slot) => (
+              <button className="btn" disabled={isPreCombatConsumable(id)} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}>
+                {CONSUMABLES[id].name} — {isPreCombatConsumable(id) ? 'bruges før kamp' : consumableEffectText(id)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (phase.t === 'chooseRoll') {
+    return (
+      <div className="panel">
+        <div className="panel-title">Skæbneterningen — vælg én</div>
+        <div className="dest-row">
+          {phase.rolls.map((roll, index) => {
+            const info = describeDest(state, roll);
+            return (
+              <button className="dest-card" key={index} onClick={() => dispatch({ type: 'CHOOSE_ROLL', index: index as 0 | 1 })}>
+                <span className="dest-tag">🎲 {roll}</span>
+                <span className="dest-title">{info.title}</span>
+                <span className="dest-detail">{info.detail}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (phase.t === 'teleport') {
+    return (
+      <div className="panel">
+        <div className="panel-title">Teleport-rullen — vælg destination</div>
+        <div className="dest-row">
+          {[1, 2, 3, 4, 5, 6].map(steps => {
+            const info = describeDest(state, steps);
+            return (
+              <button className="dest-card" key={steps} onClick={() => dispatch({ type: 'TELEPORT_MOVE', steps })}>
+                <span className="dest-tag">Flyt {steps}</span>
+                <span className="dest-title">{info.title}</span>
+                <span className="dest-detail">{info.detail}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (phase.t === 'preCombat') {
+    const enemy = enemyForTile(state.pos, phase.tile);
+    return (
+      <div className="panel">
+        <div className="panel-title">⚔ {enemy.name} — {approxEnemyStats(enemy)}{phase.openingDamage > 0 ? ` · klargjort: ${phase.openingDamage} åbningsskade` : ''}</div>
+        <div className="dest-row">
+          {hero.consumables.map((id, slot) => {
+            if (!isPreCombatConsumable(id)) return null;
+            const bossBlocked = CONSUMABLES[id].effect.kind === 'flee' && phase.tile === 'boss';
+            return (
+              <button className="btn" disabled={bossBlocked} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}>
+                {CONSUMABLES[id].name} — {consumableEffectText(id)}
+              </button>
+            );
+          })}
+        </div>
+        <button className="btn btn-roll" onClick={() => dispatch({ type: 'FIGHT' })}>⚔ Kæmp</button>
       </div>
     );
   }
@@ -130,9 +202,12 @@ export function ActionPanel({ state, dispatch }: Props) {
           {phase.offers.map((offer, index) => {
             const label = offer.kind === 'gear'
               ? `${ITEMS[offer.itemId].name} (${equipmentEffectText(offer.itemId)})`
-              : serviceLabel[offer.service];
+              : offer.kind === 'consumable'
+                ? `${CONSUMABLES[offer.consumableId].name} (${consumableEffectText(offer.consumableId)})`
+                : serviceLabel[offer.service];
             const ok = !offer.sold && hero.gold >= offer.cost
-              && !(offer.kind === 'service' && offer.service === 'heal' && hero.hp >= hero.maxHp);
+              && !(offer.kind === 'service' && offer.service === 'heal' && hero.hp >= hero.maxHp)
+              && !(offer.kind === 'consumable' && hero.consumables.length >= CONFIG.consumableSlots);
             return (
               <button key={index} className="shop-row" disabled={!ok} onClick={() => dispatch({ type: 'BUY', index })}>
                 <span>{label}{offer.sold ? ' — SOLGT' : ''}</span>

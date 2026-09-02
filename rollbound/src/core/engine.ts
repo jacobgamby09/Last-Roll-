@@ -4,17 +4,21 @@
 
 import { CONFIG, TREASURE_POOL } from './config';
 import { EQUIPMENT_DEFS, equipItem, equipmentEffectText, ownsEquipment } from './equipment';
-import { combatModsFor, ITEMS, itemEffectText as itemFx, itemStats, loadoutEffect } from './items';
+import { combatModsFor, CONSUMABLES, consumableEffectText, isPreCombatConsumable, ITEMS, itemEffectText as itemFx, itemStats, loadoutEffect } from './items';
 import { cursor, type RngCursor } from './rng';
 import { generateTrack } from './track';
 import { enemyForTile, simulateFight } from './combat';
-import type { EquipmentId, EquipmentResumePhase, GameState, ItemDef, LevelPick, LogEntry, ShopOffer, TileType, TreasureItem } from './types';
+import type { ConsumableId, EquipmentId, EquipmentResumePhase, GameState, ItemDef, LevelPick, LogEntry, ShopOffer, TileType, TreasureItem } from './types';
 
 export type Action =
   | { type: 'ROLL' }
   | { type: 'NUDGE'; dir: 1 | -1 }
   | { type: 'REROLL' }
   | { type: 'ACCEPT' }
+  | { type: 'CHOOSE_ROLL'; index: 0 | 1 }
+  | { type: 'TELEPORT_MOVE'; steps: number }
+  | { type: 'USE_CONSUMABLE'; slot: number }
+  | { type: 'FIGHT' }
   | { type: 'PICK_LEVELUP'; pick: LevelPick }
   | { type: 'PICK_TREASURE'; index: number }
   | { type: 'BUY'; index: number }
@@ -44,6 +48,7 @@ export function newGame(seed: number): GameState {
       bootsNudgeCharges: 0,
       rerolls: CONFIG.hero.rerolls,
       loadout: { ...CONFIG.equipment.starters },
+      consumables: [],
     },
     phase: { t: 'idle' },
     pendingLevelUps: 0,
@@ -52,6 +57,7 @@ export function newGame(seed: number): GameState {
     log: [{ text: `Runnet begynder. Nå felt ${CONFIG.trackLength} med et build, der kan slå bossen.`, kind: 'info' }],
     lastCombat: null,
     combatSeq: 0,
+    twinRollArmed: false,
   };
 }
 
@@ -133,6 +139,9 @@ function applyImmediateTreasure(s: GameState, item: TreasureItem) {
     case 'maxhp': s.hero.maxHp += 10; s.hero.hp += 10; break;
     case 'nudge': s.hero.nudges += 1; break;
     case 'gold': gainFieldGold(s, 12); break;
+    case 'consumable':
+      if (item.consumableId) gainConsumable(s, item.consumableId);
+      break;
     case 'weapon':
     case 'armor':
     case 'boots':
@@ -169,6 +178,28 @@ function gearTreasure(def: ItemDef): TreasureItem {
   return { key: def.slot, name: def.name, desc: itemFx(def.id), equipmentId: def.id };
 }
 
+function consumableTreasure(id: ConsumableId): TreasureItem {
+  return { key: 'consumable', name: CONSUMABLES[id].name, desc: consumableEffectText(id), consumableId: id };
+}
+
+function hasConsumableSlot(s: GameState): boolean {
+  return s.hero.consumables.length < CONFIG.consumableSlots;
+}
+
+function gainConsumable(s: GameState, id: ConsumableId): boolean {
+  if (!hasConsumableSlot(s)) return false;
+  s.hero.consumables.push(id);
+  return true;
+}
+
+// Pre-combat-beatet vises kun, hvis spilleren HAR noget at bruge i det
+function hasPreCombatOption(s: GameState, tile: 'enemy' | 'elite' | 'boss'): boolean {
+  return s.hero.consumables.some(id => {
+    const kind = CONSUMABLES[id].effect.kind;
+    return kind === 'bomb' || (kind === 'flee' && tile !== 'boss');
+  });
+}
+
 function resumeAfterReward(s: GameState): EquipmentResumePhase {
   return s.pendingLevelUps > 0 ? { t: 'levelup' } : { t: 'idle' };
 }
@@ -198,9 +229,9 @@ function gainXp(s: GameState, xp: number) {
   }
 }
 
-function runCombat(s: GameState, rng: RngCursor, type: TileType) {
+function runCombat(s: GameState, rng: RngCursor, type: TileType, openingDamage = 0) {
   const enemy = enemyForTile(s.pos, type);
-  const script = simulateFight(s.hero, enemy, rng, combatModsFor(s.hero.loadout));
+  const script = simulateFight(s.hero, enemy, rng, { ...combatModsFor(s.hero.loadout), openingDamage });
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'enemy') {
@@ -232,8 +263,11 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
       }
     }
     if (!equipmentDrop) {
-      // Normale fjender (og gear-tørke): kun utility-loot
-      const item = TREASURE_POOL[Math.floor(rng.rand() * TREASURE_POOL.length)];
+      // Normale fjender (og gear-tørke): utility eller consumable (kræver frit slot)
+      const wantConsumable = hasConsumableSlot(s) && rng.rand() < 0.5;
+      const item = wantConsumable
+        ? consumableTreasure(Object.values(CONSUMABLES)[rng.int(0, Object.values(CONSUMABLES).length - 1)].id)
+        : TREASURE_POOL[Math.floor(rng.rand() * TREASURE_POOL.length)];
       applyImmediateTreasure(s, item);
       log(s, `${enemy.name} dropper ${item.name} (${item.desc})!`, 'good');
     }
@@ -244,8 +278,8 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   else s.phase = resume;
 }
 
-function bossFight(s: GameState, rng: RngCursor) {
-  const script = simulateFight(s.hero, CONFIG.boss, rng, combatModsFor(s.hero.loadout));
+function bossFight(s: GameState, rng: RngCursor, openingDamage = 0) {
+  const script = simulateFight(s.hero, CONFIG.boss, rng, { ...combatModsFor(s.hero.loadout), openingDamage });
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'hero') {
@@ -330,9 +364,12 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     }
     case 'treasure': {
-      // Vælg 1 af 3: tier-vægtet gear + utility, trukket uden gentagelser
+      // Vælg 1 af 3: tier-vægtet gear + consumables (kræver frit slot) + utility
       const candidates = [
         ...unownedGear(s).map(def => ({ item: gearTreasure(def), weight: tierWeight(s.pos, def.tier) })),
+        ...(hasConsumableSlot(s)
+          ? Object.values(CONSUMABLES).map(def => ({ item: consumableTreasure(def.id), weight: 1 }))
+          : []),
         ...TREASURE_POOL.map(item => ({ item, weight: 2 })),
       ];
       const options: TreasureItem[] = [];
@@ -345,16 +382,22 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     }
     case 'shop': {
-      // 5 seedede slots — hvert slot 100 % tilfældigt gear eller service
+      // 5 seedede slots — hvert slot 100 % tilfældigt: gear, consumable eller service
       const gearPool = unownedGear(s).map(def => ({ item: def, weight: tierWeight(s.pos, def.tier) }));
+      const sellableConsumables = Object.values(CONSUMABLES).filter(def => def.cost > 0);
       const offers: ShopOffer[] = [];
       for (let i = 0; i < 5; i++) {
-        if (rng.rand() < 0.5) { // 50/50 til consumables (batch C) gør det til tredjedele
+        const category = rng.rand();
+        if (category < 1 / 3) {
           const def = drawWeighted(rng, gearPool);
           if (def) {
             offers.push({ kind: 'gear', itemId: def.id, cost: def.cost, sold: false });
             continue;
           }
+        } else if (category < 2 / 3) {
+          const def = sellableConsumables[rng.int(0, sellableConsumables.length - 1)];
+          offers.push({ kind: 'consumable', consumableId: def.id, cost: def.cost, sold: false });
+          continue;
         }
         const service = (['heal', 'nudge', 'reroll'] as const)[rng.int(0, 2)];
         const cost = service === 'heal' ? CONFIG.shop.heal.cost : service === 'nudge' ? CONFIG.shop.nudge : CONFIG.shop.reroll;
@@ -366,10 +409,20 @@ function resolveTile(s: GameState, rng: RngCursor) {
     }
     case 'enemy':
     case 'elite':
-      runCombat(s, rng, type);
+      if (hasPreCombatOption(s, type)) {
+        log(s, `${enemyForTile(s.pos, type).name} spærrer vejen. Gør dig klar.`);
+        s.phase = { t: 'preCombat', tile: type, openingDamage: 0 };
+      } else {
+        runCombat(s, rng, type);
+      }
       break;
     case 'boss':
-      bossFight(s, rng);
+      if (hasPreCombatOption(s, 'boss')) {
+        log(s, `${CONFIG.boss.name} venter. Gør dig klar.`);
+        s.phase = { t: 'preCombat', tile: 'boss', openingDamage: 0 };
+      } else {
+        bossFight(s, rng);
+      }
       break;
   }
 }
@@ -377,7 +430,12 @@ function resolveTile(s: GameState, rng: RngCursor) {
 function move(s: GameState, rng: RngCursor, steps: number) {
   s.pos = Math.min(s.pos + steps, CONFIG.trackLength);
   if (s.pos >= CONFIG.trackLength) {
-    bossFight(s, rng);
+    if (hasPreCombatOption(s, 'boss')) {
+      log(s, `${CONFIG.boss.name} venter. Gør dig klar.`);
+      s.phase = { t: 'preCombat', tile: 'boss', openingDamage: 0 };
+    } else {
+      bossFight(s, rng);
+    }
     return;
   }
   resolveTile(s, rng);
@@ -393,9 +451,92 @@ export function reducer(prev: GameState, action: Action): GameState {
     case 'ROLL': {
       if (s.phase.t !== 'idle') break;
       s.rolls++;
+      if (s.twinRollArmed) {
+        // Skæbneterning: rul to, vælg én
+        s.twinRollArmed = false;
+        const rolls: [number, number] = [
+          applyDieTransform(rng.d6(), s.hero.loadout),
+          applyDieTransform(rng.d6(), s.hero.loadout),
+        ];
+        log(s, `Rul #${s.rolls}: Skæbneterningen viser 🎲 ${rolls[0]} og 🎲 ${rolls[1]} — vælg én.`);
+        s.phase = { t: 'chooseRoll', rolls };
+        break;
+      }
       const roll = applyDieTransform(rng.d6(), s.hero.loadout);
       log(s, `Rul #${s.rolls}: 🎲 ${roll}.`);
       s.phase = { t: 'rolled', roll, wasReroll: false };
+      break;
+    }
+    case 'CHOOSE_ROLL': {
+      if (s.phase.t !== 'chooseRoll') break;
+      const roll = s.phase.rolls[action.index];
+      log(s, `Du vælger ${roll}.`);
+      s.phase = { t: 'rolled', roll, wasReroll: false };
+      break;
+    }
+    case 'TELEPORT_MOVE': {
+      if (s.phase.t !== 'teleport' || action.steps < 1 || action.steps > 6) break;
+      log(s, `Teleport-rullen bærer dig ${action.steps} felter frem.`);
+      move(s, rng, action.steps);
+      break;
+    }
+    case 'USE_CONSUMABLE': {
+      const id = s.hero.consumables[action.slot];
+      if (!id) break;
+      const def = CONSUMABLES[id];
+      const inIdle = s.phase.t === 'idle';
+      const inPreCombat = s.phase.t === 'preCombat';
+      if (isPreCombatConsumable(id)) {
+        if (!inPreCombat) break;
+        if (def.effect.kind === 'flee' && s.phase.t === 'preCombat' && s.phase.tile === 'boss') break;
+        s.hero.consumables.splice(action.slot, 1);
+        if (def.effect.kind === 'bomb' && s.phase.t === 'preCombat') {
+          s.phase.openingDamage += def.effect.damage;
+          log(s, `${def.name} gøres klar (${def.effect.damage} skade ved kampstart).`, 'good');
+        } else {
+          log(s, `${def.name}! Du glider uden om kampen — ingen XP, ingen bytte.`, 'info');
+          s.phase = { t: 'idle' };
+        }
+        break;
+      }
+      if (!inIdle) break;
+      s.hero.consumables.splice(action.slot, 1);
+      switch (def.effect.kind) {
+        case 'heal': {
+          const gained = heal(s, def.effect.amount);
+          log(s, `${def.name}: +${gained} HP.`, 'good');
+          break;
+        }
+        case 'permDmg':
+          s.hero.dmgMin += def.effect.amount;
+          s.hero.dmgMax += def.effect.amount;
+          log(s, `${def.name}: permanent +${def.effect.amount} Damage.`, 'good');
+          break;
+        case 'grant':
+          s.hero.nudges += def.effect.nudges;
+          s.hero.rerolls += def.effect.rerolls;
+          log(s, `${def.name}: +${def.effect.nudges} Nudge & +${def.effect.rerolls} Reroll.`, 'good');
+          break;
+        case 'gold':
+          s.hero.gold += def.effect.amount;
+          log(s, `${def.name}: +${def.effect.amount} guld.`, 'good');
+          break;
+        case 'twinRoll':
+          s.twinRollArmed = true;
+          log(s, `${def.name} aktiveret: næste kast ruller to terninger.`, 'good');
+          break;
+        case 'teleport':
+          log(s, `${def.name} lyser op — vælg din destination.`, 'good');
+          s.phase = { t: 'teleport' };
+          break;
+      }
+      break;
+    }
+    case 'FIGHT': {
+      if (s.phase.t !== 'preCombat') break;
+      const { tile, openingDamage } = s.phase;
+      if (tile === 'boss') bossFight(s, rng, openingDamage);
+      else runCombat(s, rng, tile, openingDamage);
       break;
     }
     case 'ACCEPT': {
@@ -456,6 +597,12 @@ export function reducer(prev: GameState, action: Action): GameState {
       if (offer.kind === 'gear') {
         if (ownsEquipment(h, offer.itemId)) break;
         offerEquipment(s, offer.itemId, 'shop', { t: 'shop', offers: s.phase.offers }, offer.cost);
+      } else if (offer.kind === 'consumable') {
+        if (!hasConsumableSlot(s)) break;
+        h.gold -= offer.cost;
+        offer.sold = true;
+        gainConsumable(s, offer.consumableId);
+        log(s, `Købt: ${CONSUMABLES[offer.consumableId].name} (${consumableEffectText(offer.consumableId)}).`, 'good');
       } else if (offer.service === 'heal') {
         if (h.hp >= h.maxHp) break;
         h.gold -= offer.cost;

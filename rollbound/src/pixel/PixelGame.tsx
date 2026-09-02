@@ -9,7 +9,9 @@ import type { DiceRollFx } from './PixelDie';
 import { PixelHud } from './PixelHud';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { SceneShell } from './SceneShell';
-import { EquipmentOffer, LevelUpChoice, OverPanel, ShopPanel, TreasureChoice } from './ScenePhases';
+import { EquipmentOffer, LevelUpChoice, OverPanel, PreCombatPanel, ShopPanel, TreasureChoice } from './ScenePhases';
+import { combatSpriteFor } from './combatSpriteAssets';
+import { enemyForTile } from '../core/combat';
 import './pixel.css';
 
 function initialSeed(): number {
@@ -47,6 +49,15 @@ function PhaseScene({ dispatch, state }: { dispatch: (a: Action) => void; state:
           <LevelUpChoice dispatch={dispatch} state={state} />
         </SceneShell>
       );
+    case 'preCombat': {
+      const enemy = enemyForTile(state.pos, phase.tile);
+      const accent = PIXEL_TILE_META[combatSpriteFor(enemy).fallbackTile].color;
+      return (
+        <SceneShell accent={accent} className="pixel-precombat-scene" subtitle={`FELT ${state.pos} · FORBERED DIG`} title={enemy.name.toUpperCase()}>
+          <PreCombatPanel dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    }
     case 'over':
       return (
         <SceneShell accent={phase.won ? PIXEL_TILE_META.camp.color : PIXEL_TILE_META.enemy.color} subtitle="RUN SLUT" title={phase.won ? 'SEJR' : 'DU FALDT'}>
@@ -154,8 +165,17 @@ export function PixelGame() {
     }
 
     if (action.type === 'ROLL' && state.phase.t === 'idle') {
+      if (state.twinRollArmed) {
+        dispatch(action); // Skæbneterning: chooseRoll-panelet viser begge terninger
+        return;
+      }
       const finalValue = peekRoll(state); // core ejer peek-kontrakten (inkl. dieTransform)
       playRollFx(finalValue, () => dispatch(action));
+      return;
+    }
+
+    if (action.type === 'TELEPORT_MOVE' && state.phase.t === 'teleport') {
+      beginMovement(action, action.steps);
       return;
     }
 
@@ -192,7 +212,7 @@ export function PixelGame() {
   };
 
   const scenePhase = !combatView && !moving && !rolling
-    && (state.phase.t === 'treasure' || state.phase.t === 'shop' || state.phase.t === 'equipment' || state.phase.t === 'levelup' || state.phase.t === 'over');
+    && (state.phase.t === 'treasure' || state.phase.t === 'shop' || state.phase.t === 'equipment' || state.phase.t === 'levelup' || state.phase.t === 'preCombat' || state.phase.t === 'over');
 
   return (
     <main className="pixel-page">
