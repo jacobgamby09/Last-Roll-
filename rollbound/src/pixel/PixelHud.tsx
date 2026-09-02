@@ -25,8 +25,6 @@ function PixelBar({ current, feedback, label, max, previousHp, tone }: { current
     <div aria-label={label} aria-valuemax={max} aria-valuemin={0} aria-valuenow={current} className={`pixel-bar pixel-bar-${tone} ${feedback ? `is-${feedback}` : ''}`} role="progressbar" style={style}>
       <i className="pixel-bar-ghost" />
       <i className="pixel-bar-fill" />
-      <i className="pixel-bar-segments" aria-hidden="true" />
-      <span>{current}/{max}</span>
     </div>
   );
 }
@@ -83,16 +81,24 @@ export function PixelHud({ state }: { state: GameState }) {
     <section className={`pixel-hud ${feedback.kind ? `has-${feedback.kind}` : ''} ${feedback.xpGain ? 'has-xp' : ''}`} aria-label="Heltestatus">
       <div className={`pixel-identity ${feedback.kind ? `is-${feedback.kind}` : ''}`}>
         <div className="pixel-portrait" aria-hidden="true">
-          <i className="pixel-portrait-sigil" />
           <img alt="" draggable="false" src={HERO_FRAMES.portrait} />
-          <i className="pixel-portrait-scanline" />
         </div>
-        <span aria-label={`Level ${hero.level}`} className={`pixel-level-badge ${feedback.kind === 'level' ? 'is-level-up' : ''}`}><small>LV</small><b>{hero.level}</b></span>
       </div>
       <div className="pixel-vitals">
-        <div className="pixel-vital-row"><span className="pixel-vital-label"><ResourceIcon assetId="life" size="mini" /><b>HP</b></span><PixelBar current={hero.hp} feedback={feedback.kind} label="HP" max={hero.maxHp} previousHp={feedback.previousHp} tone="hp" /></div>
-        <div className="pixel-vital-row"><span className="pixel-vital-label"><ResourceIcon assetId="xp" size="mini" /><b>XP</b></span><PixelBar current={hero.xp} feedback={feedback.xpGain ? 'xp' : null} label="XP" max={xpToNext(hero.level)} previousHp={feedback.previousHp} tone="xp" /></div>
-        <span className="pixel-next-bonus"><small>NÆSTE LEVEL</small><b>{nextBonus}</b></span>
+        <div className="pixel-vitals-heading">
+          <span aria-label={`Level ${hero.level}`} className={`pixel-level-readout ${feedback.kind === 'level' ? 'is-level-up' : ''}`}><small>LEVEL</small><b>{hero.level}</b></span>
+          <span className="pixel-next-bonus"><small>NÆSTE</small><b>{nextBonus}</b></span>
+        </div>
+        <div className="pixel-vital-row">
+          <span className="pixel-vital-label"><ResourceIcon assetId="life" size="mini" /><b>HP</b></span>
+          <PixelBar current={hero.hp} feedback={feedback.kind} label={`HP: ${hero.hp} af ${hero.maxHp}`} max={hero.maxHp} previousHp={feedback.previousHp} tone="hp" />
+          <span className="pixel-vital-value" aria-hidden="true">{hero.hp} / {hero.maxHp}</span>
+        </div>
+        <div className="pixel-vital-row">
+          <span className="pixel-vital-label"><ResourceIcon assetId="xp" size="mini" /><b>XP</b></span>
+          <PixelBar current={hero.xp} feedback={feedback.xpGain ? 'xp' : null} label={`XP: ${hero.xp} af ${xpToNext(hero.level)}`} max={xpToNext(hero.level)} previousHp={feedback.previousHp} tone="xp" />
+          <span className="pixel-vital-value" aria-hidden="true">{hero.xp} / {xpToNext(hero.level)}</span>
+        </div>
       </div>
       <EquipmentLoadout bootsNudgeCharges={hero.bootsNudgeCharges} loadout={hero.loadout} />
       <div className="pixel-stats-grid">

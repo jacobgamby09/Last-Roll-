@@ -37,7 +37,7 @@ Et run kan reproduceres fra sit seed (vises i UI).
 - Slebet klinge giver `+3 Damage`, Jernplade giver `+1 Armor`, og Stivinderstøvler giver én gratis Nudge-charge. Allerede udstyrede upgrades fjernes fra loot-puljen og deaktiveres i Shoppen.
 - Nudge er en separat board-control-ressource med sit eget terning-og-pile-asset. Den må ikke præsenteres som Boots eller skifte det viste Boots-asset.
 - Damage, Armor, HP, XP, Gold, Nudge og Reroll har nu en separat familie af syv 48×48 HUD-symboler. De bruges i HUD, Treasure og Shop uden equipment-slotbehandling.
-- Hero Status-blokken bruger et dedikeret 80×80 bust-portræt, separat Level-plade, segmenterede HP/XP-barer samt korte damage-, heal-, XP- og level-feedbackeffekter.
+- Hero Status-blokken bruger et fritstående 80×80 bust-portræt, Level og næste bonus i samme statuslinje, ubrudte HP/XP-barer med værdier uden for fyldet samt korte damage-, heal-, XP- og level-feedbackeffekter.
 - En samlet readability-pass har hævet funktionel tekst til mindst 9 px, gjort Shop- og reward-tekster wrap-bare, tilføjet eksplicitte disabled-årsager og bevaret boardets native pixelskala med intern scroll på smalle skærme.
 - Bevægelse afspilles felt for felt i UI-laget; reduceren opløser stadig hele trækket deterministisk som én action.
 - Roll-området bruger nu en fysisk 64×64 pixelterning med kodegenererede korrekte pips og en firefaset anticipation → tumble → impact → reveal-effekt. Roll og Reroll deler effekten uden ændringer i reducer eller RNG.

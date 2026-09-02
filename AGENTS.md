@@ -569,8 +569,9 @@ Non-equipment resources use a separate icon grammar:
 Hero Status presentation uses a dedicated grammar:
 
 * The HUD portrait uses a standalone `80 × 80` transparent bust asset that matches the existing board hero identity.
-* Level is a separate UI plate attached to the portrait frame; it must not obscure the hero's face or be baked into the portrait bitmap.
-* HP and XP use consistent notched, segmented pixel housings with stable `current/max` values and their own Life/XP assets.
+* The portrait is presented directly against the HUD without a square card, diamond backing plate, corner frame or overlapping badge.
+* Level is a compact text readout in the vitals heading beside the next-level reward; it must not be baked into or overlap the portrait.
+* HP and XP use consistent notched, continuous pixel bars with stable `current / max` values in a separate right-aligned column outside the fills.
 * Damage, healing, XP gain and level-up may trigger short UI-only feedback. These effects compare previous and current reducer state and must never change or delay game logic.
 * Damage and XP feedback may appear simultaneously after combat. Preserve the ghost-damage bar and reduced-motion fallback.
 * The canonical portrait, bar, feedback and responsive rules live in `rollbound/design/hero-status-visual-contract-v1.md`.
