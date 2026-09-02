@@ -254,12 +254,14 @@ The board, first functional equipment slice, and first non-equipment resource fa
 
 Formal playtesting is deliberately deferred until the playtest gate is reached: combat screen + first item batch + consumables (decided 2026-09-02).
 
-Next work (combat script, fullscreen scenes, combat screen AND the seven enemy sprites are DONE, 2026-09-02):
+Next work (combat script, fullscreen scenes, combat screen, the seven enemy sprites AND sim-on-engine are DONE, 2026-09-02):
 
-1. Port the simulation to run on the real engine reducer so rule changes are measured without drift — required before damage ranges land.
-2. Damage ranges for hero and enemies (decided 2026-09-02, see `GDD.md` changelog and `AGENTS.md` Combat Stats): `simulateFight` uses its reserved rng parameter, config converts flat values EV-preserving, range width becomes a data-driven identity axis for weapons/items/enemies, and the sim recalibrates win rates the same day. No miss/dodge/crit — a low roll still hits.
-3. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers, range width) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow. New combat effects extend the `CombatEvent.kind` union.
-4. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
+1. Damage ranges for hero and enemies (decided 2026-09-02, see `GDD.md` changelog and `AGENTS.md` Combat Stats): `simulateFight` uses its reserved rng parameter, config converts flat values EV-preserving, range width becomes a data-driven identity axis for weapons/items/enemies, and the engine sim recalibrates win rates the same day. No miss/dodge/crit — a low roll still hits. Note: this makes the closed-form `fightOutcome` an EV approximation; the bot may keep using it as heuristic, but engine resolution must use `simulateFight` only.
+2. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers, range width) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow. New combat effects extend the `CombatEvent.kind` union.
+3. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
+4. Combat scene floor-line polish (sprites' feet vs. ground line, documented in `combat-sprite-batch-v1.md`) — presentation only.
+
+Simulation: **the balance authority is now `rollbound/scripts/simulate.ts`** (`npm run sim -- 10000` from `rollbound/`), running heuristic bots directly on the real engine reducer. Cross-validated 2026-09-02 against the historical JS sim within ~1 pp: balanced **56.9%** / aggressive 34.2% / cautious 27.0% (10k runs, boss 105/10/2). The `sim/` folder is frozen history of the v0.1→v0.9 calibration (see `sim/FINDINGS.md` Opfølgning 5) and must not be extended.
 
 ## Known limitations
 

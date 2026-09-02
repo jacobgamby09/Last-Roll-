@@ -147,6 +147,20 @@ Pixel-prototypen ændrede equipment fra stakkende bonusser til tre én-gangs slo
 - **Shop-boots er domineret:** Stivinderstøvler (18 g ≈ +1 nudge) vs. shoppens nudge (8 g) — ingen rationel spiller køber støvlerne. Boots-effekten bør differentieres fra en rå nudge, fx "genoplad Boots-chargen ved hver Camp" (GDD'ens Traveler's Boots), så slottet bliver et board-build-valg frem for en dyr forbrugsvare.
 - Sim-botten modellerer boots-chargen som +1 nudge (ækvivalent, da chargen bruges før normale nudges og aldrig genoplades).
 
+## Opfølgning 5: Sim v2 kører på den rigtige engine (2026-09-02) — denne mappe er nu historik
+
+Simulationen er porteret til at køre direkte på spillets engine-reducer: `rollbound/scripts/simulate.ts` (kør `npm run sim -- 10000` fra rollbound/). Botten er samme heuristik som her; al spil-RNG bor i engine-staten, så hvert (seed, strategi)-par er reproducerbart.
+
+**Krydsvalidering (10.000 runs, boss 105/10/2, rotation, drops 25/100):**
+
+| Strategi | JS-sim v0.9 | Engine-sim v2 |
+|---|---:|---:|
+| Aggressive | 33,3 % | 34,2 % |
+| Balanced | 55,7 % | **56,9 %** |
+| Cautious | 26,2 % | 27,0 % |
+
+To uafhængige implementeringer af reglerne er enige inden for ~1 pp — begge modeller er dermed valideret. **Fremover er engine-sim'en balance-autoriteten**; denne mappe (simulate.js + varianter) bevares som historik over kalibreringsforløbet v0.1→v0.9 og opdateres ikke længere. Damage-ranges kan nu implementeres og måles samme dag.
+
 ## Næste skridt
 
 1. **v0.2-sim:** spells (Fireball/Heal) + consumables + rigtige events med trade-offs; boss skrues op tilsvarende.
