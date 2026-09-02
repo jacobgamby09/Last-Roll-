@@ -1,7 +1,7 @@
 import { CONFIG } from '../core/config';
-import { fightOutcome } from '../core/combat';
 import { PICK_LABEL, rotationPick, xpToNext } from '../core/engine';
 import type { GameState } from '../core/types';
+import { approxEnemyStats } from './preview';
 
 function Bar({ value, max, cls }: { value: number; max: number; cls: string }) {
   return (
@@ -17,7 +17,6 @@ function Bar({ value, max, cls }: { value: number; max: number; cls: string }) {
 export function Hud({ state }: { state: GameState }) {
   const h = state.hero;
   const need = xpToNext(h.level);
-  const bossOut = fightOutcome(h, CONFIG.boss);
   const nextBonus = CONFIG.levelUpMode === 'rotation' ? PICK_LABEL[rotationPick(h.level + 1)] : 'valg mellem 3';
 
   return (
@@ -43,11 +42,8 @@ export function Hud({ state }: { state: GameState }) {
         <div className="stat">📍 {state.pos}/{CONFIG.trackLength}</div>
       </div>
       {state.phase.t !== 'over' && (
-        <div className={`boss-banner ${bossOut.survives ? 'ok' : 'danger'}`}>
-          🐉 {CONFIG.boss.name}: {CONFIG.boss.hp} HP · {CONFIG.boss.dmg} DMG · {CONFIG.boss.armor} ARMOR —{' '}
-          {bossOut.survives
-            ? `koster dig ~${bossOut.hpLoss} HP lige nu ✓`
-            : `ville koste ${bossOut.hpLoss} HP — du har ${h.hp}. Byg dig stærkere!`}
+        <div className="boss-banner ok">
+          🐉 {CONFIG.boss.name} venter på felt {CONFIG.trackLength}: {approxEnemyStats(CONFIG.boss)}
         </div>
       )}
     </div>

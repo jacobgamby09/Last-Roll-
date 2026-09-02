@@ -77,6 +77,7 @@ export interface GameState {
   fights: number;
   log: LogEntry[];
   lastCombat: CombatScript | null; // seneste kamp, klar til UI-playback
+  combatSeq: number; // tælles op pr. kamp — UI'et bruger den til at opdage NYE kampe (referencer overlever ikke structuredClone)
 }
 
 export interface FightPreview {

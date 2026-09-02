@@ -2,10 +2,15 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { CONFIG } from '../core/config';
 import { newGame, reducer, type Action } from '../core/engine';
 import { cursor } from '../core/rng';
+import type { GameState } from '../core/types';
+import { CombatScene, type CombatView } from './CombatScene';
 import { PixelActionPanel } from './PixelActionPanel';
 import { PixelBoard } from './PixelBoard';
 import type { DiceRollFx } from './PixelDie';
 import { PixelHud } from './PixelHud';
+import { PIXEL_TILE_META } from './pixelMeta';
+import { SceneShell } from './SceneShell';
+import { EquipmentOffer, LevelUpChoice, OverPanel, ShopPanel, TreasureChoice } from './ScenePhases';
 import './pixel.css';
 
 function initialSeed(): number {
@@ -13,16 +18,73 @@ function initialSeed(): number {
   return Number.isSafeInteger(requested) && requested >= 0 ? requested : Math.floor(Math.random() * 2 ** 31);
 }
 
+// Fullscreen-scene for interaktive faser uden for combat (beslutning 2026-09-02).
+function PhaseScene({ dispatch, state }: { dispatch: (a: Action) => void; state: GameState }) {
+  const { phase } = state;
+  switch (phase.t) {
+    case 'treasure':
+      return (
+        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={`FELT ${state.pos}`} title="SKATTEKISTE">
+          <TreasureChoice dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    case 'shop':
+      return (
+        <SceneShell accent={PIXEL_TILE_META.shop.color} subtitle={`FELT ${state.pos}`} title="SHOP">
+          <ShopPanel dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    case 'equipment': {
+      const sourceLabel = phase.source === 'shop' ? 'SHOP' : phase.source === 'drop' ? 'DROP' : 'SKAT';
+      return (
+        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={sourceLabel} title="NYT UDSTYR">
+          <EquipmentOffer dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    }
+    case 'levelup':
+      return (
+        <SceneShell accent={PIXEL_TILE_META.event.color} subtitle="LEVEL UP" title={`LEVEL ${state.hero.level}`}>
+          <LevelUpChoice dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    case 'over':
+      return (
+        <SceneShell accent={phase.won ? PIXEL_TILE_META.camp.color : PIXEL_TILE_META.enemy.color} subtitle="RUN SLUT" title={phase.won ? 'SEJR' : 'DU FALDT'}>
+          <OverPanel dispatch={dispatch} state={state} />
+        </SceneShell>
+      );
+    default:
+      return null;
+  }
+}
+
 export function PixelGame() {
   const [state, dispatch] = useReducer(reducer, undefined, () => newGame(initialSeed()));
   const [displayPos, setDisplayPos] = useState(state.pos);
   const [movementSteps, setMovementSteps] = useState<number | null>(null);
   const [rollFx, setRollFx] = useState<DiceRollFx>({ stage: 'idle', value: 1 });
+  const [combatView, setCombatView] = useState<CombatView | null>(null);
   const movementTimer = useRef<number | null>(null);
   const rollFxTimers = useRef<number[]>([]);
+  const prevStateRef = useRef(state);
   const moving = movementSteps !== null;
   const rolling = rollFx.stage !== 'idle';
-  const presentationBusy = moving || rolling;
+  const presentationBusy = moving || rolling || combatView !== null;
+
+  // Combat-detektion: reduceren har afgjort kampen og lagt scriptet i
+  // lastCombat — scenen afspiller bagefter fra prev-snapshot + script.
+  useEffect(() => {
+    const prev = prevStateRef.current;
+    prevStateRef.current = state;
+    if (state.seed !== prev.seed) {
+      setCombatView(null);
+      return;
+    }
+    if (state.lastCombat && state.combatSeq !== prev.combatSeq) {
+      setCombatView({ script: state.lastCombat, heroBefore: prev.hero, pos: state.pos, seq: state.combatSeq });
+    }
+  }, [state]);
 
   useEffect(() => () => {
     if (movementTimer.current !== null) window.clearTimeout(movementTimer.current);
@@ -83,10 +145,11 @@ export function PixelGame() {
   };
 
   const dispatchWithPresentation = (action: Action) => {
-    if (presentationBusy) return;
+    if (presentationBusy && action.type !== 'RESTART') return;
 
     if (action.type === 'RESTART') {
       setDisplayPos(0);
+      setCombatView(null);
       dispatch(action);
       return;
     }
@@ -119,6 +182,19 @@ export function PixelGame() {
     beginMovement(action, steps);
   };
 
+  // Scener bruger rå dispatch: reduceren er allerede afgjort, og deres
+  // knapper (Equip/Keep, køb, restart) skal ikke gennem præsentations-låsen.
+  const sceneDispatch = (action: Action) => {
+    if (action.type === 'RESTART') {
+      setDisplayPos(0);
+      setCombatView(null);
+    }
+    dispatch(action);
+  };
+
+  const scenePhase = !combatView && !moving && !rolling
+    && (state.phase.t === 'treasure' || state.phase.t === 'shop' || state.phase.t === 'equipment' || state.phase.t === 'levelup' || state.phase.t === 'over');
+
   return (
     <main className="pixel-page">
       <div className="pixel-game">
@@ -129,13 +205,17 @@ export function PixelGame() {
             <a href="?ui=equipment">GEAR LAB</a>
             <a href="?ui=resources">RESOURCE LAB</a>
             <a href="?ui=classic">KLASSISK UI</a>
-            <button disabled={presentationBusy} onClick={() => dispatchWithPresentation({ type: 'RESTART' })} type="button">NYT RUN</button>
+            <button disabled={moving || rolling} onClick={() => dispatchWithPresentation({ type: 'RESTART' })} type="button">NYT RUN</button>
           </div>
         </header>
         <PixelHud state={state} />
         <PixelBoard displayPos={displayPos} moving={moving} state={state} suppressTargets={rolling} />
         <PixelActionPanel dispatch={dispatchWithPresentation} movementSteps={movementSteps} rollFx={rollFx} state={state} />
       </div>
+      {combatView ? (
+        <CombatScene dispatch={sceneDispatch} onClose={() => setCombatView(null)} state={state} view={combatView} />
+      ) : null}
+      {scenePhase ? <PhaseScene dispatch={sceneDispatch} state={state} /> : null}
     </main>
   );
 }

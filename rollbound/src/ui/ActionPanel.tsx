@@ -42,7 +42,7 @@ export function ActionPanel({ state, dispatch }: Props) {
             return (
               <button
                 key={c.dir}
-                className={`dest-card ${c.dir === 0 ? 'primary' : ''} ${info?.deadly ? 'deadly' : ''}`}
+                className={`dest-card ${c.dir === 0 ? 'primary' : ''}`}
                 disabled={!c.ok}
                 onClick={() => dispatch(c.dir === 0 ? { type: 'ACCEPT' } : { type: 'NUDGE', dir: c.dir })}
               >

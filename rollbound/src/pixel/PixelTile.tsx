@@ -1,11 +1,13 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { enemyForTile } from '../core/combat';
 import type { TileType } from '../core/types';
+import { approxEnemyStats } from '../ui/preview';
 import { HERO_FRAMES } from './heroAssets';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { PixelTileArt } from './PixelTileArt';
 
 interface PixelTileProps {
-  chip?: { deadly: boolean; text: string } | null;
+  chip?: { text: string } | null;
   current?: boolean;
   pos: number;
   primary?: boolean;
@@ -29,27 +31,45 @@ export function PixelHero({ moving = false }: { moving?: boolean }) {
 export function PixelTile({ chip, current = false, heroMoving = false, pos, primary = false, reachable = false, type, visited = false }: PixelTileProps) {
   const meta = PIXEL_TILE_META[type];
   const style = { '--tile-accent': meta.color } as CSSProperties;
+  // Inspektion (AGENTS.md 2026-09-02): combat-felter viser mob-type og ca. stats
+  // via hover/klik/fokus — aldrig en udregnet pris.
+  const isCombat = pos > 0 && (type === 'enemy' || type === 'elite' || type === 'boss');
+  const enemy = isCombat ? enemyForTile(pos, type) : null;
+  const [pinnedTip, setPinnedTip] = useState(false);
   const stateClasses = [
     current ? 'is-current' : '',
     primary ? 'is-primary' : '',
     reachable ? 'is-reachable' : '',
     visited ? 'is-visited' : '',
-    chip?.deadly ? 'is-deadly' : '',
+    isCombat ? 'is-inspectable' : '',
+    pinnedTip ? 'is-tip-pinned' : '',
   ].filter(Boolean).join(' ');
+
+  const inspectLabel = enemy ? `, ${enemy.name}: ${approxEnemyStats(enemy)}` : '';
 
   return (
     <div
       aria-current={current ? 'step' : undefined}
       className={`pixel-tile tile-${type} ${stateClasses}`}
       style={style}
-      aria-label={`Felt ${pos}: ${meta.label}${chip ? `, ${chip.text}` : ''}${primary ? ', primær destination' : reachable ? ', mulig destination med Nudge' : visited ? ', besøgt' : ''}`}
+      aria-label={`Felt ${pos}: ${meta.label}${inspectLabel}${chip ? `, ${chip.text}` : ''}${primary ? ', primær destination' : reachable ? ', mulig destination med Nudge' : visited ? ', besøgt' : ''}`}
       role="listitem"
+      tabIndex={isCombat ? 0 : undefined}
+      onClick={isCombat ? () => setPinnedTip(v => !v) : undefined}
+      onBlur={isCombat ? () => setPinnedTip(false) : undefined}
+      onKeyDown={isCombat ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPinnedTip(v => !v); } } : undefined}
     >
       <span className="pixel-tile-number">{pos === 0 ? 'S' : pos}</span>
       <PixelTileArt type={type} variant={pos} />
       {current ? <PixelHero moving={heroMoving} /> : null}
-      {chip ? <span className={`pixel-tile-chip ${chip.deadly ? 'danger' : ''}`}>{chip.text}</span> : null}
+      {chip ? <span className="pixel-tile-chip">{chip.text}</span> : null}
       <span className="pixel-tile-label">{meta.shortLabel}</span>
+      {enemy ? (
+        <span className="pixel-tile-tip" role="tooltip">
+          <b>{enemy.name}</b>
+          <span>{approxEnemyStats(enemy)}</span>
+        </span>
+      ) : null}
     </div>
   );
 }

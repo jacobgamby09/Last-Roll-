@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { CONFIG } from '../core/config';
-import { fightOutcome } from '../core/combat';
 import { PICK_LABEL, rotationPick, xpToNext } from '../core/engine';
 import type { GameState } from '../core/types';
+import { approxEnemyStats } from '../ui/preview';
 import { EquipmentLoadout } from './EquipmentLoadout';
 import { HERO_FRAMES } from './heroAssets';
 import { ResourceIcon } from './ResourceIcon';
@@ -43,7 +43,6 @@ export function PixelHud({ state }: { state: GameState }) {
   const previous = useRef({ hp: hero.hp, level: hero.level, seed: state.seed, xp: hero.xp });
   const feedbackTimer = useRef<number | null>(null);
   const [feedback, setFeedback] = useState<HudFeedback>({ kind: null, previousHp: hero.hp, xpGain: false });
-  const boss = fightOutcome(hero, CONFIG.boss);
   const nextBonus = CONFIG.levelUpMode === 'rotation' ? PICK_LABEL[rotationPick(hero.level + 1)] : 'Vælg 1 af 3';
 
   useEffect(() => {
@@ -108,10 +107,10 @@ export function PixelHud({ state }: { state: GameState }) {
         <StatBlock icon={<ResourceIcon assetId="nudge" size="hud" />} label="NUDGE" value={hero.nudges} />
         <StatBlock icon={<ResourceIcon assetId="reroll" size="hud" />} label="REROLL" value={hero.rerolls} />
       </div>
-      <div aria-live="polite" className={`pixel-boss-readiness ${boss.survives ? 'ready' : ''}`}>
-        <small>BOSS-PRIS NU</small>
-        <b>{boss.hpLoss} HP</b>
-        <span>{boss.survives ? 'KLAR' : `MANGLER ${Math.max(0, boss.hpLoss + 1 - hero.hp)} HP`}</span>
+      <div className="pixel-boss-readiness">
+        <small>BOSSEN · FELT {CONFIG.trackLength}</small>
+        <b>{CONFIG.boss.name.toUpperCase()}</b>
+        <span>{approxEnemyStats(CONFIG.boss)}</span>
       </div>
     </section>
   );

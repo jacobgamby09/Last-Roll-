@@ -31,7 +31,7 @@ export function TrackView({ state }: { state: GameState }) {
       <div key={i} className={classes.join(' ')} title={`Felt ${i}: ${meta.label}`}>
         <span className="tile-num">{i}</span>
         <span className="tile-icon">{i === state.pos ? '🧙' : meta.icon}</span>
-        {chip && <span className={`tile-chip ${chip.deadly ? 'deadly' : ''}`}>{chip.text}</span>}
+        {chip && <span className="tile-chip">{chip.text}</span>}
       </div>,
     );
   }

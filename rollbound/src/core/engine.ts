@@ -49,6 +49,7 @@ export function newGame(seed: number): GameState {
     fights: 0,
     log: [{ text: `Runnet begynder. Nå felt ${CONFIG.trackLength} med et build, der kan slå bossen.`, kind: 'info' }],
     lastCombat: null,
+    combatSeq: 0,
   };
 }
 
@@ -144,6 +145,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   const enemy = enemyForTile(s.pos, type);
   const script = simulateFight(s.hero, enemy);
   s.lastCombat = script;
+  s.combatSeq++;
   if (script.result.winner === 'enemy') {
     const enemyBlows = script.events.filter(e => e.actor === 'enemy').length;
     s.hero.hp = 0;
@@ -182,6 +184,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
 function bossFight(s: GameState) {
   const script = simulateFight(s.hero, CONFIG.boss);
   s.lastCombat = script;
+  s.combatSeq++;
   if (script.result.winner === 'hero') {
     const hpLoss = s.hero.hp - script.result.heroHpAfter;
     s.hero.hp = script.result.heroHpAfter;
