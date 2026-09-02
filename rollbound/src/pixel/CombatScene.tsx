@@ -45,7 +45,7 @@ function EnemyArt({ view }: { view: CombatView }) {
   );
 }
 
-function HpPlate({ current, max, name, side }: { current: number; max: number; name: string; side: 'hero' | 'enemy' }) {
+function HpPlate({ current, max, name, side, statline }: { current: number; max: number; name: string; side: 'hero' | 'enemy'; statline: string }) {
   const width = Math.max(0, Math.min(100, (current / max) * 100));
   return (
     <div className={`combat-plate combat-plate-${side}`}>
@@ -54,6 +54,7 @@ function HpPlate({ current, max, name, side }: { current: number; max: number; n
         <i style={{ width: `${width}%` }} />
       </span>
       <b>{current} / {max}</b>
+      <span className="combat-statline">{statline}</span>
     </div>
   );
 }
@@ -143,18 +144,34 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
     >
       <div className="combat-duel" aria-live="polite">
         <div className={`combat-side combat-side-hero ${stage === 'play' && lastEvent?.actor === 'hero' ? 'is-attacking' : ''} ${stage === 'play' && lastEvent?.actor === 'enemy' ? 'is-hit' : ''} ${!won && stage === 'payout' ? 'is-fallen' : ''}`}>
-          <HpPlate current={heroHp} max={heroBefore.maxHp} name="DIG" side="hero" />
+          <HpPlate
+            current={heroHp}
+            max={heroBefore.maxHp}
+            name={`DIG · LV ${heroBefore.level}`}
+            side="hero"
+            statline={`DMG ${heroBefore.dmgMin}-${heroBefore.dmgMax} · ARM ${heroBefore.armor}`}
+          />
           <span className="combat-sprite combat-sprite-hero">
             <img alt="" className="combat-hero-a" draggable={false} src={HERO_FRAMES.idleA} />
             <img alt="" className="combat-hero-b" draggable={false} src={HERO_FRAMES.idleB} />
           </span>
-          {stage === 'play' && lastEvent?.actor === 'enemy' ? <span className="combat-float" key={shown}>−{lastEvent.damage}</span> : null}
+          {stage === 'play' && lastEvent?.actor === 'enemy' ? (
+            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + lastEvent.damage * 1.5)}px` }}>−{lastEvent.damage}</span>
+          ) : null}
         </div>
         <span className="combat-clash" aria-hidden="true">⚔</span>
         <div className={`combat-side combat-side-enemy ${stage === 'play' && lastEvent?.actor === 'enemy' ? 'is-attacking' : ''} ${stage === 'play' && lastEvent?.actor === 'hero' ? 'is-hit' : ''} ${won && stage === 'payout' ? 'is-fallen' : ''}`}>
-          <HpPlate current={enemyHp} max={script.enemy.hp} name={script.enemy.name.toUpperCase()} side="enemy" />
+          <HpPlate
+            current={enemyHp}
+            max={script.enemy.hp}
+            name={script.enemy.name.toUpperCase()}
+            side="enemy"
+            statline={`DMG ${script.enemy.dmgMin}-${script.enemy.dmgMax} · ARM ${script.enemy.armor}`}
+          />
           <EnemyArt view={view} />
-          {stage === 'play' && lastEvent?.actor === 'hero' ? <span className="combat-float" key={shown}>−{lastEvent.damage}</span> : null}
+          {stage === 'play' && lastEvent?.actor === 'hero' ? (
+            <span className="combat-float" key={shown} style={{ fontSize: `${Math.min(44, 22 + lastEvent.damage * 1.5)}px` }}>−{lastEvent.damage}</span>
+          ) : null}
         </div>
       </div>
       <div className="combat-ticker">{ticker}</div>

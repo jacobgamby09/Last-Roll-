@@ -2,10 +2,14 @@ export type TileType =
   | 'blank' | 'enemy' | 'elite' | 'gold' | 'treasure'
   | 'camp' | 'shop' | 'event' | 'trap' | 'boss';
 
+// Damage er ranges (beslutning 2026-09-02): hvert angreb ruller i [min, max].
+// Bredden er en identitetsakse (smal = pålidelig, bred = volatil); bonusser
+// fra levels/items FORSKYDER rangen (shift-model), bredden ejes af kilden.
 export interface EnemyDef {
   name: string;
   hp: number;
-  dmg: number;
+  dmgMin: number;
+  dmgMax: number;
   armor: number;
   xp: number;
   gold: number;
@@ -14,7 +18,8 @@ export interface EnemyDef {
 export interface Hero {
   hp: number;
   maxHp: number;
-  dmg: number;
+  dmgMin: number;
+  dmgMax: number;
   armor: number;
   level: number;
   xp: number;

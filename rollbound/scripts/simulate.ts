@@ -131,10 +131,11 @@ function shopAction(s: GameState, strat: Strategy): Action {
 }
 
 function levelPickAction(s: GameState, strat: Strategy): Action {
+  const dmgEv = (s.hero.dmgMin + s.hero.dmgMax) / 2;
   let pick: LevelPick;
-  if (strat.levelPick === 'dmg') pick = s.hero.dmg < 26 ? 'dmg' : 'hp';
-  else if (strat.levelPick === 'defensive') pick = s.hero.dmg < 12 ? 'dmg' : s.hero.level % 2 === 0 ? 'armor' : 'hp';
-  else pick = s.hero.dmg < 18 ? 'dmg' : 'hp';
+  if (strat.levelPick === 'dmg') pick = dmgEv < 26 ? 'dmg' : 'hp';
+  else if (strat.levelPick === 'defensive') pick = dmgEv < 12 ? 'dmg' : s.hero.level % 2 === 0 ? 'armor' : 'hp';
+  else pick = dmgEv < 18 ? 'dmg' : 'hp';
   return { type: 'PICK_LEVELUP', pick };
 }
 

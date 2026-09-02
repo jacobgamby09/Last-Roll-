@@ -8,14 +8,12 @@ import { enemyForTile } from '../core/combat';
 import type { EnemyDef, GameState, TileType } from '../core/types';
 import { TILE_META } from './tileMeta';
 
-// Interval-reglen: HP i 5-buckets, DMG ±1, ARM eksakt.
-// Når damage-ranges lander i core, erstattes DMG-delen af det rigtige interval.
+// Interval-reglen: HP i 5-buckets, DMG = fjendens FAKTISKE range (damage er
+// nu ranges i core, så intervallet er bogstaveligt sandt), ARM eksakt.
 export function approxEnemyStats(enemy: EnemyDef): string {
   const hpLo = Math.floor(enemy.hp / 5) * 5;
   const hpHi = hpLo + 5;
-  const dmgLo = Math.max(1, enemy.dmg - 1);
-  const dmgHi = enemy.dmg + 1;
-  return `HP ${hpLo}-${hpHi} · DMG ${dmgLo}-${dmgHi} · ARM ${enemy.armor}`;
+  return `HP ${hpLo}-${hpHi} · DMG ${enemy.dmgMin}-${enemy.dmgMax} · ARM ${enemy.armor}`;
 }
 
 export interface DestInfo {

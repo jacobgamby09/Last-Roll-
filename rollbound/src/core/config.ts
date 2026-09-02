@@ -1,6 +1,7 @@
-// Rollbound balance v0.9 — sim-verificeret 2026-09-02 MED ikke-stakkende equipment:
-// balanced bot 55,7% win, ~20 rolls, HP→XP ≈ 0,44 (boss 105/10/2 står korrekt).
-// Historisk v0.8-baseline (stakkende equipment): 63,7% — se ../sim/FINDINGS.md.
+// Rollbound balance v0.10 — sim-verificeret 2026-09-02 MED damage-ranges:
+// balanced bot 57,7% win (10k runs, engine-sim), boss kalibreret 105→90 HP
+// fordi varians koster win rate ved samme EV. Kør `npm run sim -- 10000`.
+// Historik: v0.9 (flad damage) 55,7% — se ../sim/FINDINGS.md.
 // ALLE balance-tal bor her. Ingen tal hardcodes i engine eller UI.
 
 import type { EnemyDef, EquipmentId, EquipmentKind, EquipmentLoadout, TreasureItem } from './types';
@@ -9,7 +10,8 @@ export const CONFIG = {
   trackLength: 70, // felt 70 = boss
   visibility: 12,  // synlige felter forud
 
-  hero: { hp: 50, dmg: 10, armor: 0, nudges: 2, rerolls: 1, gold: 0 },
+  // dmgMin/dmgMax inkluderer start-våbnet (Trækølle). EV 9,5.
+  hero: { hp: 50, dmgMin: 7, dmgMax: 12, armor: 0, nudges: 2, rerolls: 1, gold: 0 },
 
   equipment: {
     starters: { weapon: 'wood-club', armor: 'cloth-shirt', boots: 'worn-sandals' } satisfies EquipmentLoadout,
@@ -33,19 +35,22 @@ export const CONFIG = {
   // Fordeling på felt 1-69 (summer til 69)
   tiles: { blank: 25, enemy: 16, gold: 6, treasure: 6, camp: 4, event: 4, shop: 3, elite: 3, trap: 2 },
 
+  // Damage-ranges: EV-bevarende konvertering fra de flade v0.9-tal.
+  // Bredde = identitet: Goblin smal (stabil), Ogre bred (farlige swings),
+  // bossen medium (finalen skal ikke afgøres af ét enkelt rul).
   enemies: {
-    early: { name: 'Goblin', hp: 15, dmg: 6, armor: 0, xp: 15, gold: 2 },
-    mid:   { name: 'Bandit', hp: 24, dmg: 8, armor: 1, xp: 25, gold: 3 },
-    late:  { name: 'Ogre',   hp: 36, dmg: 11, armor: 2, xp: 35, gold: 4 },
+    early: { name: 'Goblin', hp: 15, dmgMin: 5,  dmgMax: 7,  armor: 0, xp: 15, gold: 2 },
+    mid:   { name: 'Bandit', hp: 24, dmgMin: 6,  dmgMax: 10, armor: 1, xp: 25, gold: 3 },
+    late:  { name: 'Ogre',   hp: 36, dmgMin: 7,  dmgMax: 15, armor: 2, xp: 35, gold: 4 },
   } satisfies Record<string, EnemyDef>,
 
   elites: {
-    early: { name: 'Goblin-høvding', hp: 35, dmg: 9,  armor: 1, xp: 40, gold: 12 },
-    mid:   { name: 'Skyggeridder',   hp: 50, dmg: 12, armor: 2, xp: 60, gold: 16 },
-    late:  { name: 'Trold-konge',    hp: 70, dmg: 14, armor: 3, xp: 80, gold: 20 },
+    early: { name: 'Goblin-høvding', hp: 35, dmgMin: 7,  dmgMax: 11, armor: 1, xp: 40, gold: 12 },
+    mid:   { name: 'Skyggeridder',   hp: 50, dmgMin: 9,  dmgMax: 15, armor: 2, xp: 60, gold: 16 },
+    late:  { name: 'Trold-konge',    hp: 70, dmgMin: 10, dmgMax: 18, armor: 3, xp: 80, gold: 20 },
   } satisfies Record<string, EnemyDef>,
 
-  boss: { name: 'Bossen', hp: 105, dmg: 10, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
+  boss: { name: 'Bossen', hp: 90, dmgMin: 8, dmgMax: 12, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
 
   goldTile: 12,
   camp: { heal: 20 },

@@ -64,8 +64,9 @@ function equipmentDeltaLabel(state: GameState, itemId: EquipmentAssetId): string
   const currentId = equippedIdForKind(state.hero, offered.kind) as EquipmentAssetId;
   const current = EQUIPMENT_DEFS[currentId];
   if (offered.kind === 'weapon') {
-    const next = state.hero.dmg + offered.effect.dmg - current.effect.dmg;
-    return `DMG ${state.hero.dmg} → ${next}`;
+    const shift = offered.effect.dmg - current.effect.dmg;
+    const { dmgMin, dmgMax } = state.hero;
+    return `DMG ${dmgMin}-${dmgMax} → ${dmgMin + shift}-${dmgMax + shift}`;
   }
   if (offered.kind === 'armor') {
     const next = state.hero.armor + offered.effect.armor - current.effect.armor;

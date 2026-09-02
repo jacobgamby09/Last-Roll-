@@ -6,10 +6,10 @@ export const SCENE_TIMING = {
 };
 
 export const COMBAT_TIMING = {
-  intro: 550,       // fjenden træder ind, navneskilt
-  introBoss: 1100,  // bossens ceremoni-indtræden
-  eventBase: 420,   // første udveksling
-  eventDecay: 0.82, // accelererende tempo pr. event
-  eventMin: 160,    // gulv for tempoet
-  outcome: 650,     // pause på sidste slag før payout
+  intro: 700,       // fjenden træder ind, navneskilt
+  introBoss: 1300,  // bossens ceremoni-indtræden
+  eventBase: 800,   // første udveksling — roligt nok til at aflæse rullet
+  eventDecay: 0.92, // blidt accelererende tempo pr. event
+  eventMin: 420,    // gulv for tempoet
+  outcome: 950,     // pause på sidste slag før payout
 };

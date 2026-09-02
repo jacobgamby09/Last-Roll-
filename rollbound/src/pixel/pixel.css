@@ -2200,6 +2200,13 @@
   color: var(--px-copy);
 }
 
+.combat-statline {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--px-muted);
+  white-space: nowrap;
+}
+
 .combat-sprite {
   width: 96px;
   height: 120px;
@@ -2251,21 +2258,26 @@
 
 .combat-float {
   position: absolute;
-  top: 34px;
+  top: 44px;
   left: 50%;
-  font-size: 20px;
-  font-weight: 700;
+  font-weight: 900;
   color: var(--px-red);
-  text-shadow: 0 2px 0 #000;
+  -webkit-text-stroke: 1px #1a0508;
+  text-shadow: 0 3px 0 #000, 0 0 12px rgba(255, 59, 77, 0.35);
   pointer-events: none;
-  animation: combat-float-up 550ms ease-out forwards;
+  animation: combat-float-up 850ms ease-out forwards;
 }
 
-.combat-side-enemy .combat-float { color: var(--px-ivory); }
+.combat-side-enemy .combat-float {
+  color: var(--px-gold);
+  text-shadow: 0 3px 0 #000, 0 0 12px rgba(255, 216, 74, 0.35);
+}
 
 @keyframes combat-float-up {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -30px); }
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.6); }
+  18% { opacity: 1; transform: translate(-50%, -2px) scale(1.15); }
+  32% { transform: translate(-50%, -6px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -44px) scale(1); }
 }
 
 .combat-ticker {

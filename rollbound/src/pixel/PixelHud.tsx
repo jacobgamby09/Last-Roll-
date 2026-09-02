@@ -29,7 +29,7 @@ function PixelBar({ current, feedback, label, max, previousHp, tone }: { current
   );
 }
 
-function StatBlock({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
+function StatBlock({ icon, label, value }: { icon: ReactNode; label: string; value: number | string }) {
   return (
     <div aria-label={`${label}: ${value}`} className="pixel-stat">
       <span className="pixel-stat-icon" aria-hidden="true">{icon}</span>
@@ -101,7 +101,7 @@ export function PixelHud({ state }: { state: GameState }) {
       </div>
       <EquipmentLoadout bootsNudgeCharges={hero.bootsNudgeCharges} loadout={hero.loadout} />
       <div className="pixel-stats-grid">
-        <StatBlock icon={<ResourceIcon assetId="damage" size="hud" />} label="DMG" value={hero.dmg} />
+        <StatBlock icon={<ResourceIcon assetId="damage" size="hud" />} label="DMG" value={`${hero.dmgMin}-${hero.dmgMax}`} />
         <StatBlock icon={<ResourceIcon assetId="armor" size="hud" />} label="ARM" value={hero.armor} />
         <StatBlock icon={<ResourceIcon assetId="gold" size="hud" />} label="GULD" value={hero.gold} />
         <StatBlock icon={<ResourceIcon assetId="nudge" size="hud" />} label="NUDGE" value={hero.nudges} />

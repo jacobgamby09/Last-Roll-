@@ -34,7 +34,7 @@ export function Hud({ state }: { state: GameState }) {
         </div>
       </div>
       <div className="hud-row">
-        <div className="stat">⚔️ {h.dmg} <small>DMG</small></div>
+        <div className="stat">⚔️ {h.dmgMin}-{h.dmgMax} <small>DMG</small></div>
         <div className="stat">🛡️ {h.armor} <small>ARMOR</small></div>
         <div className="stat">💰 {h.gold} <small>GULD</small></div>
         <div className="stat">👉 {h.nudges} <small>NUDGE</small></div>

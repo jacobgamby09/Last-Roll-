@@ -33,7 +33,8 @@ export function newGame(seed: number): GameState {
     hero: {
       hp: CONFIG.hero.hp,
       maxHp: CONFIG.hero.hp,
-      dmg: CONFIG.hero.dmg,
+      dmgMin: CONFIG.hero.dmgMin,
+      dmgMax: CONFIG.hero.dmgMax,
       armor: CONFIG.hero.armor,
       level: 1,
       xp: 0,
@@ -85,7 +86,11 @@ function heal(s: GameState, amount: number): number {
 
 function applyLevelPick(s: GameState, pick: LevelPick) {
   const lu = CONFIG.levelUp;
-  if (pick === 'dmg') s.hero.dmg += lu.dmg;
+  if (pick === 'dmg') {
+    // Shift-model: bonusser forskyder hele rangen; bredden ejes af våbnet
+    s.hero.dmgMin += lu.dmg;
+    s.hero.dmgMax += lu.dmg;
+  }
   else if (pick === 'hp') {
     s.hero.maxHp += lu.hp;
     s.hero.hp += lu.hp;
@@ -143,7 +148,7 @@ function gainXp(s: GameState, xp: number) {
 
 function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   const enemy = enemyForTile(s.pos, type);
-  const script = simulateFight(s.hero, enemy);
+  const script = simulateFight(s.hero, enemy, rng);
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'enemy') {
@@ -181,8 +186,8 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   else s.phase = resume;
 }
 
-function bossFight(s: GameState) {
-  const script = simulateFight(s.hero, CONFIG.boss);
+function bossFight(s: GameState, rng: RngCursor) {
+  const script = simulateFight(s.hero, CONFIG.boss, rng);
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'hero') {
@@ -265,7 +270,7 @@ function resolveTile(s: GameState, rng: RngCursor) {
       runCombat(s, rng, type);
       break;
     case 'boss':
-      bossFight(s);
+      bossFight(s, rng);
       break;
   }
 }
@@ -273,7 +278,7 @@ function resolveTile(s: GameState, rng: RngCursor) {
 function move(s: GameState, rng: RngCursor, steps: number) {
   s.pos = Math.min(s.pos + steps, CONFIG.trackLength);
   if (s.pos >= CONFIG.trackLength) {
-    bossFight(s);
+    bossFight(s, rng);
     return;
   }
   resolveTile(s, rng);

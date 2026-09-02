@@ -11,7 +11,7 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
-### 2026-09-02 · Damage-ranges for både hero og fjender (beslutning)
+### 2026-09-02 · Damage-ranges for både hero og fjender (IMPLEMENTERET samme dag)
 
 Al damage bliver ranges i stedet for flade tal — fx start-våben 7-12 i stedet for 10, og tilsvarende for fjender. **Variansen er en bevidst design-akse:** nogle våben/items og fjender har brede ranges (vilde, gamble-agtige), andre smalle (pålidelige). Items skal støtte op om aksen som en del af deres identitet.
 
@@ -19,6 +19,7 @@ Al damage bliver ranges i stedet for flade tal — fx start-våben 7-12 i stedet
 - Stadig ingen miss chance, dodge, crit-systemer eller tilfældig initiative — et lavt slag rammer stadig. Ranges er den godkendte form for combat-RNG (jf. v0.1 sektion 19, nu med bredere spillerum end "8-10").
 - Damage-rolls trækkes af run'ets seedede RNG inde i combat-scriptet → runs forbliver reproducerbare pr. seed.
 - Rækkefølge: implementeres EFTER combat screen (flad damage er sand indtil da) og EFTER sim er porteret til den rigtige engine, så effekten kan måles samme dag.
+- **Resultat af implementeringen:** shift-model (bonusser forskyder rangen; bredden ejes af våben/fjende). Hero 7-12; Goblin 5-7 (smal), Bandit 6-10, Ogre 7-15 (bred), elites 7-11/9-15/10-18, boss 8-12. Variansen kostede som forudsagt (balanced 46,4 % ved uændret boss) → boss kalibreret 105→90 HP → **balanced 57,7 %** (10k runs, engine-sim). Track-død fordobledes (~5,5 % → ~11,7 %) — tvangskampe kan nu gå galt, hvilket er variansens tilsigtede pris. Kampscenens tempo blev samtidig sænket, HP-plates fik statlinjer (DMG-range, ARM, level), og skadetal vises som store floats skaleret efter rullets størrelse.
 
 ### 2026-09-02 · Alle interaktive skærme er fullscreen-scener (beslutning)
 

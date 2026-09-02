@@ -57,7 +57,9 @@ export function equipItem(hero: Hero, itemId: EquipmentId) {
   const currentId = equippedIdForKind(hero, next.kind);
   const current = EQUIPMENT_DEFS[currentId];
 
-  hero.dmg += next.effect.dmg - current.effect.dmg;
+  // Shift-model: dmg-bonus forskyder hele rangen
+  hero.dmgMin += next.effect.dmg - current.effect.dmg;
+  hero.dmgMax += next.effect.dmg - current.effect.dmg;
   hero.armor += next.effect.armor - current.effect.armor;
   if (next.kind === 'boots') hero.bootsNudgeCharges = next.effect.freeNudges;
   if (next.kind === 'weapon') hero.loadout.weapon = itemId as Hero['loadout']['weapon'];
