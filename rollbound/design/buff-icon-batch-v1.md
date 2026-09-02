@@ -72,3 +72,5 @@ At 1280×900 and 390×844:
 - No browser exceptions or Vite error overlay in the tested flows.
 
 Initial screenshots and the read-only seed search are retained in the isolated QA worktree's ignored `rollbound/tmp.local/`. They are not shipped routes or production test hooks. The isolated worktree was moved outside the application tree so normal test discovery does not include its duplicate sources.
+
+Final integration check on English `main` (`98cfeff`): lint, build, all 21 tests and all 42 asset checks pass again. Gear Lab at `http://127.0.0.1:5173/?ui=equipment` was visually verified at 1280×900 and 390×844: both English item names and descriptions accompany the correct images, coverage is 12/12, all six image instances load at their existing sizes, and neither layout has horizontal page overflow. Browser error collection is empty. Screenshots: `tmp.local/buff-final-english-desktop.png` and `tmp.local/buff-final-english-mobile.png` in the isolated QA worktree.
