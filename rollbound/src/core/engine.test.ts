@@ -81,6 +81,40 @@ describe('engine-kontrakter', () => {
     expect(s.hero.slotBuffs.armor).toEqual({ dmg: 0, armor: 0, maxHp: 0 });
   });
 
+  it('kiste-inspektion er gratis: Keep går tilbage til kisten, Equip forbruger valget', () => {
+    let s = newGame(1);
+    const options = [
+      { key: 'weapon' as const, name: 'Honed Blade', desc: '', equipmentId: 'rusted-sword' as const },
+      { key: 'nudge' as const, name: 'Lucky Die', desc: '+1 nudge' },
+      { key: 'gold' as const, name: 'Coin Purse', desc: '+12 gold' },
+    ];
+    s.phase = { t: 'treasure', options };
+
+    // Inspicér gear-kortet → equipment-fasen husker kisten som resume
+    s = reducer(s, { type: 'PICK_TREASURE', index: 0 });
+    expect(s.phase.t).toBe('equipment');
+    if (s.phase.t !== 'equipment') throw new Error('unreachable');
+    expect(s.phase.resume).toEqual({ t: 'treasure', options });
+
+    // Keep → tilbage til kisten med ALLE muligheder intakte
+    s = reducer(s, { type: 'KEEP_EQUIPMENT' });
+    expect(s.phase).toEqual({ t: 'treasure', options });
+
+    // Vælg et andet kort — kisten fungerer stadig normalt
+    const nudgesBefore = s.hero.nudges;
+    s = reducer(s, { type: 'PICK_TREASURE', index: 1 });
+    expect(s.phase.t).toBe('idle');
+    expect(s.hero.nudges).toBe(nudgesBefore + 1);
+
+    // Equip fra en kiste forbruger valget: fasen går til idle, ikke tilbage
+    let s2 = newGame(2);
+    s2.phase = { t: 'treasure', options };
+    s2 = reducer(s2, { type: 'PICK_TREASURE', index: 0 });
+    s2 = reducer(s2, { type: 'EQUIP_OFFER' });
+    expect(s2.hero.loadout.weapon).toBe('rusted-sword');
+    expect(s2.phase.t).toBe('idle');
+  });
+
   it('dice-peek-kontrakten: næste RNG-træk i idle er præcis ét d6 = det faktiske roll', () => {
     for (const seed of [0, 7, 99]) {
       let s = newGame(seed);

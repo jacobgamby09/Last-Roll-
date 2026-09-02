@@ -11,6 +11,10 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Kiste-inspektion er gratis: Keep går tilbage til kisten (IMPLEMENTERET)
+
+Playtest-fund: at klikke et gear-kort i en skattekiste førte til Equip/Keep-skærmen, men Keep smed hele valget væk — spilleren kunne ikke gå tilbage og tage en af de andre muligheder. Det var i konflikt med shoppens kontrakt, hvor Equip/Keep-skærmen allerede er gratis inspektion ("BACK TO SHOP"). **Beslutning: Equip/Keep-skærmen er ALTID en inspektion, aldrig en fælde.** Vælges et gear-kort i en kiste, husker equipment-fasen kisten som resume; Keep ("KEEP CURRENT · BACK TO CHEST") returnerer til kisten med alle 3 muligheder intakte. Først Equip (eller valg af et ikke-gear-kort) forbruger kisten. Engine-test pinner kontrakten; sim-botten er loop-sikret (tager tilbuddet, hvis kisten intet bedre alternativ har). Sim uændret: balanced 56,0 % (10k).
+
 ### 2026-09-02 · Fleksibilitets-præmie på heal-eliksirer (IMPLEMENTERET)
 
 Healing Elixir (+20 HP) dominerede shoppens Healing Herb (+15 HP for samme 8 guld): billigere pr. HP **og** frit timbar (ingen overheal-spild), kun modvægtet af consumable-slottet. Prissætningen var inverteret — fleksibilitet skal koste, ikke belønnes. **Healing-mængderne er uændrede (item-identitet); priserne er justeret:** Healing Elixir 8 → **12 g** (1,67 HP/g), Grand Elixir 14 → **20 g** (2,0 HP/g). Urten (8 g / +15, 1,88 HP/g) er nu bedste HP pr. guld, når du har brug for healing *nu*; eliksirer betaler præmie for timing. Sim-verificeret (10k runs): balanced 56,0 % / aggressive 40,6 % / cautious 37,8 % — ≤0,6 pp fra Batch C-kalibreringen, ingen rekalibrering.

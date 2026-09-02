@@ -603,8 +603,10 @@ export function reducer(prev: GameState, action: Action): GameState {
       const item = s.phase.options[action.index];
       if (!item) break;
       if (item.equipmentId) {
+        // Inspektion er gratis (samme kontrakt som shoppen): Keep går TILBAGE
+        // til kisten med alle muligheder intakte; først Equip forbruger valget.
         log(s, `You find ${item.name}. Compare it with your current gear.`, 'good');
-        offerEquipment(s, item.equipmentId, 'treasure', { t: 'idle' });
+        offerEquipment(s, item.equipmentId, 'treasure', { t: 'treasure', options: s.phase.options });
       } else {
         applyImmediateTreasure(s, item);
         log(s, `You take ${item.name} (${item.desc}).`, 'good');
@@ -656,13 +658,18 @@ export function reducer(prev: GameState, action: Action): GameState {
         if (sold) sold.sold = true;
       }
       log(s, `${source === 'shop' ? 'Bought & equipped' : 'Equipped'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
-      s.phase = resume;
+      // Equip fra en kiste forbruger valget — de andre muligheder forsvinder
+      s.phase = resume.t === 'treasure' ? { t: 'idle' } : resume;
       break;
     }
     case 'KEEP_EQUIPMENT': {
       if (s.phase.t !== 'equipment') break;
       const item = EQUIPMENT_DEFS[s.phase.itemId];
-      log(s, `You keep your current gear and leave ${item.name} behind.`);
+      if (s.phase.resume.t === 'treasure') {
+        log(s, `You put ${item.name} back and look at the chest again.`);
+      } else {
+        log(s, `You keep your current gear and leave ${item.name} behind.`);
+      }
       s.phase = s.phase.resume;
       break;
     }

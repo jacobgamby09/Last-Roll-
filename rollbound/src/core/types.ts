@@ -150,7 +150,8 @@ export type ShopOffer =
 export type EquipmentResumePhase =
   | { t: 'idle' }
   | { t: 'levelup' }
-  | { t: 'shop'; offers: ShopOffer[] };
+  | { t: 'shop'; offers: ShopOffer[] }
+  | { t: 'treasure'; options: TreasureItem[] };
 
 export type Phase =
   | { t: 'idle' }

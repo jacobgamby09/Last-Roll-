@@ -12,6 +12,8 @@ Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seede
 
 This icon batch changes presentation only. Claude's upstream Batch C calibration is balanced **56.4%** / aggressive **41.8%** / cautious **38.4%** over 10,000 engine-sim runs, with boss HP 85 / DMG 8–12 / ARM 2. Those are the upstream results, not a new simulation or balance change made during icon production.
 
+UX rule 2026-09-02: **the Equip/Keep screen is always a free inspection, never a trap.** Picking a gear card in a treasure chest opens the compare screen with the chest stored as its resume phase; Keep ("KEEP CURRENT · BACK TO CHEST") returns to the chest with all options intact, and only Equip (or taking a non-gear option) consumes the chest. This matches the shop's existing "BACK TO SHOP" contract. Pinned by an engine test; the sim bot is loop-proofed (it equips when the chest holds no better alternative).
+
 Balance tweak 2026-09-02: **flexibility premium on healing elixirs** — Healing Elixir 8 → 12 g, Grand Elixir 14 → 20 g (heal amounts unchanged). The shop's Healing Herb (8 g / +15 HP, instant) is now the best HP-per-gold when you need healing immediately; elixirs pay a premium for free timing. Sim-verified (10k runs): balanced 56.0% / aggressive 40.6% / cautious 37.8% — within 0.6 pp of Batch C, no recalibration. See the GDD changelog.
 
 The current visual direction has been approved by the user:

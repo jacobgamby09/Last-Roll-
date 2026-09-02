@@ -109,7 +109,11 @@ export function EquipmentOffer({ state, dispatch }: PhaseProps) {
   const offered = EQUIPMENT_DEFS[phase.itemId];
   const currentId = equippedIdForKind(hero, offered.slot) as EquipmentAssetId;
   const equipLabel = phase.cost > 0 ? `BUY & EQUIP · ${phase.cost} G` : 'EQUIP';
-  const keepLabel = phase.source === 'shop' ? 'KEEP CURRENT · BACK TO SHOP' : 'KEEP CURRENT';
+  const keepLabel = phase.source === 'shop'
+    ? 'KEEP CURRENT · BACK TO SHOP'
+    : phase.source === 'treasure'
+      ? 'KEEP CURRENT · BACK TO CHEST'
+      : 'KEEP CURRENT';
 
   return (
     <div className="pixel-phase-block pixel-equipment-offer">

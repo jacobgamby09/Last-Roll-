@@ -187,7 +187,9 @@ export function ActionPanel({ state, dispatch }: Props) {
           <div className="dest-card"><span className="dest-tag">New</span><span className="dest-title">{offered.name}</span><span className="dest-detail">{equipmentEffectText(phase.itemId)}</span></div>
         </div>
         <button className="btn btn-roll" disabled={hero.gold < phase.cost} onClick={() => dispatch({ type: 'EQUIP_OFFER' })}>{phase.cost > 0 ? `Buy & equip (${phase.cost} gold)` : 'Equip'}</button>
-        <button className="btn" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })}>Keep current</button>
+        <button className="btn" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })}>
+          {phase.source === 'shop' ? 'Keep current (back to shop)' : phase.source === 'treasure' ? 'Keep current (back to chest)' : 'Keep current'}
+        </button>
       </div>
     );
   }

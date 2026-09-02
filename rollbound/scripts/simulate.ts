@@ -284,8 +284,18 @@ function botAction(s: GameState, strat: Strategy): Action {
     case 'treasure': return treasureAction(s, strat);
     case 'equipment': {
       // Vurdér tilbuddet mod det udstyrede — 30 items er ikke strengt bedre
-      const worthIt = gearDelta(s, s.phase.itemId, strat) > 0;
-      return worthIt && s.hero.gold >= s.phase.cost ? { type: 'EQUIP_OFFER' } : { type: 'KEEP_EQUIPMENT' };
+      const phase = s.phase;
+      const worthIt = gearDelta(s, phase.itemId, strat) > 0;
+      if (worthIt && s.hero.gold >= phase.cost) return { type: 'EQUIP_OFFER' };
+      // Keep fra en kiste går TILBAGE til kisten (gratis inspektion, 2026-09-02).
+      // Botten er deterministisk og ville gen-vælge samme afviste gear i en
+      // uendelig løkke — findes intet bedre alternativ i kisten, tag tilbuddet.
+      if (phase.resume.t === 'treasure') {
+        const hasAlternative = phase.resume.options.some(o =>
+          o.equipmentId ? o.equipmentId !== phase.itemId && gearDelta(s, o.equipmentId, strat) > 0 : true);
+        if (!hasAlternative) return { type: 'EQUIP_OFFER' };
+      }
+      return { type: 'KEEP_EQUIPMENT' };
     }
     case 'shop': return shopAction(s, strat);
     case 'levelup': return levelPickAction(s, strat);
