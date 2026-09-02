@@ -382,9 +382,10 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     }
     case 'shop': {
-      // 5 seedede slots — hvert slot 100 % tilfældigt: gear, consumable eller service
+      // 5 seedede slots — hvert slot 100 % tilfældigt: gear, consumable eller service.
+      // Gear og consumables trækkes UDEN tilbagelægning (ingen dubletter i én shop).
       const gearPool = unownedGear(s).map(def => ({ item: def, weight: tierWeight(s.pos, def.tier) }));
-      const sellableConsumables = Object.values(CONSUMABLES).filter(def => def.cost > 0);
+      const consumablePool = Object.values(CONSUMABLES).filter(def => def.cost > 0);
       const offers: ShopOffer[] = [];
       for (let i = 0; i < 5; i++) {
         const category = rng.rand();
@@ -394,8 +395,8 @@ function resolveTile(s: GameState, rng: RngCursor) {
             offers.push({ kind: 'gear', itemId: def.id, cost: def.cost, sold: false });
             continue;
           }
-        } else if (category < 2 / 3) {
-          const def = sellableConsumables[rng.int(0, sellableConsumables.length - 1)];
+        } else if (category < 2 / 3 && consumablePool.length > 0) {
+          const def = consumablePool.splice(rng.int(0, consumablePool.length - 1), 1)[0];
           offers.push({ kind: 'consumable', consumableId: def.id, cost: def.cost, sold: false });
           continue;
         }
