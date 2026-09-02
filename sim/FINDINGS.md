@@ -130,6 +130,23 @@ Track-længde, tredjedele og genereringsregler er nu parameteriseret i simulate.
 
 **Anbefaling:** Prototypen bør stadig teste 70 felter først (hurtigst at playteste), men track-længde er nu ren data — en act-baseret 105-140-version (2-3 segmenter med egen tier + mini-boss) er den oplagte form for "længere", fordi eskalering følger gratis med.
 
+## Opfølgning 4: Ikke-stakkende equipment (v0.9, den live prototypes regelsæt) — testet 2026-09-02
+
+Pixel-prototypen ændrede equipment fra stakkende bonusser til tre én-gangs slots (weapon +3 dmg / armor +1 / boots ≈ 1 gratis nudge; shop 25/20/18 guld; ejede upgrades filtreres fra loot). Sim'en er opdateret til at modellere det (`CONFIG.equipment` i simulate.js, variants-equipment-test.js, 10.000 runs):
+
+| Boss | Aggressive | Balanced | Cautious | Uden manipulation |
+|---|---:|---:|---:|---:|
+| **105/10/2 (live)** | 33,3% | **55,7%** | 26,2% | 31,0% |
+| 80/10/2 | 44,4% | 68,6% | 42,2% | 40,8% |
+| 70/9/2 | 60,3% | 82,8% | 60,2% | 52,4% |
+
+**Hovedkonklusion: nerf'en er næsten selvkompenserende — boss 105/10/2 kan blive stående.** Hero-damage ved boss falder (23,5 → 19,3), men to emergente effekter opvejer det: (1) når upgrades er ejet, består loot-poolen kun af maxHP/nudge/guld, så sene drops bliver utility (maxHP ved boss: 86,9 → 91,7; nudges brugt: 2,8 → 3,2) — den "to loot-pools"-dynamik, vi anbefalede, opstod af sig selv; (2) guld, der før gik til stakkende våben, går nu til heals.
+
+**Sekundære fund:**
+- **Aggressive svækkes mest** (46,2% → 33,3%): arketypen levede af stakkende damage. Med flere item-tiers (planlagt) kommer det tilbage.
+- **Shop-boots er domineret:** Stivinderstøvler (18 g ≈ +1 nudge) vs. shoppens nudge (8 g) — ingen rationel spiller køber støvlerne. Boots-effekten bør differentieres fra en rå nudge, fx "genoplad Boots-chargen ved hver Camp" (GDD'ens Traveler's Boots), så slottet bliver et board-build-valg frem for en dyr forbrugsvare.
+- Sim-botten modellerer boots-chargen som +1 nudge (ækvivalent, da chargen bruges før normale nudges og aldrig genoplades).
+
 ## Næste skridt
 
 1. **v0.2-sim:** spells (Fireball/Heal) + consumables + rigtige events med trade-offs; boss skrues op tilsvarende.

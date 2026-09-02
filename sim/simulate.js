@@ -24,6 +24,9 @@ const CONFIG = {
   boss: { name: 'Boss', hp: 110, dmg: 15, armor: 3 },
   goldTile: 10,
   camp: { heal: 15 },
+  // Equipment-mode (v0.9+): ikke-stakkende slots som i den live prototype.
+  // null = gammel stakkende model. Form: { weapon:{dmg,cost}, armor:{armor,cost}, boots:{nudges,cost} }
+  equipment: null,
   drops: { normal: 0, elite: 0 },           // chance for 1 tilfældigt treasure-item ved kill
   trap: { hpLoss: 8, goldLoss: 10 },        // 50/50
   event: { gold: 10, hpLoss: 6 },           // 50/50
@@ -176,12 +179,28 @@ function applyLevelPick(hero, pick) {
   }
 }
 
+// Pool af tilgængelige treasure/drop-items. I equipment-mode er weapon/armor/boots
+// én-gangs slots (som i den live prototype); ejede upgrades filtreres fra.
+function treasurePool(hero) {
+  if (!CONFIG.equipment) return CONFIG.treasurePool;
+  const eq = CONFIG.equipment;
+  const pool = [
+    { key: 'maxhp', apply: h => { h.maxHp += 10; h.hp += 10; } },
+    { key: 'nudge', apply: h => h.nudges += 1 },
+    { key: 'gold', apply: h => h.gold += 12 },
+  ];
+  if (!hero.equip.weapon) pool.push({ key: 'weapon', apply: h => { h.dmg += eq.weapon.dmg; h.equip.weapon = true; } });
+  if (!hero.equip.armor) pool.push({ key: 'armor', apply: h => { h.armor += eq.armor.armor; h.equip.armor = true; } });
+  if (!hero.equip.boots) pool.push({ key: 'boots', apply: h => { h.nudges += eq.boots.nudges; h.equip.boots = true; } });
+  return pool;
+}
+
 function pickTreasure(hero, strat, options, stats) {
-  // Grådig pick efter strategi
-  const prefer = strat.levelPick === 'dmg' ? ['dmg', 'nudge', 'gold', 'maxhp', 'armor']
-    : strat.levelPick === 'defensive' ? ['armor', 'maxhp', 'nudge', 'gold', 'dmg']
-    : hero.hp / hero.maxHp < 0.5 ? ['maxhp', 'armor', 'dmg', 'nudge', 'gold']
-    : ['dmg', 'maxhp', 'nudge', 'armor', 'gold'];
+  // Grådig pick efter strategi ('weapon'/'boots' findes kun i equipment-mode)
+  const prefer = strat.levelPick === 'dmg' ? ['weapon', 'dmg', 'nudge', 'boots', 'gold', 'maxhp', 'armor']
+    : strat.levelPick === 'defensive' ? ['armor', 'maxhp', 'boots', 'nudge', 'gold', 'weapon', 'dmg']
+    : hero.hp / hero.maxHp < 0.5 ? ['maxhp', 'armor', 'weapon', 'dmg', 'boots', 'nudge', 'gold']
+    : ['weapon', 'dmg', 'maxhp', 'boots', 'nudge', 'armor', 'gold'];
   for (const key of prefer) {
     const opt = options.find(o => o.key === key);
     if (opt) { opt.apply(hero); stats.treasurePicks[key] = (stats.treasurePicks[key] || 0) + 1; return; }
@@ -266,7 +285,20 @@ function shopVisit(hero, strat, stats) {
     buy(S.heal.cost); hero.hp = Math.min(hero.maxHp, hero.hp + S.heal.hp); heals++;
   }
   // Stor ting efter strategi
-  if (strat.levelPick === 'defensive') {
+  if (CONFIG.equipment) {
+    // Én-gangs slots som i den live prototype (boots købes ikke: +1 nudge for 18
+    // er domineret af shoppens nudge til 8 — se FINDINGS)
+    const eq = CONFIG.equipment;
+    const buyWeapon = () => { buy(eq.weapon.cost); hero.dmg += eq.weapon.dmg; hero.equip.weapon = true; };
+    const buyArmor = () => { buy(eq.armor.cost); hero.armor += eq.armor.armor; hero.equip.armor = true; };
+    if (strat.levelPick === 'defensive') {
+      if (!hero.equip.armor && hero.gold >= eq.armor.cost) buyArmor();
+      if (!hero.equip.weapon && hero.gold >= eq.weapon.cost) buyWeapon();
+    } else {
+      if (!hero.equip.weapon && hero.gold >= eq.weapon.cost) buyWeapon();
+      if (!hero.equip.armor && hero.gold >= eq.armor.cost) buyArmor();
+    }
+  } else if (strat.levelPick === 'defensive') {
     if (hero.gold >= S.armor.cost) { buy(S.armor.cost); hero.armor += S.armor.armor; }
   } else if (hero.gold >= S.weapon.cost) {
     buy(S.weapon.cost); hero.dmg += S.weapon.dmg;
@@ -289,6 +321,7 @@ function simulateRun(stratName, forcePick = null) {
   const hero = {
     hp: CONFIG.hero.hp, maxHp: CONFIG.hero.hp, dmg: CONFIG.hero.dmg, armor: CONFIG.hero.armor,
     level: 1, xp: 0, gold: CONFIG.hero.gold, nudges: CONFIG.hero.nudges, rerolls: CONFIG.hero.rerolls,
+    equip: { weapon: false, armor: false, boots: false },
   };
   const stats = {
     rolls: 0, fights: 0, eliteFights: 0, nudgesUsed: 0, rerollsUsed: 0,
@@ -349,14 +382,15 @@ function simulateRun(stratName, forcePick = null) {
       // Loot drop: ét tilfældigt item (intet valg, modsat Treasure)
       const dropChance = type === 'elite' ? CONFIG.drops.elite : CONFIG.drops.normal;
       if (dropChance > 0 && rand() < dropChance) {
-        const item = CONFIG.treasurePool[Math.floor(rand() * CONFIG.treasurePool.length)];
+        const pool = treasurePool(hero);
+        const item = pool[Math.floor(rand() * pool.length)];
         item.apply(hero);
         stats.drops = (stats.drops || 0) + 1;
       }
     } else if (type === 'gold') {
       gainGold(CONFIG.goldTile);
     } else if (type === 'treasure') {
-      const pool = shuffle([...CONFIG.treasurePool]).slice(0, 3);
+      const pool = shuffle([...treasurePool(hero)]).slice(0, 3);
       pickTreasure(hero, strat, pool, stats);
     } else if (type === 'camp') {
       hero.hp = Math.min(hero.maxHp, hero.hp + CONFIG.camp.heal);

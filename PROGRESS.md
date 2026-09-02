@@ -22,8 +22,8 @@ The current visual direction has been approved by the user:
 
 - Branch: `main`
 - Remote: `https://github.com/jacobgamby09/Last-Roll-.git`
-- Current committed baseline: `17d9cac Initial Rollbound prototype`
-- The pixel UI, design files, normalized assets, and the latest documentation changes are currently local and uncommitted/unpushed.
+- Pushed commits: `17d9cac` initial prototype, `63ccee7` pixel UI + equipment slice, `e71713b` dice presentation, `5466d70` hero-status HUD.
+- Local uncommitted changes: the hero-status design correction (no portrait card/diamond/overlapping badge, continuous bars) in `PixelHud.tsx`, `pixel.css`, `AGENTS.md`, the hero-status contract, plus the v0.9 simulation revalidation (sim/, config comment, this file).
 - Preserve all existing local changes. Do not reset or overwrite the worktree.
 
 ## Run and QA
@@ -59,7 +59,7 @@ Latest verification:
 - Seed 2 shows dedicated Damage, Armor, Life, Gold, Nudge and Reroll assets in the HUD without replacing the three equipment slots.
 - Seed 2 verifies the new D6 anticipation/tumble/impact sequence resolves to the same deterministic face as the reducer and reveals destinations only afterward.
 - A real Reroll verifies the same D6 effect plays before movement, consumes exactly one Reroll and resolves the previewed value.
-- Hero Status uses the dedicated 80×80 bust, separate Level plate, segmented HP/XP bars and a dedicated XP essence asset.
+- Hero Status uses the dedicated 80×80 bust without a backing card, a compact Level/next-reward heading, continuous HP/XP bars with external values and a dedicated XP essence asset.
 - A real seed 2 Goblin result verifies simultaneous HP ghost-damage and XP gain feedback (`50 → 44 HP`, `0 → 15 XP`).
 - A later real seed 2 Goblin verifies Level `1 → 2`, retained `10/30 XP`, Level feedback and the updated next-level reward.
 - Seed 0 maps Gold and Nudge Treasure rewards to resource assets while Weapon remains an equipment asset.
@@ -218,19 +218,21 @@ The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`,
 52. Replaced the white prototype bars with shared notched, segmented, three-tone HP and XP housings.
 53. Added reducer-derived ghost damage, heal, XP and level-up feedback with simultaneous combat damage/XP handling.
 54. Verified initial, real combat and real level-up states plus a `390 × 844` layout without global overflow or browser errors.
+55. Removed the portrait card, diamond sigil, scanline and overlapping Level badge so the transparent hero bust stands directly against the HUD.
+56. Moved Level and the next upgrade into one compact vitals heading, and replaced segmented bars with continuous fills plus external `current / max` values.
+57. Preserved reducer-derived damage/heal/XP/level feedback and verified the redesign at desktop and `390 × 844` with no overflow or browser warnings.
 
 The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` mentions visible tile frames. Treat it only as the origin mockup. The newer rules in `AGENTS.md` and `tile-asset-contract-v1.md` supersede that part of the prompt.
 
 ## Recommended next work
 
-The board, first functional equipment slice, and first non-equipment resource family are complete. The next work should validate the changed run balance before producing more gear:
+The board, first functional equipment slice, and first non-equipment resource family are complete. **The balance revalidation is done (2026-09-02):** the simulation now models non-stacking equipment (`CONFIG.equipment` in `sim/simulate.js`, results in `sim/FINDINGS.md` section "Opfølgning 4"). Balanced bot wins **55.7%** under the live ruleset with boss 105/10/2 — inside the 55–70% target band, so no boss rebalance is needed. Aggressive dropped to 33% (stacking damage is gone) and shop-Boots at 18g is strictly dominated by the 8g Nudge.
 
-1. Update the simulation/bot model for fixed, non-stacking equipment offers and the Boots free-Nudge charge.
-2. Re-run balanced/aggressive/cautious calibration; the historical `63.7%` result is no longer authoritative for the complete ruleset.
-3. Playtest whether the comparison pause feels worthwhile or interrupts the Roll → Resolve rhythm too often, especially on combat drops.
-4. Only then decide whether the next content slice is a second item per slot or better Event trade-offs.
+Next work:
 
-Why this comes next: equipment now has truthful semantics and a complete acquisition flow. More art should wait until the changed power curve and decision frequency are measured.
+1. Playtest whether the comparison pause feels worthwhile or interrupts the Roll → Resolve rhythm too often, especially on combat drops.
+2. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
+3. Then decide whether the next content slice is a second item per slot (which also restores the aggressive archetype's damage ceiling) or better Event trade-offs.
 
 ## Known limitations
 
@@ -238,8 +240,8 @@ Why this comes next: equipment now has truthful semantics and a complete acquisi
 - Combat is communicated by result/log rather than an animated encounter scene.
 - No sound pass exists.
 - There is deliberately no inventory, rarity, selling, or duplicate conversion; equipped upgrades are filtered instead.
-- The v0.8 `63.7%` balanced-bot result predates fixed, non-stacking equipment and Boots charges and must be revalidated.
-- Pixel work is local and has not yet been committed or pushed to GitHub.
+- Balance is revalidated for the non-stacking ruleset (v0.9: balanced 55.7%), but the sim bot approximates the Boots charge as +1 Nudge and always equips strict upgrades; human decision patterns may differ.
+- The hero-status design correction and the v0.9 simulation work are local and not yet committed or pushed.
 
 ## Guardrails for the next contributor
 
@@ -253,7 +255,7 @@ Why this comes next: equipment now has truthful semantics and a complete acquisi
 - Do not reintroduce whole-board responsive scaling; preserve native pixel scale and internal board scrolling.
 - Do not reduce runtime functional text below the tiers in `readability-contract-v1.md` or hide disabled reasons through low opacity.
 - Do not move dice animation state into the reducer, add visual randomness to the RNG stream or bake pips into the D6 body asset.
-- Do not bake the Level plate or feedback states into the hero portrait, and do not let HUD feedback mutate reducer-owned HP, XP or Level.
+- Do not reintroduce a portrait backing card, diamond sigil, overlapping Level badge or segmented bars; keep values outside the fills and keep HUD feedback isolated from reducer-owned HP, XP and Level.
 - Never map a Nudge resource directly to the Boots slot; Stivinderstøvler's separate charge is the explicit item effect.
 - Never apply equipment-slot frames or colors to non-equipment resource icons.
 - Preserve true alpha transparency and nearest-neighbor downsampling.

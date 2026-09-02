@@ -1,6 +1,6 @@
-// Rollbound board/combat-baseline v0.8 — sim-verificeret 2026-08-31.
-// Equipment blev gjort ikke-stakkende efter denne sim; samlet winrate skal genverificeres.
-// Historisk baseline: balanced bot 63,7%, ~20 rolls, HP→XP ≈ 0,39 — se ../sim/FINDINGS.md.
+// Rollbound balance v0.9 — sim-verificeret 2026-09-02 MED ikke-stakkende equipment:
+// balanced bot 55,7% win, ~20 rolls, HP→XP ≈ 0,44 (boss 105/10/2 står korrekt).
+// Historisk v0.8-baseline (stakkende equipment): 63,7% — se ../sim/FINDINGS.md.
 // ALLE balance-tal bor her. Ingen tal hardcodes i engine eller UI.
 
 import type { EnemyDef, EquipmentId, EquipmentKind, EquipmentLoadout, TreasureItem } from './types';
