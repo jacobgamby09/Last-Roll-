@@ -6,7 +6,7 @@ import { CONFIG, TREASURE_POOL } from './config';
 import { EQUIPMENT_DEFS, equipItem, ownsEquipment } from './equipment';
 import { cursor, type RngCursor } from './rng';
 import { generateTrack } from './track';
-import { enemyForTile, fightOutcome } from './combat';
+import { enemyForTile, simulateFight } from './combat';
 import type { EquipmentId, EquipmentKind, EquipmentResumePhase, GameState, LevelPick, LogEntry, TileType, TreasureItem } from './types';
 
 export type Action =
@@ -48,6 +48,7 @@ export function newGame(seed: number): GameState {
     rolls: 0,
     fights: 0,
     log: [{ text: `Runnet begynder. Nå felt ${CONFIG.trackLength} med et build, der kan slå bossen.`, kind: 'info' }],
+    lastCombat: null,
   };
 }
 
@@ -141,19 +142,22 @@ function gainXp(s: GameState, xp: number) {
 
 function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   const enemy = enemyForTile(s.pos, type);
-  const out = fightOutcome(s.hero, enemy);
-  if (!out.survives) {
+  const script = simulateFight(s.hero, enemy);
+  s.lastCombat = script;
+  if (script.result.winner === 'enemy') {
+    const enemyBlows = script.events.filter(e => e.actor === 'enemy').length;
     s.hero.hp = 0;
     s.phase = { t: 'over', won: false, cause: `Dræbt af ${enemy.name} på felt ${s.pos}` };
-    log(s, `${enemy.name} fælder dig efter ${out.hitsToKill - 1} slag.`, 'bad');
+    log(s, `${enemy.name} fælder dig efter ${enemyBlows} slag.`, 'bad');
     return;
   }
-  s.hero.hp -= out.hpLoss;
+  const hpLoss = s.hero.hp - script.result.heroHpAfter;
+  s.hero.hp = script.result.heroHpAfter;
   s.fights++;
   s.hero.gold += enemy.gold;
   log(
     s,
-    `Du besejrer ${enemy.name} på ${out.hitsToKill} slag: −${out.hpLoss} HP, +${enemy.xp} XP, +${enemy.gold} guld.`,
+    `Du besejrer ${enemy.name} på ${script.result.turns} slag: −${hpLoss} HP, +${enemy.xp} XP, +${enemy.gold} guld.`,
     'combat',
   );
   const dropChance = type === 'elite' ? CONFIG.drops.elite : CONFIG.drops.normal;
@@ -176,10 +180,12 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
 }
 
 function bossFight(s: GameState) {
-  const out = fightOutcome(s.hero, CONFIG.boss);
-  if (out.survives) {
-    s.hero.hp -= out.hpLoss;
-    log(s, `${CONFIG.boss.name} falder efter ${out.hitsToKill} slag! Du mistede ${out.hpLoss} HP.`, 'good');
+  const script = simulateFight(s.hero, CONFIG.boss);
+  s.lastCombat = script;
+  if (script.result.winner === 'hero') {
+    const hpLoss = s.hero.hp - script.result.heroHpAfter;
+    s.hero.hp = script.result.heroHpAfter;
+    log(s, `${CONFIG.boss.name} falder efter ${script.result.turns} slag! Du mistede ${hpLoss} HP.`, 'good');
     s.phase = { t: 'over', won: true, cause: `Sejr med ${s.hero.hp} HP tilbage` };
   } else {
     s.hero.hp = 0;

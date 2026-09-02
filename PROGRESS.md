@@ -89,6 +89,7 @@ Latest verification:
 - Normal and elite drop rates behind configuration.
 - Pixel UI is the default; Classic UI remains available.
 - Hero movement is animated field-by-field in the UI while the reducer remains deterministic and UI-free.
+- Combat resolves through a combat script: `simulateFight` in `src/core/combat.ts` produces the blow-by-blow event list, the reducer applies its result atomically and stores it as `state.lastCombat` for future UI playback. Equivalence with the old closed-form math, run determinism, and the dice-peek contract are locked by `npm test` (vitest: `combat.test.ts`, `engine.test.ts`).
 - Equipment is now a reducer-owned offer flow for Treasure, combat drops, and Shops with explicit Equip/Keep actions.
 - Equipment effects replace the effect in one slot rather than stacking permanent bonuses; equipped upgrades are removed from future loot and disabled in Shops.
 - The first upgrade effects are Slebet klinge `+3 Damage`, Jernplade `+1 Armor`, and Stivinderstøvler `1 free Nudge charge`.
@@ -232,13 +233,12 @@ The board, first functional equipment slice, and first non-equipment resource fa
 
 Formal playtesting is deliberately deferred until the playtest gate is reached: combat screen + first item batch + consumables (decided 2026-09-02).
 
-Next work:
+Next work (combat script in core is DONE, 2026-09-02 — see `simulateFight` and the vitest suite):
 
-1. Combat script in core: the engine exposes the blow-by-blow sequence of a fight as data (pure refactor of existing deterministic math), so presentation never re-derives rules.
-2. Combat screen in the pixel UI: play back the combat script visually instead of a "lose X HP" log line. In the same slice, remove the exact-price UI (combat tile chips, destination HP forecasts, deadly flags, the boss-price HUD panel) and add hover/click enemy inspection with type + approximate stats per `AGENTS.md`.
-3. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow.
-4. Port the simulation to run on the real engine reducer so every item batch can be revalidated without rule drift.
-5. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
+1. Combat screen in the pixel UI: play back `state.lastCombat` visually instead of a "lose X HP" log line, following the movement/dice pattern (input locked, reduced-motion skips to result, no rule re-derivation). In the same slice, remove the exact-price UI (combat tile chips, destination HP forecasts, deadly flags, the boss-price HUD panel) and add hover/click enemy inspection with type + approximate stats per `AGENTS.md`.
+2. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow. New combat effects extend the `CombatEvent.kind` union.
+3. Port the simulation to run on the real engine reducer so every item batch can be revalidated without rule drift.
+4. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
 
 ## Known limitations
 

@@ -76,6 +76,7 @@ export interface GameState {
   rolls: number;
   fights: number;
   log: LogEntry[];
+  lastCombat: CombatScript | null; // seneste kamp, klar til UI-playback
 }
 
 export interface FightPreview {
@@ -84,4 +85,25 @@ export interface FightPreview {
   hitsToKill: number;
   hpLoss: number;
   survives: boolean;
+}
+
+// Combat script: reducerens atomiske kamp-afgørelse som afspilbar event-liste.
+// UI'et afspiller events uden at gen-beregne regler; fremtidige effects
+// (first strike, lifesteal, pre-combat casts) udvider `kind`-unionen.
+export interface CombatEvent {
+  turn: number;
+  actor: 'hero' | 'enemy';
+  kind: 'attack';
+  damage: number; // efter armor
+  targetHpAfter: number;
+}
+
+export interface CombatScript {
+  enemy: EnemyDef;
+  events: CombatEvent[];
+  result: {
+    winner: 'hero' | 'enemy';
+    heroHpAfter: number;
+    turns: number; // antal hero-angreb
+  };
 }
