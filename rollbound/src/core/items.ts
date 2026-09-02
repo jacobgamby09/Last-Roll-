@@ -1,20 +1,55 @@
 // Item-kataloget — BALANCE-DATA på linje med config.ts (guideline 10).
 // Ét item = navn + slot + tier + effects; al item-adfærd er datadrevet.
-// Slice A: de seks eksisterende items porteret til den nye model —
-// adfærden er uændret (sim-tal verificeret identiske). Batch B udvider
-// kataloget til 10 pr. slot (godkendt roster, se GDD.md-changeloggen).
+// Batch B (2026-09-02): fuldt roster, 10 pr. slot — godkendt i GDD.md-
+// changeloggen. Hvert item har ÉN tydelig identitet; nogle er rene
+// stat-varianter (bevidst), effekterne bærer resten.
 
 import type { CombatMods, EquipmentId, EquipmentKind, EquipmentLoadout, ItemDef, ItemEffect } from './types';
 
 export const ITEMS: Record<EquipmentId, ItemDef> = {
+  // ---------- Våben: akserne er EV, bredde og effekt ----------
   'wood-club': {
     id: 'wood-club', slot: 'weapon', tier: 0, name: 'Trækølle', cost: 0,
     effects: [{ kind: 'dmgRange', min: 7, max: 12 }],
   },
   'rusted-sword': {
     id: 'rusted-sword', slot: 'weapon', tier: 1, name: 'Slebet klinge', cost: 25,
-    effects: [{ kind: 'dmgRange', min: 10, max: 15 }],
+    effects: [{ kind: 'dmgRange', min: 11, max: 14 }], // pålidelig, smal
   },
+  'wild-axe': {
+    id: 'wild-axe', slot: 'weapon', tier: 1, name: 'Vildøkse', cost: 24,
+    effects: [{ kind: 'dmgRange', min: 6, max: 20 }], // gambleren
+  },
+  'dagger': {
+    id: 'dagger', slot: 'weapon', tier: 1, name: 'Dolk', cost: 22,
+    effects: [{ kind: 'dmgRange', min: 8, max: 11 }, { kind: 'firstStrike', mult: 2 }],
+  },
+  'hunting-spear': {
+    id: 'hunting-spear', slot: 'weapon', tier: 1, name: 'Jagtspyd', cost: 20,
+    effects: [{ kind: 'dmgRange', min: 9, max: 16 }], // bred budget-økse
+  },
+  'twin-daggers': {
+    id: 'twin-daggers', slot: 'weapon', tier: 2, name: 'Tvillingedolke', cost: 32,
+    effects: [{ kind: 'dmgRange', min: 5, max: 8 }, { kind: 'doubleHit' }], // armor bider dobbelt
+  },
+  'war-hammer': {
+    id: 'war-hammer', slot: 'weapon', tier: 2, name: 'Krigshammer', cost: 34,
+    effects: [{ kind: 'dmgRange', min: 11, max: 15 }, { kind: 'armorPen', amount: 'all' }],
+  },
+  'blood-blade': {
+    id: 'blood-blade', slot: 'weapon', tier: 2, name: 'Blodklinge', cost: 33,
+    effects: [{ kind: 'dmgRange', min: 10, max: 14 }, { kind: 'killHeal', amount: 4 }],
+  },
+  'executioner-axe': {
+    id: 'executioner-axe', slot: 'weapon', tier: 2, name: 'Bøddeløkse', cost: 35,
+    effects: [{ kind: 'dmgRange', min: 9, max: 19 }, { kind: 'executeBonus', threshold: 0.5, mult: 1.5 }],
+  },
+  'rune-blade': {
+    id: 'rune-blade', slot: 'weapon', tier: 2, name: 'Runeklinge', cost: 38,
+    effects: [{ kind: 'dmgRange', min: 13, max: 16 }], // top-tier pålidelighed
+  },
+
+  // ---------- Armor: armor vs. HP vs. triggers ----------
   'cloth-shirt': {
     id: 'cloth-shirt', slot: 'armor', tier: 0, name: 'Stoftunika', cost: 0,
     effects: [],
@@ -23,13 +58,79 @@ export const ITEMS: Record<EquipmentId, ItemDef> = {
     id: 'worn-plate', slot: 'armor', tier: 1, name: 'Jernplade', cost: 20,
     effects: [{ kind: 'armor', amount: 1 }],
   },
+  'wanderer-coat': {
+    id: 'wanderer-coat', slot: 'armor', tier: 1, name: 'Vandringskofte', cost: 18,
+    effects: [{ kind: 'maxHp', amount: 14 }],
+  },
+  'camp-cloak': {
+    id: 'camp-cloak', slot: 'armor', tier: 1, name: 'Lejrkappe', cost: 19,
+    effects: [{ kind: 'maxHp', amount: 6 }, { kind: 'campHealBonus', amount: 8 }],
+  },
+  'riveted-harness': {
+    id: 'riveted-harness', slot: 'armor', tier: 2, name: 'Nitteharnisk', cost: 30,
+    effects: [{ kind: 'armor', amount: 1 }, { kind: 'maxHp', amount: 8 }],
+  },
+  'thorn-mail': {
+    id: 'thorn-mail', slot: 'armor', tier: 2, name: 'Tornebrynje', cost: 30,
+    effects: [{ kind: 'armor', amount: 1 }, { kind: 'thorns', amount: 1 }],
+  },
+  'shield-vest': {
+    id: 'shield-vest', slot: 'armor', tier: 2, name: 'Skjoldvest', cost: 34,
+    effects: [{ kind: 'armor', amount: 2 }],
+  },
+  'duelist-jacket': {
+    id: 'duelist-jacket', slot: 'armor', tier: 2, name: 'Duelistvams', cost: 32,
+    effects: [{ kind: 'maxHp', amount: 4 }, { kind: 'firstHitBlock' }], // anti-burst
+  },
+  'blood-plate': {
+    id: 'blood-plate', slot: 'armor', tier: 2, name: 'Blodpanser', cost: 30,
+    effects: [{ kind: 'maxHp', amount: 8 }, { kind: 'killHeal', amount: 2 }],
+  },
+  'sacrifice-plate': {
+    id: 'sacrifice-plate', slot: 'armor', tier: 2, name: 'Ofringsplade', cost: 26,
+    effects: [{ kind: 'armor', amount: 2 }, { kind: 'maxHp', amount: -10 }], // glaskanon-forsvar
+  },
+
+  // ---------- Boots: boardet, terningen eller økonomien ----------
   'worn-sandals': {
     id: 'worn-sandals', slot: 'boots', tier: 0, name: 'Slidte sandaler', cost: 0,
     effects: [],
   },
   'trail-boots': {
     id: 'trail-boots', slot: 'boots', tier: 1, name: 'Stivinderstøvler', cost: 18,
-    effects: [{ kind: 'bootsCharges', count: 1, rechargeAtCamp: false }],
+    effects: [{ kind: 'bootsCharges', count: 1, rechargeAtCamp: true }], // boots-differentieringen
+  },
+  'heavy-greaves': {
+    id: 'heavy-greaves', slot: 'boots', tier: 1, name: 'Tunge grever', cost: 20,
+    effects: [{ kind: 'armor', amount: 1 }, { kind: 'dieTransform', from: 6, to: 5 }],
+  },
+  'light-runners': {
+    id: 'light-runners', slot: 'boots', tier: 1, name: 'Letløbere', cost: 20,
+    effects: [{ kind: 'dieTransform', from: 1, to: 2 }],
+  },
+  'scout-boots': {
+    id: 'scout-boots', slot: 'boots', tier: 1, name: 'Spejderstøvler', cost: 16,
+    effects: [{ kind: 'visibility', amount: 2 }],
+  },
+  'goldthread-shoes': {
+    id: 'goldthread-shoes', slot: 'boots', tier: 1, name: 'Guldtrådssko', cost: 18,
+    effects: [{ kind: 'goldBonus', amount: 3 }],
+  },
+  'elven-boots': {
+    id: 'elven-boots', slot: 'boots', tier: 2, name: 'Elverstøvler', cost: 28,
+    effects: [{ kind: 'freeRerollOn1' }],
+  },
+  'pilgrim-shoes': {
+    id: 'pilgrim-shoes', slot: 'boots', tier: 2, name: 'Pilgrimssko', cost: 30,
+    effects: [{ kind: 'campNudge', amount: 1 }],
+  },
+  'shadow-shoes': {
+    id: 'shadow-shoes', slot: 'boots', tier: 2, name: 'Skyggesko', cost: 26,
+    effects: [{ kind: 'trapImmune' }],
+  },
+  'iron-shod': {
+    id: 'iron-shod', slot: 'boots', tier: 2, name: 'Jernskoede', cost: 26,
+    effects: [{ kind: 'bootsCharges', count: 2, rechargeAtCamp: false }], // burst-udgaven
   },
 };
 

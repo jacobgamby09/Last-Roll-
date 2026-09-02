@@ -19,7 +19,10 @@ export interface EquipmentAsset {
   tier: EquipmentTier;
 }
 
-export const EQUIPMENT_ASSETS: Record<EquipmentAssetId, EquipmentAsset> = {
+// Partial: batch B udvidede kataloget til 30 items; ikoner produceres i
+// batches efter equipment-asset-kontrakten. Manglende id'er falder tilbage
+// til slot-placeholder i EquipmentIcon.
+export const EQUIPMENT_ASSETS: Partial<Record<EquipmentAssetId, EquipmentAsset>> = {
   'wood-club': {
     alt: 'En simpel trækølle lavet af en knudret gren',
     id: 'wood-club',
@@ -80,7 +83,7 @@ export const EQUIPMENT_PAIRS = [
   upgrade: EquipmentAssetId;
 }>;
 
-export const EQUIPMENT_LAB_ASSETS = Object.values(EQUIPMENT_ASSETS);
+export const EQUIPMENT_LAB_ASSETS = Object.values(EQUIPMENT_ASSETS).filter((a): a is EquipmentAsset => a !== undefined);
 
 export function equipmentAssetIdForTreasure(key: string): EquipmentAssetId | null {
   if (key === 'weapon') return 'rusted-sword';

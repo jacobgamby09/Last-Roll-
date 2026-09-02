@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { CONFIG } from '../core/config';
-import { newGame, reducer, type Action } from '../core/engine';
-import { cursor } from '../core/rng';
+import { newGame, peekRoll, reducer, type Action } from '../core/engine';
 import type { GameState } from '../core/types';
 import { CombatScene, type CombatView } from './CombatScene';
 import { PixelActionPanel } from './PixelActionPanel';
@@ -155,7 +154,7 @@ export function PixelGame() {
     }
 
     if (action.type === 'ROLL' && state.phase.t === 'idle') {
-      const finalValue = cursor(state.rngState).d6();
+      const finalValue = peekRoll(state); // core ejer peek-kontrakten (inkl. dieTransform)
       playRollFx(finalValue, () => dispatch(action));
       return;
     }
@@ -169,7 +168,7 @@ export function PixelGame() {
     if (action.type === 'ACCEPT') steps = state.phase.roll;
     if (action.type === 'NUDGE') steps = state.phase.roll + action.dir;
     if (action.type === 'REROLL') {
-      const rerollSteps = cursor(state.rngState).d6();
+      const rerollSteps = peekRoll(state);
       playRollFx(rerollSteps, () => beginMovement(action, rerollSteps));
       return;
     }

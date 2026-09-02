@@ -12,9 +12,9 @@
 import { CONFIG } from '../src/core/config';
 import { enemyForTile, fightOutcome } from '../src/core/combat';
 import { availableNudges } from '../src/core/equipment';
-import { ITEMS } from '../src/core/items';
+import { ITEMS, itemStats } from '../src/core/items';
 import { newGame, reducer, type Action } from '../src/core/engine';
-import type { GameState, LevelPick } from '../src/core/types';
+import type { EquipmentId, GameState, ItemDef, LevelPick } from '../src/core/types';
 
 interface Strategy {
   name: string;
@@ -90,44 +90,94 @@ function rolledAction(s: GameState, strat: Strategy): Action {
   return best.action;
 }
 
-const TREASURE_PREFER: Record<Strategy['levelPick'], string[]> = {
-  dmg: ['weapon', 'nudge', 'boots', 'gold', 'maxhp', 'armor'],
-  defensive: ['armor', 'maxhp', 'boots', 'nudge', 'gold', 'weapon'],
-  smart: ['weapon', 'maxhp', 'boots', 'nudge', 'armor', 'gold'],
-};
+// ---------- Item-vurdering (heuristik oven på item-kataloget) ----------
+
+function gearScore(def: ItemDef, strat: Strategy): number {
+  const st = itemStats(def);
+  let score = 0;
+  if (def.slot === 'weapon') {
+    const ev = (st.dmgMin + st.dmgMax) / 2;
+    const refArmor = 1.5; // typisk fjende-armor midt i runnet
+    let perTurn = ev - refArmor;
+    for (const e of def.effects) {
+      if (e.kind === 'armorPen') perTurn = e.amount === 'all' ? ev : ev - Math.max(0, refArmor - e.amount);
+      if (e.kind === 'doubleHit') perTurn = 2 * (ev - refArmor);
+      if (e.kind === 'firstStrike') perTurn += ev * 0.35;
+      if (e.kind === 'executeBonus') perTurn += ev * 0.2;
+      if (e.kind === 'killHeal') perTurn += 2;
+    }
+    const width = st.dmgMax - st.dmgMin;
+    const widthPref = strat.levelPick === 'dmg' ? 0.06 : strat.levelPick === 'defensive' ? -0.12 : -0.03;
+    score = perTurn + width * widthPref;
+  } else {
+    score = st.armor * 6 + st.maxHp * 0.45 + st.bootsCharges * 5 + (st.rechargeAtCamp ? 4 : 0);
+    for (const e of def.effects) {
+      if (e.kind === 'thorns') score += e.amount * 3.5;
+      if (e.kind === 'firstHitBlock') score += 5;
+      if (e.kind === 'killHeal') score += e.amount;
+      if (e.kind === 'dieTransform') score += e.from === 1 ? 2 : -1.5;
+      if (e.kind === 'visibility') score += e.amount * 1.5;
+      if (e.kind === 'goldBonus') score += e.amount;
+      if (e.kind === 'campNudge') score += e.amount * 5;
+      if (e.kind === 'trapImmune') score += 2;
+      if (e.kind === 'freeRerollOn1') score += 4;
+    }
+  }
+  return score;
+}
+
+function gearDelta(s: GameState, id: EquipmentId, strat: Strategy): number {
+  const def = ITEMS[id];
+  return gearScore(def, strat) - gearScore(ITEMS[s.hero.loadout[def.slot]], strat);
+}
 
 function treasureAction(s: GameState, strat: Strategy): Action {
   if (s.phase.t !== 'treasure') throw new Error('treasureAction uden treasure-fase');
-  const options = s.phase.options;
-  const prefer = s.hero.hp / s.hero.maxHp < 0.5 && strat.levelPick === 'smart'
-    ? ['maxhp', 'armor', 'weapon', 'boots', 'nudge', 'gold']
-    : TREASURE_PREFER[strat.levelPick];
-  for (const key of prefer) {
-    const index = options.findIndex(o => o.key === key);
-    if (index >= 0) return { type: 'PICK_TREASURE', index };
-  }
-  return { type: 'PICK_TREASURE', index: 0 };
+  const lowHp = s.hero.hp / s.hero.maxHp < 0.5;
+  let best = 0;
+  let bestValue = -Infinity;
+  s.phase.options.forEach((option, index) => {
+    const value = option.equipmentId
+      ? gearDelta(s, option.equipmentId, strat)
+      : option.key === 'maxhp' ? 5 + (lowHp ? 3 : 0)
+      : option.key === 'nudge' ? 6
+      : 4; // gold
+    if (value > bestValue) { bestValue = value; best = index; }
+  });
+  return { type: 'PICK_TREASURE', index: best };
 }
 
 function shopAction(s: GameState, strat: Strategy): Action {
   if (s.phase.t !== 'shop') throw new Error('shopAction uden shop-fase');
   const { hero, phase } = s;
-  const S = CONFIG.shop;
-  const canHeal = hero.gold >= S.heal.cost && hero.hp < hero.maxHp;
-  if (hero.hp / hero.maxHp < 0.6 && canHeal) return { type: 'BUY', item: 'heal' };
-  const weaponOk = !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= ITEMS['rusted-sword'].cost;
-  const armorOk = !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= ITEMS['worn-plate'].cost;
-  if (strat.levelPick === 'defensive') {
-    if (armorOk) return { type: 'BUY', item: 'armor' };
-    if (weaponOk) return { type: 'BUY', item: 'weapon' };
-  } else {
-    if (weaponOk) return { type: 'BUY', item: 'weapon' };
-    if (armorOk) return { type: 'BUY', item: 'armor' };
+  const buyable = (index: number) => {
+    const offer = phase.offers[index];
+    return offer && !offer.sold && hero.gold >= offer.cost;
+  };
+  const findService = (service: 'heal' | 'nudge' | 'reroll') =>
+    phase.offers.findIndex(o => o.kind === 'service' && o.service === service && !o.sold);
+
+  // 1) Akut heal
+  const healIdx = findService('heal');
+  if (hero.hp / hero.maxHp < 0.6 && hero.hp < hero.maxHp && healIdx >= 0 && buyable(healIdx)) {
+    return { type: 'BUY', index: healIdx };
   }
-  // Boots købes ikke: 18 g for ~1 nudge er domineret af nudge til 8 g (se sim/FINDINGS.md)
-  if (hero.nudges < 2 && hero.gold >= S.nudge) return { type: 'BUY', item: 'nudge' };
-  if (hero.rerolls < 1 && hero.gold >= S.reroll) return { type: 'BUY', item: 'reroll' };
-  if (hero.hp < hero.maxHp - 10 && canHeal) return { type: 'BUY', item: 'heal' };
+  // 2) Bedste gear-opgradering
+  let bestGear = -1;
+  let bestDelta = 1; // kræver reel forbedring
+  phase.offers.forEach((offer, index) => {
+    if (offer.kind === 'gear' && buyable(index)) {
+      const delta = gearDelta(s, offer.itemId, strat);
+      if (delta > bestDelta) { bestDelta = delta; bestGear = index; }
+    }
+  });
+  if (bestGear >= 0) return { type: 'BUY', index: bestGear };
+  // 3) Board-ressourcer og top-up
+  const nudgeIdx = findService('nudge');
+  if (hero.nudges < 2 && nudgeIdx >= 0 && buyable(nudgeIdx)) return { type: 'BUY', index: nudgeIdx };
+  const rerollIdx = findService('reroll');
+  if (hero.rerolls < 1 && rerollIdx >= 0 && buyable(rerollIdx)) return { type: 'BUY', index: rerollIdx };
+  if (hero.hp < hero.maxHp - 10 && healIdx >= 0 && buyable(healIdx)) return { type: 'BUY', index: healIdx };
   return { type: 'LEAVE_SHOP' };
 }
 
@@ -145,8 +195,11 @@ function botAction(s: GameState, strat: Strategy): Action {
     case 'idle': return { type: 'ROLL' };
     case 'rolled': return rolledAction(s, strat);
     case 'treasure': return treasureAction(s, strat);
-    case 'equipment': // upgrades er strengt bedre; udstyr hvis der er råd
-      return s.hero.gold >= s.phase.cost ? { type: 'EQUIP_OFFER' } : { type: 'KEEP_EQUIPMENT' };
+    case 'equipment': {
+      // Vurdér tilbuddet mod det udstyrede — 30 items er ikke strengt bedre
+      const worthIt = gearDelta(s, s.phase.itemId, strat) > 0;
+      return worthIt && s.hero.gold >= s.phase.cost ? { type: 'EQUIP_OFFER' } : { type: 'KEEP_EQUIPMENT' };
+    }
     case 'shop': return shopAction(s, strat);
     case 'levelup': return levelPickAction(s, strat);
     case 'over': throw new Error('botAction i over-fase');

@@ -122,24 +122,24 @@ export function ActionPanel({ state, dispatch }: Props) {
 
   if (phase.t === 'shop') {
     const sh = CONFIG.shop;
-    const rows: { key: 'weapon' | 'armor' | 'boots' | 'heal' | 'nudge' | 'reroll'; label: string; cost: number; ok: boolean }[] = [
-      { key: 'weapon', label: `Slebet klinge (${equipmentEffectText('rusted-sword')})`, cost: ITEMS['rusted-sword'].cost, ok: !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= ITEMS['rusted-sword'].cost },
-      { key: 'armor', label: `Jernplade (${equipmentEffectText('worn-plate')})`, cost: ITEMS['worn-plate'].cost, ok: !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= ITEMS['worn-plate'].cost },
-      { key: 'boots', label: `Stivinderstøvler (${equipmentEffectText('trail-boots')})`, cost: ITEMS['trail-boots'].cost, ok: !phase.boughtBoots && hero.loadout.boots !== 'trail-boots' && hero.gold >= ITEMS['trail-boots'].cost },
-      { key: 'heal', label: `Heling (+${sh.heal.hp} HP)`, cost: sh.heal.cost, ok: hero.gold >= sh.heal.cost && hero.hp < hero.maxHp },
-      { key: 'nudge', label: '+1 Nudge', cost: sh.nudge, ok: hero.gold >= sh.nudge },
-      { key: 'reroll', label: '+1 Reroll', cost: sh.reroll, ok: hero.gold >= sh.reroll },
-    ];
+    const serviceLabel = { heal: `Heling (+${sh.heal.hp} HP)`, nudge: '+1 Nudge', reroll: '+1 Reroll' } as const;
     return (
       <div className="panel">
         <div className="panel-title">🏪 Shop — du har 💰 {hero.gold}</div>
         <div className="shop-rows">
-          {rows.map(r => (
-            <button key={r.key} className="shop-row" disabled={!r.ok} onClick={() => dispatch({ type: 'BUY', item: r.key })}>
-              <span>{r.label}</span>
-              <span className="shop-cost">{r.cost} 💰</span>
-            </button>
-          ))}
+          {phase.offers.map((offer, index) => {
+            const label = offer.kind === 'gear'
+              ? `${ITEMS[offer.itemId].name} (${equipmentEffectText(offer.itemId)})`
+              : serviceLabel[offer.service];
+            const ok = !offer.sold && hero.gold >= offer.cost
+              && !(offer.kind === 'service' && offer.service === 'heal' && hero.hp >= hero.maxHp);
+            return (
+              <button key={index} className="shop-row" disabled={!ok} onClick={() => dispatch({ type: 'BUY', index })}>
+                <span>{label}{offer.sold ? ' — SOLGT' : ''}</span>
+                <span className="shop-cost">{offer.cost} 💰</span>
+              </button>
+            );
+          })}
         </div>
         <button className="btn" onClick={() => dispatch({ type: 'LEAVE_SHOP' })}>
           Forlad shoppen →

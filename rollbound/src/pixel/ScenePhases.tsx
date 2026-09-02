@@ -116,36 +116,45 @@ function goldStatus(gold: number, cost: number): string | undefined {
   return gold < cost ? `MANGLER ${cost - gold} GULD` : undefined;
 }
 
+const SERVICE_META: Record<string, { name: string; effect: (shop: typeof CONFIG.shop) => string; resourceId: ResourceAssetId }> = {
+  heal: { name: 'LÆGEURT', effect: shop => `+${shop.heal.hp} HP`, resourceId: 'life' },
+  nudge: { name: 'NUDGE', effect: () => '+1 NUDGE', resourceId: 'nudge' },
+  reroll: { name: 'SKÆBNETERNING', effect: () => '+1 REROLL', resourceId: 'reroll' },
+};
+
 export function ShopPanel({ state, dispatch }: PhaseProps) {
   if (state.phase.t !== 'shop') return null;
   const { hero, phase } = state;
-  const shop = CONFIG.shop;
-  const weaponStatus = phase.boughtWeapon ? 'KØBT' : hero.loadout.weapon === 'rusted-sword' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['rusted-sword'].cost);
-  const armorStatus = phase.boughtArmor ? 'KØBT' : hero.loadout.armor === 'worn-plate' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['worn-plate'].cost);
-  const bootsStatus = phase.boughtBoots ? 'KØBT' : hero.loadout.boots === 'trail-boots' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['trail-boots'].cost);
-  const rows: { action: Action; assetId?: EquipmentAssetId; cost: number; effect: string; name: string; resourceId?: ResourceAssetId; status?: string }[] = [
-    { action: { type: 'BUY', item: 'weapon' }, assetId: 'rusted-sword', cost: ITEMS['rusted-sword'].cost, effect: equipmentEffectText('rusted-sword'), name: 'SLEBET KLINGE', status: weaponStatus },
-    { action: { type: 'BUY', item: 'armor' }, assetId: 'worn-plate', cost: ITEMS['worn-plate'].cost, effect: equipmentEffectText('worn-plate'), name: 'JERNPLADE', status: armorStatus },
-    { action: { type: 'BUY', item: 'boots' }, assetId: 'trail-boots', cost: ITEMS['trail-boots'].cost, effect: equipmentEffectText('trail-boots'), name: 'STIVINDERSTØVLER', status: bootsStatus },
-    { action: { type: 'BUY', item: 'heal' }, cost: shop.heal.cost, effect: `+${shop.heal.hp} HP`, name: 'LÆGEURT', resourceId: 'life', status: hero.hp >= hero.maxHp ? 'FULD HP' : goldStatus(hero.gold, shop.heal.cost) },
-    { action: { type: 'BUY', item: 'nudge' }, cost: shop.nudge, effect: '+1 NUDGE', name: 'NUDGE', resourceId: 'nudge', status: goldStatus(hero.gold, shop.nudge) },
-    { action: { type: 'BUY', item: 'reroll' }, cost: shop.reroll, effect: '+1 REROLL', name: 'SKÆBNETERNING', resourceId: 'reroll', status: goldStatus(hero.gold, shop.reroll) },
-  ];
   return (
     <div className="pixel-phase-block shop-panel">
       <div className="pixel-panel-title">SHOP · {hero.gold} GULD</div>
       <div className="pixel-shop-grid">
-        {rows.map(row => (
-          <button aria-label={`${row.name}, ${row.effect}, ${row.cost} guld${row.status ? `, ${row.status}` : ''}`} className="pixel-shop-item" disabled={Boolean(row.status)} key={row.name} onClick={() => dispatch(row.action)} type="button">
-            {row.assetId
-              ? <EquipmentIcon assetId={row.assetId} />
-              : row.resourceId
-                ? <ResourceIcon assetId={row.resourceId} />
-                : null}
-            <span className="pixel-item-copy"><small>{row.name}</small><span>{row.effect}</span>{row.status ? <em>{row.status}</em> : null}</span>
-            <b>{row.cost} G</b>
-          </button>
-        ))}
+        {phase.offers.map((offer, index) => {
+          if (offer.kind === 'gear') {
+            const def = ITEMS[offer.itemId];
+            const status = offer.sold ? 'SOLGT' : goldStatus(hero.gold, offer.cost);
+            return (
+              <button aria-label={`${def.name}, ${equipmentEffectText(offer.itemId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
+                <EquipmentIcon assetId={offer.itemId as EquipmentAssetId} />
+                <span className="pixel-item-copy"><small>{def.name.toUpperCase()}</small><span>{equipmentEffectText(offer.itemId)}</span>{status ? <em>{status}</em> : null}</span>
+                <b>{offer.cost} G</b>
+              </button>
+            );
+          }
+          const meta = SERVICE_META[offer.service];
+          const status = offer.sold
+            ? 'SOLGT'
+            : offer.service === 'heal' && hero.hp >= hero.maxHp
+              ? 'FULD HP'
+              : goldStatus(hero.gold, offer.cost);
+          return (
+            <button aria-label={`${meta.name}, ${meta.effect(CONFIG.shop)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
+              <ResourceIcon assetId={meta.resourceId} />
+              <span className="pixel-item-copy"><small>{meta.name}</small><span>{meta.effect(CONFIG.shop)}</span>{status ? <em>{status}</em> : null}</span>
+              <b>{offer.cost} G</b>
+            </button>
+          );
+        })}
       </div>
       <button className="pixel-secondary-button" onClick={() => dispatch({ type: 'LEAVE_SHOP' })} type="button">FORLAD SHOPPEN →</button>
     </div>

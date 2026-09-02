@@ -45,7 +45,7 @@ export const CONFIG = {
     late:  { name: 'Trold-konge',    hp: 70, dmgMin: 10, dmgMax: 18, armor: 3, xp: 80, gold: 20 },
   } satisfies Record<string, EnemyDef>,
 
-  boss: { name: 'Bossen', hp: 90, dmgMin: 8, dmgMax: 12, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
+  boss: { name: 'Bossen', hp: 85, dmgMin: 8, dmgMax: 12, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
 
   goldTile: 12,
   camp: { heal: 20 },

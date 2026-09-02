@@ -30,9 +30,15 @@ export interface Hero {
   loadout: EquipmentLoadout;
 }
 
-export type WeaponVisualId = 'wood-club' | 'rusted-sword';
-export type ArmorVisualId = 'cloth-shirt' | 'worn-plate';
-export type BootsVisualId = 'worn-sandals' | 'trail-boots';
+export type WeaponVisualId =
+  | 'wood-club' | 'rusted-sword' | 'wild-axe' | 'dagger' | 'hunting-spear'
+  | 'twin-daggers' | 'war-hammer' | 'blood-blade' | 'executioner-axe' | 'rune-blade';
+export type ArmorVisualId =
+  | 'cloth-shirt' | 'worn-plate' | 'wanderer-coat' | 'camp-cloak' | 'riveted-harness'
+  | 'thorn-mail' | 'shield-vest' | 'duelist-jacket' | 'blood-plate' | 'sacrifice-plate';
+export type BootsVisualId =
+  | 'worn-sandals' | 'trail-boots' | 'heavy-greaves' | 'light-runners' | 'scout-boots'
+  | 'goldthread-shoes' | 'elven-boots' | 'pilgrim-shoes' | 'shadow-shoes' | 'iron-shod';
 export type EquipmentId = WeaponVisualId | ArmorVisualId | BootsVisualId;
 export type EquipmentKind = 'weapon' | 'armor' | 'boots';
 
@@ -94,17 +100,24 @@ export interface TreasureItem {
 
 export type LevelPick = 'dmg' | 'hp' | 'armor';
 
+// Shoppen har 5 seedede slots — hvert slot er 100 % tilfældigt gear eller
+// service (consumables kommer til i batch C). Hvert slot kan købes én gang.
+export type ShopService = 'heal' | 'nudge' | 'reroll';
+export type ShopOffer =
+  | { kind: 'gear'; itemId: EquipmentId; cost: number; sold: boolean }
+  | { kind: 'service'; service: ShopService; cost: number; sold: boolean };
+
 export type EquipmentResumePhase =
   | { t: 'idle' }
   | { t: 'levelup' }
-  | { t: 'shop'; boughtWeapon: boolean; boughtArmor: boolean; boughtBoots: boolean };
+  | { t: 'shop'; offers: ShopOffer[] };
 
 export type Phase =
   | { t: 'idle' }
   | { t: 'rolled'; roll: number; wasReroll: boolean }
   | { t: 'levelup' }
   | { t: 'treasure'; options: TreasureItem[] }
-  | { t: 'shop'; boughtWeapon: boolean; boughtArmor: boolean; boughtBoots: boolean }
+  | { t: 'shop'; offers: ShopOffer[] }
   | { t: 'equipment'; itemId: EquipmentId; source: 'treasure' | 'drop' | 'shop'; cost: number; resume: EquipmentResumePhase }
   | { t: 'over'; won: boolean; cause: string };
 

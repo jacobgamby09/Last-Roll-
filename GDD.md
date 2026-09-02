@@ -11,6 +11,16 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Item-system med 30 items + 5-slots random shop (IMPLEMENTERET)
+
+Godkendt roster: **10 våben, 10 armor, 10 boots** — hver med unik identitet (effekter eller distinkte stats). Kataloget er balance-data i `rollbound/src/core/items.ts`; effekt-vokabular på 18 kinds (dmgRange, armorPen, firstStrike, doubleHit, executeBonus, killHeal, thorns, firstHitBlock, bootsCharges±camp-recharge, dieTransform, visibility, campHeal/campNudge, goldBonus, trapImmune, freeRerollOn1 m.fl.), alle datadrevne.
+
+- **Anskaffelse (kontrol-gradienten):** Treasure = vælg 1 af 3, tier-vægtet efter track-tredjedel; **elites dropper garanteret gear**; normale fjender dropper kun utility; **shoppen har 5 seedede slots, hvert slot 100 % tilfældigt** gear eller service (consumables kommer til i batch C) — hvert slot kan købes én gang. Ejede items filtreres altid fra.
+- Stivinderstøvler genoplades nu ved Camp (boots-differentieringen); Slebet klinge er 11-14 (pålidelig).
+- **Kalibrering (10k engine-sim):** boss 90→85 HP → balanced **55,3 %** / aggressive 38,3 % / cautious **40,5 %**. Arketype-spredningen snævrede markant ind (før: 34/58/28) — item-diversiteten løfter både aggressive (brede våben) og cautious (defensivt gear), præcis som ønsket.
+- Sprite-status: de 24 nye items bruger slot-placeholder-glyf, indtil ikon-batchen produceres efter equipment-asset-kontrakten.
+- Mål: ~10-14 af 40 items ses pr. run — 10 runs viser forskellige udsnit og builds.
+
 ### 2026-09-02 · Damage-ranges for både hero og fjender (IMPLEMENTERET samme dag)
 
 Al damage bliver ranges i stedet for flade tal — fx start-våben 7-12 i stedet for 10, og tilsvarende for fjender. **Variansen er en bevidst design-akse:** nogle våben/items og fjender har brede ranges (vilde, gamble-agtige), andre smalle (pålidelige). Items skal støtte op om aksen som en del af deres identitet.

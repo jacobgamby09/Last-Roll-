@@ -4,11 +4,11 @@
 
 import { CONFIG, TREASURE_POOL } from './config';
 import { EQUIPMENT_DEFS, equipItem, equipmentEffectText, ownsEquipment } from './equipment';
-import { combatModsFor, ITEMS, itemStats } from './items';
+import { combatModsFor, ITEMS, itemEffectText as itemFx, itemStats, loadoutEffect } from './items';
 import { cursor, type RngCursor } from './rng';
 import { generateTrack } from './track';
 import { enemyForTile, simulateFight } from './combat';
-import type { EquipmentId, EquipmentKind, EquipmentResumePhase, GameState, LevelPick, LogEntry, TileType, TreasureItem } from './types';
+import type { EquipmentId, EquipmentResumePhase, GameState, ItemDef, LevelPick, LogEntry, ShopOffer, TileType, TreasureItem } from './types';
 
 export type Action =
   | { type: 'ROLL' }
@@ -17,7 +17,7 @@ export type Action =
   | { type: 'ACCEPT' }
   | { type: 'PICK_LEVELUP'; pick: LevelPick }
   | { type: 'PICK_TREASURE'; index: number }
-  | { type: 'BUY'; item: 'weapon' | 'armor' | 'boots' | 'heal' | 'nudge' | 'reroll' }
+  | { type: 'BUY'; index: number }
   | { type: 'EQUIP_OFFER' }
   | { type: 'KEEP_EQUIPMENT' }
   | { type: 'LEAVE_SHOP' }
@@ -67,6 +67,24 @@ export function rotationPick(level: number): LevelPick {
   return (['dmg', 'hp', 'armor'] as const)[(level - 2) % 3];
 }
 
+// Boots kan transformere terningen (fx 6 tæller som 5). Transformen sker
+// PÅ rullet — terningen viser det transformerede tal.
+export function applyDieTransform(roll: number, loadout: GameState['hero']['loadout']): number {
+  const t = loadoutEffect(loadout, 'dieTransform');
+  return t && roll === t.from ? t.to : roll;
+}
+
+// UI'ets forudsigelse af næste terningkast — SKAL bruges af al præsentation,
+// så peek-kontrakten bor ét sted i core (testet i engine.test.ts).
+export function peekRoll(s: GameState): number {
+  return applyDieTransform(cursor(s.rngState).d6(), s.hero.loadout);
+}
+
+// Synlige felter forud, inkl. boots-bonus (Spejderstøvler)
+export function visibleAhead(s: GameState): number {
+  return CONFIG.visibility + (loadoutEffect(s.hero.loadout, 'visibility')?.amount ?? 0);
+}
+
 const PICK_LABEL: Record<LevelPick, string> = {
   dmg: `+${CONFIG.levelUp.dmg} Damage`,
   hp: `+${CONFIG.levelUp.hp} Max HP`,
@@ -102,11 +120,19 @@ function applyLevelPick(s: GameState, pick: LevelPick) {
   }
 }
 
+// Guld-gevinster fra felter/skatte/drops respekterer goldBonus (Guldtrådssko)
+function gainFieldGold(s: GameState, amount: number): number {
+  const bonus = loadoutEffect(s.hero.loadout, 'goldBonus')?.amount ?? 0;
+  const gained = amount + bonus;
+  s.hero.gold += gained;
+  return gained;
+}
+
 function applyImmediateTreasure(s: GameState, item: TreasureItem) {
   switch (item.key) {
     case 'maxhp': s.hero.maxHp += 10; s.hero.hp += 10; break;
     case 'nudge': s.hero.nudges += 1; break;
-    case 'gold': s.hero.gold += 12; break;
+    case 'gold': gainFieldGold(s, 12); break;
     case 'weapon':
     case 'armor':
     case 'boots':
@@ -114,8 +140,33 @@ function applyImmediateTreasure(s: GameState, item: TreasureItem) {
   }
 }
 
-function availableTreasure(hero: GameState['hero']): TreasureItem[] {
-  return TREASURE_POOL.filter(item => !item.equipmentId || !ownsEquipment(hero, item.equipmentId));
+// ---------- Loot-pools (batch B) ----------
+// Kontrol-gradienten: Shop (købt) > Treasure (vælg 1 af 3) > Elite (garanteret
+// gear, tilfældigt) > normal-drop (kun utility). Ejede items filtreres fra.
+
+function tierWeight(pos: number, tier: number): number {
+  const third = pos <= CONFIG.trackLength / 3 ? 0 : pos <= (2 * CONFIG.trackLength) / 3 ? 1 : 2;
+  return tier === 1 ? [3, 2, 1][third] : [1, 2, 3][third];
+}
+
+function unownedGear(s: GameState): ItemDef[] {
+  return Object.values(ITEMS).filter(def => def.tier > 0 && !ownsEquipment(s.hero, def.id));
+}
+
+// Vægtet træk UDEN tilbagelægning (muterer entries)
+function drawWeighted<T>(rng: RngCursor, entries: { item: T; weight: number }[]): T | null {
+  const total = entries.reduce((sum, e) => sum + e.weight, 0);
+  if (total <= 0 || entries.length === 0) return null;
+  let r = rng.rand() * total;
+  for (let i = 0; i < entries.length; i++) {
+    r -= entries[i].weight;
+    if (r < 0) return entries.splice(i, 1)[0].item;
+  }
+  return entries.pop()!.item;
+}
+
+function gearTreasure(def: ItemDef): TreasureItem {
+  return { key: def.slot, name: def.name, desc: itemFx(def.id), equipmentId: def.id };
 }
 
 function resumeAfterReward(s: GameState): EquipmentResumePhase {
@@ -171,12 +222,18 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   const dropChance = type === 'elite' ? CONFIG.drops.elite : CONFIG.drops.normal;
   let equipmentDrop: EquipmentId | null = null;
   if (dropChance > 0 && rng.rand() < dropChance) {
-    const pool = availableTreasure(s.hero);
-    const item = pool[Math.floor(rng.rand() * pool.length)];
-    if (item.equipmentId) {
-      equipmentDrop = item.equipmentId;
-      log(s, `${enemy.name} dropper ${item.name}. Vurdér det nye udstyr.`, 'good');
-    } else {
+    if (type === 'elite') {
+      // Elites dropper garanteret GEAR (tier-vægtet); utility som nødfald
+      const pool = unownedGear(s).map(def => ({ item: def, weight: tierWeight(s.pos, def.tier) }));
+      const def = drawWeighted(rng, pool);
+      if (def) {
+        equipmentDrop = def.id;
+        log(s, `${enemy.name} efterlader ${def.name}. Vurdér det nye udstyr.`, 'good');
+      }
+    }
+    if (!equipmentDrop) {
+      // Normale fjender (og gear-tørke): kun utility-loot
+      const item = TREASURE_POOL[Math.floor(rng.rand() * TREASURE_POOL.length)];
       applyImmediateTreasure(s, item);
       log(s, `${enemy.name} dropper ${item.name} (${item.desc})!`, 'good');
     }
@@ -211,24 +268,35 @@ function resolveTile(s: GameState, rng: RngCursor) {
       s.phase = { t: 'idle' };
       break;
     case 'gold': {
-      s.hero.gold += CONFIG.goldTile;
-      log(s, `Du finder ${CONFIG.goldTile} guld.`, 'good');
+      const gained = gainFieldGold(s, CONFIG.goldTile);
+      log(s, `Du finder ${gained} guld.`, 'good');
       s.phase = { t: 'idle' };
       break;
     }
     case 'camp': {
-      const gained = heal(s, CONFIG.camp.heal);
+      const healBonus = loadoutEffect(s.hero.loadout, 'campHealBonus')?.amount ?? 0;
+      const gained = heal(s, CONFIG.camp.heal + healBonus);
       log(s, gained > 0 ? `Lejren heler dig +${gained} HP.` : 'Lejren er rar, men du var på fuld HP.', 'good');
-      // Board-hook: boots med rechargeAtCamp genoplader deres charges her
+      // Board-hooks: boots-recharge og Pilgrimssko
       const boots = itemStats(ITEMS[s.hero.loadout.boots]);
       if (boots.rechargeAtCamp && s.hero.bootsNudgeCharges < boots.bootsCharges) {
         s.hero.bootsNudgeCharges = boots.bootsCharges;
         log(s, `${ITEMS[s.hero.loadout.boots].name} genoplades.`, 'good');
       }
+      const campNudge = loadoutEffect(s.hero.loadout, 'campNudge')?.amount ?? 0;
+      if (campNudge > 0) {
+        s.hero.nudges += campNudge;
+        log(s, `Pilgrimsskoene giver +${campNudge} Nudge.`, 'good');
+      }
       s.phase = { t: 'idle' };
       break;
     }
     case 'trap': {
+      if (loadoutEffect(s.hero.loadout, 'trapImmune')) {
+        log(s, 'Skyggeskoene bærer dig uden om fælden.', 'good');
+        s.phase = { t: 'idle' };
+        break;
+      }
       if (rng.rand() < 0.5) {
         s.hero.hp -= CONFIG.trap.hpLoss;
         log(s, `Fælde! Du tager ${CONFIG.trap.hpLoss} skade.`, 'bad');
@@ -247,8 +315,8 @@ function resolveTile(s: GameState, rng: RngCursor) {
     }
     case 'event': {
       if (rng.rand() < 0.5) {
-        s.hero.gold += CONFIG.event.gold;
-        log(s, `Skæbnen smiler: +${CONFIG.event.gold} guld.`, 'good');
+        const gained = gainFieldGold(s, CONFIG.event.gold);
+        log(s, `Skæbnen smiler: +${gained} guld.`, 'good');
       } else {
         s.hero.hp -= CONFIG.event.hpLoss;
         log(s, `Skæbnen bider: −${CONFIG.event.hpLoss} HP.`, 'bad');
@@ -262,14 +330,38 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     }
     case 'treasure': {
-      const options = rng.shuffle(availableTreasure(s.hero)).slice(0, 3);
+      // Vælg 1 af 3: tier-vægtet gear + utility, trukket uden gentagelser
+      const candidates = [
+        ...unownedGear(s).map(def => ({ item: gearTreasure(def), weight: tierWeight(s.pos, def.tier) })),
+        ...TREASURE_POOL.map(item => ({ item, weight: 2 })),
+      ];
+      const options: TreasureItem[] = [];
+      for (let i = 0; i < 3; i++) {
+        const pick = drawWeighted(rng, candidates);
+        if (pick) options.push(pick);
+      }
       log(s, 'En skattekiste! Vælg 1 af 3.');
       s.phase = { t: 'treasure', options };
       break;
     }
     case 'shop': {
+      // 5 seedede slots — hvert slot 100 % tilfældigt gear eller service
+      const gearPool = unownedGear(s).map(def => ({ item: def, weight: tierWeight(s.pos, def.tier) }));
+      const offers: ShopOffer[] = [];
+      for (let i = 0; i < 5; i++) {
+        if (rng.rand() < 0.5) { // 50/50 til consumables (batch C) gør det til tredjedele
+          const def = drawWeighted(rng, gearPool);
+          if (def) {
+            offers.push({ kind: 'gear', itemId: def.id, cost: def.cost, sold: false });
+            continue;
+          }
+        }
+        const service = (['heal', 'nudge', 'reroll'] as const)[rng.int(0, 2)];
+        const cost = service === 'heal' ? CONFIG.shop.heal.cost : service === 'nudge' ? CONFIG.shop.nudge : CONFIG.shop.reroll;
+        offers.push({ kind: 'service', service, cost, sold: false });
+      }
       log(s, 'Du træder ind i shoppen.');
-      s.phase = { t: 'shop', boughtWeapon: false, boughtArmor: false, boughtBoots: false };
+      s.phase = { t: 'shop', offers };
       break;
     }
     case 'enemy':
@@ -301,7 +393,7 @@ export function reducer(prev: GameState, action: Action): GameState {
     case 'ROLL': {
       if (s.phase.t !== 'idle') break;
       s.rolls++;
-      const roll = rng.d6();
+      const roll = applyDieTransform(rng.d6(), s.hero.loadout);
       log(s, `Rul #${s.rolls}: 🎲 ${roll}.`);
       s.phase = { t: 'rolled', roll, wasReroll: false };
       break;
@@ -324,10 +416,13 @@ export function reducer(prev: GameState, action: Action): GameState {
       break;
     }
     case 'REROLL': {
-      if (s.phase.t !== 'rolled' || s.phase.wasReroll || s.hero.rerolls <= 0) break;
-      s.hero.rerolls--;
-      const roll = rng.d6();
-      log(s, `Reroll: ${s.phase.roll} → 🎲 ${roll}. Resultatet er endeligt.`);
+      if (s.phase.t !== 'rolled' || s.phase.wasReroll) break;
+      // Elverstøvler: at omslå en 1'er koster ikke reroll'en
+      const freeOn1 = s.phase.roll === 1 && loadoutEffect(s.hero.loadout, 'freeRerollOn1') !== null;
+      if (!freeOn1 && s.hero.rerolls <= 0) break;
+      if (!freeOn1) s.hero.rerolls--;
+      const roll = applyDieTransform(rng.d6(), s.hero.loadout);
+      log(s, `${freeOn1 ? 'Elverstøvlerne omslår 1\'eren gratis' : 'Reroll'}: ${s.phase.roll} → 🎲 ${roll}. Resultatet er endeligt.`);
       move(s, rng, roll);
       break;
     }
@@ -355,28 +450,26 @@ export function reducer(prev: GameState, action: Action): GameState {
     }
     case 'BUY': {
       if (s.phase.t !== 'shop') break;
-      const sh = CONFIG.shop;
       const h = s.hero;
-      const offers: Partial<Record<EquipmentKind, { id: EquipmentId; cost: number; bought: boolean }>> = {
-        weapon: { id: 'rusted-sword', cost: ITEMS['rusted-sword'].cost, bought: s.phase.boughtWeapon },
-        armor: { id: 'worn-plate', cost: ITEMS['worn-plate'].cost, bought: s.phase.boughtArmor },
-        boots: { id: 'trail-boots', cost: ITEMS['trail-boots'].cost, bought: s.phase.boughtBoots },
-      };
-      if (action.item === 'weapon' || action.item === 'armor' || action.item === 'boots') {
-        const offer = offers[action.item];
-        if (offer && !offer.bought && !ownsEquipment(h, offer.id) && h.gold >= offer.cost) {
-          offerEquipment(s, offer.id, 'shop', { ...s.phase }, offer.cost);
-        }
-      } else if (action.item === 'heal' && h.gold >= sh.heal.cost && h.hp < h.maxHp) {
-        h.gold -= sh.heal.cost;
-        const gained = heal(s, sh.heal.hp);
+      const offer = s.phase.offers[action.index];
+      if (!offer || offer.sold || h.gold < offer.cost) break;
+      if (offer.kind === 'gear') {
+        if (ownsEquipment(h, offer.itemId)) break;
+        offerEquipment(s, offer.itemId, 'shop', { t: 'shop', offers: s.phase.offers }, offer.cost);
+      } else if (offer.service === 'heal') {
+        if (h.hp >= h.maxHp) break;
+        h.gold -= offer.cost;
+        offer.sold = true;
+        const gained = heal(s, CONFIG.shop.heal.hp);
         log(s, `Købt: heling (+${gained} HP).`, 'good');
-      } else if (action.item === 'nudge' && h.gold >= sh.nudge) {
-        h.gold -= sh.nudge;
+      } else if (offer.service === 'nudge') {
+        h.gold -= offer.cost;
+        offer.sold = true;
         h.nudges++;
         log(s, 'Købt: +1 Nudge.', 'good');
-      } else if (action.item === 'reroll' && h.gold >= sh.reroll) {
-        h.gold -= sh.reroll;
+      } else {
+        h.gold -= offer.cost;
+        offer.sold = true;
         h.rerolls++;
         log(s, 'Købt: +1 Reroll.', 'good');
       }
@@ -389,9 +482,8 @@ export function reducer(prev: GameState, action: Action): GameState {
       s.hero.gold -= cost;
       equipItem(s.hero, itemId);
       if (resume.t === 'shop') {
-        if (item.slot === 'weapon') resume.boughtWeapon = true;
-        if (item.slot === 'armor') resume.boughtArmor = true;
-        if (item.slot === 'boots') resume.boughtBoots = true;
+        const sold = resume.offers.find(o => o.kind === 'gear' && o.itemId === itemId && !o.sold);
+        if (sold) sold.sold = true;
       }
       log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
       s.phase = resume;

@@ -1,5 +1,6 @@
 import { CONFIG } from '../core/config';
 import { availableNudges } from '../core/equipment';
+import { visibleAhead } from '../core/engine';
 import type { GameState } from '../core/types';
 import { TILE_META } from './tileMeta';
 import { tileChip } from './preview';
@@ -7,7 +8,7 @@ import { tileChip } from './preview';
 export function TrackView({ state }: { state: GameState }) {
   const L = CONFIG.trackLength;
   const from = Math.max(1, state.pos - 2);
-  const to = Math.min(L, state.pos + CONFIG.visibility);
+  const to = Math.min(L, state.pos + visibleAhead(state));
 
   const landing = state.phase.t === 'rolled' ? Math.min(state.pos + state.phase.roll, L) : -1;
   const canNudge = state.phase.t === 'rolled' && !state.phase.wasReroll && availableNudges(state.hero) > 0;

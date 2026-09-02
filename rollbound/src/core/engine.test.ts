@@ -1,11 +1,10 @@
 // Engine-kontrakter:
 // 1) Determinisme: samme seed + samme actions => bit-identisk state.
-// 2) Dice-peek: UI'ets preview (cursor(state.rngState).d6()) SKAL matche
-//    det roll, reduceren derefter producerer. PixelGame afhænger af dette.
+// 2) Dice-peek: UI'ets preview (peekRoll) SKAL matche det roll, reduceren
+//    derefter producerer — inkl. dieTransform-boots. PixelGame afhænger af dette.
 
 import { describe, expect, it } from 'vitest';
-import { newGame, reducer, type Action } from './engine';
-import { cursor } from './rng';
+import { newGame, peekRoll, reducer, type Action } from './engine';
 import type { GameState } from './types';
 
 function policyAction(s: GameState): Action | null {
@@ -46,7 +45,7 @@ describe('engine-kontrakter', () => {
       let checked = 0;
       for (let i = 0; i < 300 && s.phase.t !== 'over'; i++) {
         if (s.phase.t === 'idle') {
-          const predicted = cursor(s.rngState).d6();
+          const predicted = peekRoll(s);
           s = reducer(s, { type: 'ROLL' });
           if (s.phase.t === 'rolled') {
             expect(s.phase.roll, `seed ${seed}, roll #${checked + 1}`).toBe(predicted);

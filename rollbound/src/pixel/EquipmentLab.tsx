@@ -25,6 +25,7 @@ export function EquipmentLab() {
           {EQUIPMENT_PAIRS.map(pair => {
             const starter = EQUIPMENT_ASSETS[pair.starter];
             const upgrade = EQUIPMENT_ASSETS[pair.upgrade];
+            if (!starter || !upgrade) return null;
             return (
               <article className={`equipment-lab-sample is-${pair.kind}`} key={pair.kind}>
                 <small>{pair.kind.toUpperCase()}</small>

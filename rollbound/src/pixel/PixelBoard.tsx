@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { CONFIG } from '../core/config';
 import { availableNudges } from '../core/equipment';
+import { visibleAhead } from '../core/engine';
 import type { GameState, TileType } from '../core/types';
 import { tileChip } from '../ui/preview';
 import { PixelTile } from './PixelTile';
@@ -33,7 +34,7 @@ const PATH_SLOTS: PathSlot[] = [
 
 export function PixelBoard({ state, displayPos = state.pos, moving = false, suppressTargets = false }: { state: GameState; displayPos?: number; moving?: boolean; suppressTargets?: boolean }) {
   const start = Math.max(0, state.pos - 2);
-  const end = Math.min(CONFIG.trackLength, state.pos + CONFIG.visibility, start + PATH_SLOTS.length - 1);
+  const end = Math.min(CONFIG.trackLength, state.pos + visibleAhead(state), start + PATH_SLOTS.length - 1);
   const positions = Array.from({ length: end - start + 1 }, (_, index) => start + index);
   const rolledPhase = !moving && !suppressTargets && state.phase.t === 'rolled' ? state.phase : null;
   const roll = rolledPhase?.roll ?? null;
