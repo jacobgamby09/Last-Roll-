@@ -7,6 +7,7 @@ import { PixelActionPanel } from './PixelActionPanel';
 import { PixelBoard } from './PixelBoard';
 import type { DiceRollFx } from './PixelDie';
 import { PixelHud } from './PixelHud';
+import { UI_SCALE } from './presentation';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { SceneShell } from './SceneShell';
 import { EquipmentOffer, LevelUpChoice, OverPanel, PreCombatPanel, ShopPanel, TreasureChoice } from './ScenePhases';
@@ -215,7 +216,7 @@ export function PixelGame() {
     && (state.phase.t === 'treasure' || state.phase.t === 'shop' || state.phase.t === 'equipment' || state.phase.t === 'levelup' || state.phase.t === 'preCombat' || state.phase.t === 'over');
 
   return (
-    <main className="pixel-page">
+    <main className="pixel-page" style={{ zoom: UI_SCALE }}>
       <div className="pixel-game">
         <header className="pixel-header">
           <div><small>BOARD-ROGUELIKE PROTOTYPE</small><h1>ROLLBOUND</h1></div>

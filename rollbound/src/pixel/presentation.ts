@@ -5,6 +5,10 @@ export const SCENE_TIMING = {
   enter: 220, // fade/scale ind for alle fullscreen-scener
 };
 
+// Global UI-skala (læsbarheds-pass 2026-09-02): zoom-testen viste, at skala
+// var den største enkeltfaktor. Justér frit under playtest — 1.0 er native.
+export const UI_SCALE = 1.2;
+
 export const COMBAT_TIMING = {
   intro: 700,       // fjenden træder ind, navneskilt
   introBoss: 1300,  // bossens ceremoni-indtræden

@@ -58,3 +58,13 @@ Use `--px-copy: #cbbdd2` for secondary functional text. `--px-muted` is reserved
 - Narrow viewport: verify at `390 × 844`, including no global horizontal overflow and an internally scrolling unscaled board.
 - Resource Lab: `?ui=resources` must show `7/7 ASSETS MAPPED` at lab, HUD and card sizes.
 - Finish with lint, production build and a browser-console check.
+
+## Amendment v2 — læsbarheds-pass (2026-09-02)
+
+Zoom-test med brugeren viste, at skala var den største enkeltfaktor. Følgende regler supplerer (og ved konflikt erstatter) v1-tiers:
+
+1. **Global UI-skala:** `UI_SCALE` i `src/pixel/presentation.ts` (default `1.2`) anvendes som CSS `zoom` på `.pixel-page` i spillet (ikke labs). Justérbar under playtest; må ikke hardcodes andre steder. Dette er IKKE den forbudte responsive nedskalering af boardet — det er en opt-in opskalering af hele UI'et.
+2. **Font-hybrid:** pixel-fonten (Courier-familien) er forbeholdt titler, korte labels og knap-tekster. Al funktionel læsetekst — beskrivelser, effekter, priser/status, log, ticker, tooltips, statlinjer — sættes i `--font-body` (systemets sans) uden letter-spacing.
+3. **Nye minimums-tiers for funktionel tekst:** beskrivelser/effekter/status min. `13 px` (før zoom), tooltips/statlinjer min. `12 px`, ticker `15 px`. Ingen funktionel tekst under `12 px`.
+4. **Sentence case:** ALL CAPS er forbeholdt korte labels og titler. Effekt- og beskrivelsestekster (inkl. `itemEffectText`/`consumableEffectText` i core) er sentence case; stat-forkortelser (DMG/ARM/HP/XP) forbliver caps.
+5. **Kontrast:** `--px-muted` er løftet til `#a89aae` og `--px-copy` til `#ded4e6`; sekundær funktionel tekst må ikke sættes mørkere end `--px-muted`.

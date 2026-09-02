@@ -146,7 +146,7 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
             return (
               <button aria-label={`${def.name}, ${equipmentEffectText(offer.itemId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
                 <EquipmentIcon assetId={offer.itemId as EquipmentAssetId} />
-                <span className="pixel-item-copy"><small>{def.name.toUpperCase()}</small><span>{equipmentEffectText(offer.itemId)}</span>{status ? <em>{status}</em> : null}</span>
+                <span className="pixel-item-copy"><small>{def.name}</small><span>{equipmentEffectText(offer.itemId)}</span>{status ? <em>{status}</em> : null}</span>
                 <b>{offer.cost} G</b>
               </button>
             );
@@ -158,7 +158,7 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
             return (
               <button aria-label={`${def.name}, ${consumableEffectText(offer.consumableId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
                 <ConsumableIcon assetId={offer.consumableId} />
-                <span className="pixel-item-copy"><small>{def.name.toUpperCase()}</small><span>{consumableEffectText(offer.consumableId)}</span>{status ? <em>{status}</em> : null}</span>
+                <span className="pixel-item-copy"><small>{def.name}</small><span>{consumableEffectText(offer.consumableId)}</span>{status ? <em>{status}</em> : null}</span>
                 <b>{offer.cost} G</b>
               </button>
             );
@@ -207,7 +207,7 @@ export function PreCombatPanel({ state, dispatch }: PhaseProps) {
           return (
             <button className="pixel-consumable-use" disabled={bossBlocked} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })} type="button">
               <ConsumableIcon assetId={id} />
-              <span className="pixel-consumable-copy"><b>{def.name.toUpperCase()}</b><small>{consumableEffectText(id)}{bossBlocked ? ' (VIRKER IKKE PÅ BOSSEN)' : ''}</small></span>
+              <span className="pixel-consumable-copy"><b>{def.name}</b><small>{consumableEffectText(id)}{bossBlocked ? ' (virker ikke på bossen)' : ''}</small></span>
             </button>
           );
         })}

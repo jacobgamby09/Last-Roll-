@@ -4,8 +4,9 @@
   --px-panel-light: #1b1225;
   --px-line: #46384f;
   --px-ivory: #fff2df;
-  --px-muted: #8f7f9a;
-  --px-copy: #cbbdd2;
+  --px-muted: #a89aae; /* løftet kontrast (læsbarheds-pass 2026-09-02) */
+  --px-copy: #ded4e6;
+  --font-body: "Segoe UI", system-ui, -apple-system, sans-serif; /* funktionel tekst; pixel-fonten er til titler/labels */
   --px-red: #ff3b4d;
   --px-magenta: #ff4bd8;
   --px-cyan: #25d9ff;
@@ -2602,3 +2603,58 @@
   }
   .combat-hpbar i { transition: none; }
 }
+
+/* ============================================================
+   LÆSBARHEDS-PASS v2 (2026-09-02)
+   Skala er det primære greb (UI_SCALE i presentation.ts, anvendt som
+   zoom på .pixel-page). Herunder: font-hybrid — pixel-æstetik bevares
+   til titler/labels, funktionel tekst (beskrivelser, effekter, log,
+   priser) sættes i --font-body med hævede minimumsstørrelser og uden
+   letter-spacing. Kontrast-tokens er løftet i :root.
+   ============================================================ */
+
+/* Beskrivelser og effekt-tekster: shop, treasure, equipment-sammenligning */
+.pixel-item-copy span,
+.pixel-item-copy em,
+.pixel-equipment-compare article span,
+.pixel-equipment-delta,
+.pixel-destination span,
+.pixel-consumable-use small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.35;
+}
+
+.pixel-item-copy em { font-style: normal; }
+
+/* Løbende tekst: log-strip, combat-ticker, tooltips, statlinjer */
+.pixel-last-event span,
+.combat-ticker,
+.pixel-tile-tip span,
+.combat-statline,
+.precombat-enemy span,
+.combat-payout-rows span,
+.combat-levelups span,
+.pixel-boss-readiness span {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.35;
+}
+
+.combat-ticker { font-size: 15px; }
+.pixel-tile-tip span { font-size: 12px; white-space: normal; }
+.pixel-tile-tip { min-width: 170px; }
+.combat-statline { font-size: 12px; white-space: normal; text-align: center; }
+
+/* Navne på kort og i HUD-slots må gerne beholde pixel-fonten, men større */
+.pixel-item-copy small { font-size: 12px; }
+.pixel-destination b { font-size: 13px; }
+.pixel-consumable-held span { font-size: 11px; }
+.pixel-consumable-held { font-size: 11px; }
+
+/* Disabled-grunde skal kunne læses uden anstrengelse */
+.pixel-item-copy em { color: #e8b7a0; }

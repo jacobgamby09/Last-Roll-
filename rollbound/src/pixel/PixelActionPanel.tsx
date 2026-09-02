@@ -118,7 +118,7 @@ export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state
                   type="button"
                 >
                   <ConsumableIcon assetId={id} />
-                  <span className="pixel-consumable-copy"><b>{CONSUMABLES[id].name.toUpperCase()}</b><small>{preCombat ? 'BRUGES FØR KAMP' : consumableEffectText(id)}</small></span>
+                  <span className="pixel-consumable-copy"><b>{CONSUMABLES[id].name}</b><small>{preCombat ? 'Bruges før kamp' : consumableEffectText(id)}</small></span>
                 </button>
               );
             })}

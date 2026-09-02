@@ -193,29 +193,30 @@ export function loadoutEffect<K extends ItemEffect['kind']>(
 export function itemEffectText(id: EquipmentId): string {
   const def = ITEMS[id];
   const parts: string[] = [];
+  // Sentence case (læsbarheds-pass): stat-forkortelser (DMG/ARM/HP) forbliver caps
   for (const e of def.effects) {
     switch (e.kind) {
       case 'dmgRange': parts.push(`DMG ${e.min}-${e.max}`); break;
       case 'armor': parts.push(`+${e.amount} ARM`); break;
-      case 'maxHp': parts.push(e.amount >= 0 ? `+${e.amount} MAX HP` : `${e.amount} MAX HP`); break;
-      case 'armorPen': parts.push(e.amount === 'all' ? 'IGNORERER ARMOR' : `IGNORERER ${e.amount} ARMOR`); break;
-      case 'firstStrike': parts.push(`FØRSTE HUG ×${e.mult}`); break;
-      case 'doubleHit': parts.push('TO HUG PR. TUR'); break;
-      case 'executeBonus': parts.push(`×${e.mult} UNDER ${Math.round(e.threshold * 100)}% HP`); break;
-      case 'killHeal': parts.push(`+${e.amount} HP PR. KILL`); break;
-      case 'thorns': parts.push(`${e.amount} REFLEKS PR. HUG`); break;
-      case 'firstHitBlock': parts.push('BLOKERER FØRSTE ANGREB'); break;
-      case 'bootsCharges': parts.push(`${e.count} GRATIS NUDGE${e.rechargeAtCamp ? ' · GENOPLADES VED CAMP' : ''}`); break;
-      case 'dieTransform': parts.push(`${e.from} TÆLLER SOM ${e.to}`); break;
-      case 'visibility': parts.push(`+${e.amount} FELTER SYN`); break;
-      case 'campHealBonus': parts.push(`CAMPS HELER +${e.amount}`); break;
-      case 'campNudge': parts.push(`CAMPS GIVER +${e.amount} NUDGE`); break;
-      case 'goldBonus': parts.push(`+${e.amount} PR. GULD-GEVINST`); break;
-      case 'trapImmune': parts.push('IMMUN MOD FÆLDER'); break;
-      case 'freeRerollOn1': parts.push('GRATIS REROLL PÅ 1'); break;
+      case 'maxHp': parts.push(e.amount >= 0 ? `+${e.amount} max HP` : `${e.amount} max HP`); break;
+      case 'armorPen': parts.push(e.amount === 'all' ? 'Ignorerer armor' : `Ignorerer ${e.amount} armor`); break;
+      case 'firstStrike': parts.push(`Første hug ×${e.mult}`); break;
+      case 'doubleHit': parts.push('To hug pr. tur'); break;
+      case 'executeBonus': parts.push(`×${e.mult} under ${Math.round(e.threshold * 100)} % HP`); break;
+      case 'killHeal': parts.push(`+${e.amount} HP pr. kill`); break;
+      case 'thorns': parts.push(`${e.amount} refleks pr. hug`); break;
+      case 'firstHitBlock': parts.push('Blokerer første angreb'); break;
+      case 'bootsCharges': parts.push(`${e.count} gratis nudge${e.rechargeAtCamp ? ' · genoplades ved Camp' : ''}`); break;
+      case 'dieTransform': parts.push(`${e.from} tæller som ${e.to}`); break;
+      case 'visibility': parts.push(`+${e.amount} felter synlighed`); break;
+      case 'campHealBonus': parts.push(`Camps heler +${e.amount}`); break;
+      case 'campNudge': parts.push(`Camps giver +${e.amount} nudge`); break;
+      case 'goldBonus': parts.push(`+${e.amount} pr. guld-gevinst`); break;
+      case 'trapImmune': parts.push('Immun mod fælder'); break;
+      case 'freeRerollOn1': parts.push('Gratis reroll på 1'); break;
     }
   }
-  return parts.length > 0 ? parts.join(' · ') : 'INGEN BONUS';
+  return parts.length > 0 ? parts.join(' · ') : 'Ingen bonus';
 }
 
 export function itemsBySlot(slot: EquipmentKind): ItemDef[] {
@@ -247,12 +248,12 @@ export function consumableEffectText(id: ConsumableId): string {
   const e = CONSUMABLES[id].effect;
   switch (e.kind) {
     case 'heal': return `+${e.amount} HP`;
-    case 'bomb': return `${e.damage} SKADE FØR KAMPEN`;
-    case 'flee': return 'UNDGÅ KAMPEN (IKKE BOSSEN)';
-    case 'permDmg': return `PERMANENT +${e.amount} DMG`;
-    case 'grant': return `+${e.nudges} NUDGE & +${e.rerolls} REROLL`;
-    case 'gold': return `+${e.amount} GULD`;
-    case 'twinRoll': return 'NÆSTE KAST: RUL TO, VÆLG ÉN';
-    case 'teleport': return 'FLYT 1-6 EFTER EGET VALG';
+    case 'bomb': return `${e.damage} skade før kampen`;
+    case 'flee': return 'Undgå kampen (ikke bossen)';
+    case 'permDmg': return `Permanent +${e.amount} DMG`;
+    case 'grant': return `+${e.nudges} nudge & +${e.rerolls} reroll`;
+    case 'gold': return `+${e.amount} guld`;
+    case 'twinRoll': return 'Næste kast: rul to, vælg én';
+    case 'teleport': return 'Flyt 1-6 efter eget valg';
   }
 }

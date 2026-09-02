@@ -110,7 +110,7 @@ export function PixelHud({ state }: { state: GameState }) {
             : hero.consumables.map((id, i) => (
               <span aria-label={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`} className="pixel-consumable-held" key={`${id}-${i}`} title={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`}>
                 <ConsumableIcon assetId={id} size="hud" />
-                <span>{CONSUMABLES[id].name.toUpperCase()}</span>
+                <span>{CONSUMABLES[id].name}</span>
               </span>
             ))}
         </div>
