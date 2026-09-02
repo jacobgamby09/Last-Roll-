@@ -19,8 +19,9 @@ Production contract for the seven enemy sprites used by the fullscreen combat sc
 - Source canvas: `64 × 80` RGBA, true alpha transparency, shared ground baseline at the bottom edge.
 - Nearest-neighbor only; no antialiasing, no partial alpha except deliberate 1px edges.
 - The character faces LEFT (toward the hero). The scene does not mirror sprites.
-- Silhouette must read at 96px rendered height on the near-black plum backdrop.
-- Boss may use the full canvas; normal enemies should sit around 70–85% of canvas height so the boss reads bigger.
+- Silhouette must read at the rendered sizes: `96 × 120` on desktop, `72 × 90` on mobile (both preserve the 64×80 aspect; sprites are bottom-aligned so feet stay on the ground line).
+- Size hierarchy within the canvas: normal enemies ~70–85% of canvas height, **elites ~85–95%** (elite-early low end, elite-late high end), boss may use up to 100% so it reads bigger. No per-sprite CSS sizing.
+- Boss concept (decided 2026-09-02): a ceremonial armored ruler of fate — tall, symmetrical, cloaked, ivory bone-plate armor with red accents and a crown/halo silhouette. A subtle die or rune motif may appear as a detail (scepter, chest plate, crown), never literally. Clearly distinct from elite-mid (slender, magenta, stalking) and elite-late (massive, organic): the boss is upright, ceremonial, inevitable.
 
 ## Absolutely not in the bitmap
 

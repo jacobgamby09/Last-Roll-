@@ -2406,7 +2406,8 @@
   }
   .combat-clash { display: none; }
   .combat-side-enemy { order: -1; }
-  .combat-sprite { width: 72px; height: 96px; }
+  /* 72×90 bevarer assets' 4:5-forhold (64×80) — ingen deformation */
+  .combat-sprite { width: 72px; height: 90px; }
   .combat-sprite-hero img { width: 72px; }
   .pixel-scene-top b { font-size: 16px; }
 }
