@@ -2531,6 +2531,10 @@
 }
 
 .pixel-consumable-use:hover:not(:disabled) { border-color: var(--px-cyan); }
+.pixel-consumable-use.is-armed {
+  border-color: var(--px-gold);
+  box-shadow: 0 0 10px rgba(255, 216, 74, 0.35);
+}
 .pixel-consumable-use:focus-visible { outline: 2px solid var(--px-ivory); outline-offset: 3px; }
 .pixel-consumable-use:disabled { cursor: default; }
 .pixel-consumable-use:disabled .pixel-consumable-icon,

@@ -3,6 +3,7 @@
 // treasure, shop, level-up, game over) renderes som fullscreen-scener
 // af PixelGame — se SceneShell/ScenePhases/CombatScene.
 
+import { useState } from 'react';
 import { availableNudges } from '../core/equipment';
 import { CONSUMABLES, consumableEffectText, isPreCombatConsumable } from '../core/items';
 import type { Action } from '../core/engine';
@@ -68,6 +69,7 @@ function DestinationCard({ disabled, disabledReason, onSelect, primary, state, s
 
 export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state }: Props) {
   const { hero, phase } = state;
+  const [armedSlot, setArmedSlot] = useState<number | null>(null);
 
   if (movementSteps !== null) {
     return (
@@ -108,17 +110,30 @@ export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state
           <div className="pixel-consumable-row" aria-label="Brug consumable">
             {hero.consumables.map((id, slot) => {
               const preCombat = isPreCombatConsumable(id);
+              const armed = armedSlot === slot;
               return (
                 <button
-                  className="pixel-consumable-use"
+                  className={`pixel-consumable-use ${armed ? 'is-armed' : ''}`}
                   disabled={preCombat}
                   key={`${id}-${slot}`}
-                  onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}
-                  title={consumableEffectText(id)}
+                  onBlur={() => setArmedSlot(null)}
+                  onClick={() => {
+                    // To-trins-brug: første klik armerer, andet klik bruger —
+                    // så et nysgerrigt klik ikke koster item'et
+                    if (armed) {
+                      setArmedSlot(null);
+                      dispatch({ type: 'USE_CONSUMABLE', slot });
+                    } else {
+                      setArmedSlot(slot);
+                    }
+                  }}
                   type="button"
                 >
                   <ConsumableIcon assetId={id} />
-                  <span className="pixel-consumable-copy"><b>{CONSUMABLES[id].name}</b><small>{preCombat ? 'Bruges før kamp' : consumableEffectText(id)}</small></span>
+                  <span className="pixel-consumable-copy">
+                    <b>{armed ? `Brug ${CONSUMABLES[id].name}?` : CONSUMABLES[id].name}</b>
+                    <small>{armed ? 'Klik igen for at bruge' : preCombat ? 'Bruges før kamp' : consumableEffectText(id)}</small>
+                  </span>
                 </button>
               );
             })}
