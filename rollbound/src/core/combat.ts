@@ -5,9 +5,9 @@
 
 import { CONFIG } from './config';
 import type { RngCursor } from './rng';
-import type { CombatEvent, CombatScript, EnemyDef, FightPreview, Hero, TileType } from './types';
+import type { CombatEvent, CombatMods, CombatScript, EnemyDef, FightPreview, Hero, TileType } from './types';
 
-type Combatant = Pick<Hero, 'hp' | 'dmgMin' | 'dmgMax' | 'armor'>;
+type Combatant = Pick<Hero, 'hp' | 'maxHp' | 'dmgMin' | 'dmgMax' | 'armor'>;
 
 // Lukket EV-formel over samme regler (midtpunkt af rangen). KUN til
 // bot-heuristik og interne estimater — engine-afgørelser går altid gennem
@@ -20,24 +20,66 @@ export function fightOutcome(hero: Combatant, enemy: EnemyDef): FightPreview {
   return { heroHit, enemyHit, hitsToKill, hpLoss, survives: hero.hp > hpLoss };
 }
 
-export function simulateFight(hero: Combatant, enemy: EnemyDef, rng: RngCursor): CombatScript {
-  const heroHit = () => Math.max(CONFIG.minDamage, rng.int(hero.dmgMin, hero.dmgMax) - enemy.armor);
-  const enemyHit = () => Math.max(CONFIG.minDamage, rng.int(enemy.dmgMin, enemy.dmgMax) - hero.armor);
+export function simulateFight(hero: Combatant, enemy: EnemyDef, rng: RngCursor, mods: CombatMods = {}): CombatScript {
+  const effectiveEnemyArmor = mods.armorPen === 'all'
+    ? 0
+    : Math.max(0, enemy.armor - (mods.armorPen ?? 0));
   const events: CombatEvent[] = [];
   let heroHp = hero.hp;
   let enemyHp = enemy.hp;
   let turn = 0;
+  let heroAttacksMade = 0;
+  let enemyAttacksMade = 0;
+
+  // Ét hero-hug: rul, multiplicér (firstStrike/execute rammer FØR armor), træk armor
+  const heroBlow = (): { damage: number; note?: CombatEvent['note'] } => {
+    let roll = rng.int(hero.dmgMin, hero.dmgMax);
+    let note: CombatEvent['note'];
+    if (mods.firstStrikeMult && heroAttacksMade === 0) {
+      roll = Math.round(roll * mods.firstStrikeMult);
+      note = 'firstStrike';
+    } else if (mods.executeBonus && enemyHp <= enemy.hp * mods.executeBonus.threshold) {
+      roll = Math.round(roll * mods.executeBonus.mult);
+      note = 'execute';
+    }
+    heroAttacksMade++;
+    return { damage: Math.max(CONFIG.minDamage, roll - effectiveEnemyArmor), note };
+  };
+
+  const applyHeroBlow = (): boolean => {
+    const blow = heroBlow();
+    enemyHp -= blow.damage;
+    events.push({ turn, actor: 'hero', kind: 'attack', damage: blow.damage, targetHpAfter: Math.max(0, enemyHp), ...(blow.note ? { note: blow.note } : {}) });
+    if (enemyHp <= 0 && mods.killHeal) {
+      const healed = Math.min(mods.killHeal, hero.maxHp - heroHp);
+      if (healed > 0) {
+        heroHp += healed;
+        events.push({ turn, actor: 'hero', kind: 'lifesteal', damage: healed, targetHpAfter: heroHp });
+      }
+    }
+    return enemyHp <= 0;
+  };
 
   while (true) {
     turn++;
-    const heroBlow = heroHit();
-    enemyHp -= heroBlow;
-    events.push({ turn, actor: 'hero', kind: 'attack', damage: heroBlow, targetHpAfter: Math.max(0, enemyHp) });
-    if (enemyHp <= 0) break;
-    const enemyBlow = enemyHit();
-    heroHp -= enemyBlow;
-    events.push({ turn, actor: 'enemy', kind: 'attack', damage: enemyBlow, targetHpAfter: Math.max(0, heroHp) });
-    if (heroHp <= 0) break;
+    if (applyHeroBlow()) break;
+    if (mods.doubleHit && applyHeroBlow()) break;
+
+    if (mods.firstHitBlock && enemyAttacksMade === 0) {
+      enemyAttacksMade++;
+      events.push({ turn, actor: 'enemy', kind: 'block', damage: 0, targetHpAfter: heroHp });
+    } else {
+      enemyAttacksMade++;
+      const enemyBlow = Math.max(CONFIG.minDamage, rng.int(enemy.dmgMin, enemy.dmgMax) - hero.armor);
+      heroHp -= enemyBlow;
+      events.push({ turn, actor: 'enemy', kind: 'attack', damage: enemyBlow, targetHpAfter: Math.max(0, heroHp) });
+      if (heroHp <= 0) break;
+      if (mods.thorns) {
+        enemyHp -= mods.thorns;
+        events.push({ turn, actor: 'hero', kind: 'thorns', damage: mods.thorns, targetHpAfter: Math.max(0, enemyHp) });
+        if (enemyHp <= 0) break;
+      }
+    }
   }
 
   return {

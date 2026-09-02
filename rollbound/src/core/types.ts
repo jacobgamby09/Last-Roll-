@@ -36,6 +36,49 @@ export type BootsVisualId = 'worn-sandals' | 'trail-boots';
 export type EquipmentId = WeaponVisualId | ArmorVisualId | BootsVisualId;
 export type EquipmentKind = 'weapon' | 'armor' | 'boots';
 
+// Datadrevet effect-vokabular (item-system slice A, 2026-09-02).
+// Items er data: ét item = navn + slot + tier + en liste af effects.
+// Combat-effects afvikles i simulateFight; board-effects i engine-hooks.
+export type ItemEffect =
+  | { kind: 'dmgRange'; min: number; max: number }        // våbnet EJER rangen
+  | { kind: 'armor'; amount: number }
+  | { kind: 'maxHp'; amount: number }
+  | { kind: 'armorPen'; amount: number | 'all' }
+  | { kind: 'firstStrike'; mult: number }                 // første hug ganges (før armor)
+  | { kind: 'doubleHit' }                                 // to ruller pr. tur (armor bider dobbelt)
+  | { kind: 'executeBonus'; threshold: number; mult: number } // vs fjender under threshold×maxHP
+  | { kind: 'killHeal'; amount: number }                  // heal pr. kill
+  | { kind: 'thorns'; amount: number }                    // refleks pr. modtaget hug
+  | { kind: 'firstHitBlock' }                             // bloker fjendens første angreb
+  | { kind: 'bootsCharges'; count: number; rechargeAtCamp: boolean }
+  | { kind: 'dieTransform'; from: number; to: number }    // fx 6 tæller som 5
+  | { kind: 'visibility'; amount: number }                // ekstra synlige felter
+  | { kind: 'campHealBonus'; amount: number }
+  | { kind: 'campNudge'; amount: number }
+  | { kind: 'goldBonus'; amount: number }                 // pr. guld-gevinst fra felter
+  | { kind: 'trapImmune' }
+  | { kind: 'freeRerollOn1' };
+
+export interface ItemDef {
+  id: EquipmentId;
+  slot: EquipmentKind;
+  tier: 0 | 1 | 2;
+  name: string;
+  cost: number; // shoppris; 0 = sælges ikke
+  effects: ItemEffect[];
+}
+
+// Kamp-modifiers afledt af heroens loadout — sendes ind i simulateFight
+export interface CombatMods {
+  firstStrikeMult?: number;
+  doubleHit?: boolean;
+  executeBonus?: { threshold: number; mult: number };
+  armorPen?: number | 'all';
+  killHeal?: number;
+  thorns?: number;
+  firstHitBlock?: boolean;
+}
+
 export interface EquipmentLoadout {
   weapon: WeaponVisualId;
   armor: ArmorVisualId;
@@ -99,9 +142,10 @@ export interface FightPreview {
 export interface CombatEvent {
   turn: number;
   actor: 'hero' | 'enemy';
-  kind: 'attack';
-  damage: number; // efter armor
+  kind: 'attack' | 'thorns' | 'lifesteal' | 'block';
+  damage: number; // efter armor (heal-mængde for 'lifesteal', 0 for 'block')
   targetHpAfter: number;
+  note?: 'firstStrike' | 'execute'; // markerer særlige attack-events til UI'et
 }
 
 export interface CombatScript {

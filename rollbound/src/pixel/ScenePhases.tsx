@@ -4,6 +4,7 @@
 
 import { CONFIG } from '../core/config';
 import { EQUIPMENT_DEFS, equippedIdForKind, equipmentEffectText } from '../core/equipment';
+import { ITEMS, itemStats } from '../core/items';
 import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
 import type { GameState, LevelPick } from '../core/types';
@@ -61,25 +62,27 @@ export function TreasureChoice({ state, dispatch }: PhaseProps) {
 
 function equipmentDeltaLabel(state: GameState, itemId: EquipmentAssetId): string {
   const offered = EQUIPMENT_DEFS[itemId];
-  const currentId = equippedIdForKind(state.hero, offered.kind) as EquipmentAssetId;
-  const current = EQUIPMENT_DEFS[currentId];
-  if (offered.kind === 'weapon') {
-    const shift = offered.effect.dmg - current.effect.dmg;
-    const { dmgMin, dmgMax } = state.hero;
-    return `DMG ${dmgMin}-${dmgMax} → ${dmgMin + shift}-${dmgMax + shift}`;
+  const currentId = equippedIdForKind(state.hero, offered.slot) as EquipmentAssetId;
+  const o = itemStats(offered);
+  const c = itemStats(EQUIPMENT_DEFS[currentId]);
+  const hero = state.hero;
+  const parts: string[] = [];
+  if (o.dmgMin !== c.dmgMin || o.dmgMax !== c.dmgMax) {
+    parts.push(`DMG ${hero.dmgMin}-${hero.dmgMax} → ${hero.dmgMin + o.dmgMin - c.dmgMin}-${hero.dmgMax + o.dmgMax - c.dmgMax}`);
   }
-  if (offered.kind === 'armor') {
-    const next = state.hero.armor + offered.effect.armor - current.effect.armor;
-    return `ARM ${state.hero.armor} → ${next}`;
+  if (o.armor !== c.armor) parts.push(`ARM ${hero.armor} → ${hero.armor + o.armor - c.armor}`);
+  if (o.maxHp !== c.maxHp) parts.push(`MAX HP ${hero.maxHp} → ${hero.maxHp + o.maxHp - c.maxHp}`);
+  if (o.bootsCharges !== c.bootsCharges || offered.slot === 'boots') {
+    parts.push(`GRATIS NUDGE ${hero.bootsNudgeCharges} → ${o.bootsCharges}`);
   }
-  return `GRATIS NUDGE ${state.hero.bootsNudgeCharges} → ${offered.effect.freeNudges}`;
+  return parts.length > 0 ? parts.join(' · ') : 'SAMME STATS — NY EFFEKT';
 }
 
 export function EquipmentOffer({ state, dispatch }: PhaseProps) {
   if (state.phase.t !== 'equipment') return null;
   const { hero, phase } = state;
   const offered = EQUIPMENT_DEFS[phase.itemId];
-  const currentId = equippedIdForKind(hero, offered.kind) as EquipmentAssetId;
+  const currentId = equippedIdForKind(hero, offered.slot) as EquipmentAssetId;
   const equipLabel = phase.cost > 0 ? `KØB & UDSTYR · ${phase.cost} G` : 'UDSTYR';
   const keepLabel = phase.source === 'shop' ? 'BEHOLD NUVÆRENDE · TILBAGE TIL SHOP' : 'BEHOLD NUVÆRENDE';
 
@@ -117,13 +120,13 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
   if (state.phase.t !== 'shop') return null;
   const { hero, phase } = state;
   const shop = CONFIG.shop;
-  const weaponStatus = phase.boughtWeapon ? 'KØBT' : hero.loadout.weapon === 'rusted-sword' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, shop.weapon.cost);
-  const armorStatus = phase.boughtArmor ? 'KØBT' : hero.loadout.armor === 'worn-plate' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, shop.armorItem.cost);
-  const bootsStatus = phase.boughtBoots ? 'KØBT' : hero.loadout.boots === 'trail-boots' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, shop.boots.cost);
+  const weaponStatus = phase.boughtWeapon ? 'KØBT' : hero.loadout.weapon === 'rusted-sword' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['rusted-sword'].cost);
+  const armorStatus = phase.boughtArmor ? 'KØBT' : hero.loadout.armor === 'worn-plate' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['worn-plate'].cost);
+  const bootsStatus = phase.boughtBoots ? 'KØBT' : hero.loadout.boots === 'trail-boots' ? 'ALLEREDE UDSTYRET' : goldStatus(hero.gold, ITEMS['trail-boots'].cost);
   const rows: { action: Action; assetId?: EquipmentAssetId; cost: number; effect: string; name: string; resourceId?: ResourceAssetId; status?: string }[] = [
-    { action: { type: 'BUY', item: 'weapon' }, assetId: 'rusted-sword', cost: shop.weapon.cost, effect: equipmentEffectText('rusted-sword'), name: 'SLEBET KLINGE', status: weaponStatus },
-    { action: { type: 'BUY', item: 'armor' }, assetId: 'worn-plate', cost: shop.armorItem.cost, effect: equipmentEffectText('worn-plate'), name: 'JERNPLADE', status: armorStatus },
-    { action: { type: 'BUY', item: 'boots' }, assetId: 'trail-boots', cost: shop.boots.cost, effect: equipmentEffectText('trail-boots'), name: 'STIVINDERSTØVLER', status: bootsStatus },
+    { action: { type: 'BUY', item: 'weapon' }, assetId: 'rusted-sword', cost: ITEMS['rusted-sword'].cost, effect: equipmentEffectText('rusted-sword'), name: 'SLEBET KLINGE', status: weaponStatus },
+    { action: { type: 'BUY', item: 'armor' }, assetId: 'worn-plate', cost: ITEMS['worn-plate'].cost, effect: equipmentEffectText('worn-plate'), name: 'JERNPLADE', status: armorStatus },
+    { action: { type: 'BUY', item: 'boots' }, assetId: 'trail-boots', cost: ITEMS['trail-boots'].cost, effect: equipmentEffectText('trail-boots'), name: 'STIVINDERSTØVLER', status: bootsStatus },
     { action: { type: 'BUY', item: 'heal' }, cost: shop.heal.cost, effect: `+${shop.heal.hp} HP`, name: 'LÆGEURT', resourceId: 'life', status: hero.hp >= hero.maxHp ? 'FULD HP' : goldStatus(hero.gold, shop.heal.cost) },
     { action: { type: 'BUY', item: 'nudge' }, cost: shop.nudge, effect: '+1 NUDGE', name: 'NUDGE', resourceId: 'nudge', status: goldStatus(hero.gold, shop.nudge) },
     { action: { type: 'BUY', item: 'reroll' }, cost: shop.reroll, effect: '+1 REROLL', name: 'SKÆBNETERNING', resourceId: 'reroll', status: goldStatus(hero.gold, shop.reroll) },

@@ -12,6 +12,7 @@
 import { CONFIG } from '../src/core/config';
 import { enemyForTile, fightOutcome } from '../src/core/combat';
 import { availableNudges } from '../src/core/equipment';
+import { ITEMS } from '../src/core/items';
 import { newGame, reducer, type Action } from '../src/core/engine';
 import type { GameState, LevelPick } from '../src/core/types';
 
@@ -114,8 +115,8 @@ function shopAction(s: GameState, strat: Strategy): Action {
   const S = CONFIG.shop;
   const canHeal = hero.gold >= S.heal.cost && hero.hp < hero.maxHp;
   if (hero.hp / hero.maxHp < 0.6 && canHeal) return { type: 'BUY', item: 'heal' };
-  const weaponOk = !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= S.weapon.cost;
-  const armorOk = !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= S.armorItem.cost;
+  const weaponOk = !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= ITEMS['rusted-sword'].cost;
+  const armorOk = !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= ITEMS['worn-plate'].cost;
   if (strat.levelPick === 'defensive') {
     if (armorOk) return { type: 'BUY', item: 'armor' };
     if (weaponOk) return { type: 'BUY', item: 'weapon' };

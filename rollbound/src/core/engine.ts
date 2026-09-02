@@ -3,7 +3,8 @@
 // så et run kan reproduceres fra sit seed.
 
 import { CONFIG, TREASURE_POOL } from './config';
-import { EQUIPMENT_DEFS, equipItem, ownsEquipment } from './equipment';
+import { EQUIPMENT_DEFS, equipItem, equipmentEffectText, ownsEquipment } from './equipment';
+import { combatModsFor, ITEMS, itemStats } from './items';
 import { cursor, type RngCursor } from './rng';
 import { generateTrack } from './track';
 import { enemyForTile, simulateFight } from './combat';
@@ -148,7 +149,7 @@ function gainXp(s: GameState, xp: number) {
 
 function runCombat(s: GameState, rng: RngCursor, type: TileType) {
   const enemy = enemyForTile(s.pos, type);
-  const script = simulateFight(s.hero, enemy, rng);
+  const script = simulateFight(s.hero, enemy, rng, combatModsFor(s.hero.loadout));
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'enemy') {
@@ -187,7 +188,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType) {
 }
 
 function bossFight(s: GameState, rng: RngCursor) {
-  const script = simulateFight(s.hero, CONFIG.boss, rng);
+  const script = simulateFight(s.hero, CONFIG.boss, rng, combatModsFor(s.hero.loadout));
   s.lastCombat = script;
   s.combatSeq++;
   if (script.result.winner === 'hero') {
@@ -218,6 +219,12 @@ function resolveTile(s: GameState, rng: RngCursor) {
     case 'camp': {
       const gained = heal(s, CONFIG.camp.heal);
       log(s, gained > 0 ? `Lejren heler dig +${gained} HP.` : 'Lejren er rar, men du var på fuld HP.', 'good');
+      // Board-hook: boots med rechargeAtCamp genoplader deres charges her
+      const boots = itemStats(ITEMS[s.hero.loadout.boots]);
+      if (boots.rechargeAtCamp && s.hero.bootsNudgeCharges < boots.bootsCharges) {
+        s.hero.bootsNudgeCharges = boots.bootsCharges;
+        log(s, `${ITEMS[s.hero.loadout.boots].name} genoplades.`, 'good');
+      }
       s.phase = { t: 'idle' };
       break;
     }
@@ -351,9 +358,9 @@ export function reducer(prev: GameState, action: Action): GameState {
       const sh = CONFIG.shop;
       const h = s.hero;
       const offers: Partial<Record<EquipmentKind, { id: EquipmentId; cost: number; bought: boolean }>> = {
-        weapon: { id: 'rusted-sword', cost: sh.weapon.cost, bought: s.phase.boughtWeapon },
-        armor: { id: 'worn-plate', cost: sh.armorItem.cost, bought: s.phase.boughtArmor },
-        boots: { id: 'trail-boots', cost: sh.boots.cost, bought: s.phase.boughtBoots },
+        weapon: { id: 'rusted-sword', cost: ITEMS['rusted-sword'].cost, bought: s.phase.boughtWeapon },
+        armor: { id: 'worn-plate', cost: ITEMS['worn-plate'].cost, bought: s.phase.boughtArmor },
+        boots: { id: 'trail-boots', cost: ITEMS['trail-boots'].cost, bought: s.phase.boughtBoots },
       };
       if (action.item === 'weapon' || action.item === 'armor' || action.item === 'boots') {
         const offer = offers[action.item];
@@ -386,7 +393,7 @@ export function reducer(prev: GameState, action: Action): GameState {
         if (item.kind === 'armor') resume.boughtArmor = true;
         if (item.kind === 'boots') resume.boughtBoots = true;
       }
-      log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${item.effect.dmg ? `+${item.effect.dmg} Damage` : item.effect.armor ? `+${item.effect.armor} Armor` : `${item.effect.freeNudges} gratis Nudge`}).`, 'good');
+      log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
       s.phase = resume;
       break;
     }

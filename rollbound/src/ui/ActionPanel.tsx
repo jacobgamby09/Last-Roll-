@@ -1,5 +1,6 @@
 import { CONFIG } from '../core/config';
 import { availableNudges, EQUIPMENT_DEFS, equippedIdForKind, equipmentEffectText } from '../core/equipment';
+import { ITEMS } from '../core/items';
 import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
 import type { GameState, LevelPick } from '../core/types';
@@ -105,7 +106,7 @@ export function ActionPanel({ state, dispatch }: Props) {
 
   if (phase.t === 'equipment') {
     const offered = EQUIPMENT_DEFS[phase.itemId];
-    const currentId = equippedIdForKind(hero, offered.kind);
+    const currentId = equippedIdForKind(hero, offered.slot);
     return (
       <div className="panel">
         <div className="panel-title">Nyt udstyr: {offered.name}</div>
@@ -122,9 +123,9 @@ export function ActionPanel({ state, dispatch }: Props) {
   if (phase.t === 'shop') {
     const sh = CONFIG.shop;
     const rows: { key: 'weapon' | 'armor' | 'boots' | 'heal' | 'nudge' | 'reroll'; label: string; cost: number; ok: boolean }[] = [
-      { key: 'weapon', label: `Slebet klinge (${equipmentEffectText('rusted-sword')})`, cost: sh.weapon.cost, ok: !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= sh.weapon.cost },
-      { key: 'armor', label: `Jernplade (${equipmentEffectText('worn-plate')})`, cost: sh.armorItem.cost, ok: !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= sh.armorItem.cost },
-      { key: 'boots', label: `Stivinderstøvler (${equipmentEffectText('trail-boots')})`, cost: sh.boots.cost, ok: !phase.boughtBoots && hero.loadout.boots !== 'trail-boots' && hero.gold >= sh.boots.cost },
+      { key: 'weapon', label: `Slebet klinge (${equipmentEffectText('rusted-sword')})`, cost: ITEMS['rusted-sword'].cost, ok: !phase.boughtWeapon && hero.loadout.weapon !== 'rusted-sword' && hero.gold >= ITEMS['rusted-sword'].cost },
+      { key: 'armor', label: `Jernplade (${equipmentEffectText('worn-plate')})`, cost: ITEMS['worn-plate'].cost, ok: !phase.boughtArmor && hero.loadout.armor !== 'worn-plate' && hero.gold >= ITEMS['worn-plate'].cost },
+      { key: 'boots', label: `Stivinderstøvler (${equipmentEffectText('trail-boots')})`, cost: ITEMS['trail-boots'].cost, ok: !phase.boughtBoots && hero.loadout.boots !== 'trail-boots' && hero.gold >= ITEMS['trail-boots'].cost },
       { key: 'heal', label: `Heling (+${sh.heal.hp} HP)`, cost: sh.heal.cost, ok: hero.gold >= sh.heal.cost && hero.hp < hero.maxHp },
       { key: 'nudge', label: '+1 Nudge', cost: sh.nudge, ok: hero.gold >= sh.nudge },
       { key: 'reroll', label: '+1 Reroll', cost: sh.reroll, ok: hero.gold >= sh.reroll },
