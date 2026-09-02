@@ -231,7 +231,9 @@ export const CONSUMABLES: Record<ConsumableId, ConsumableDef> = {
   'bomb': { id: 'bomb', tier: 1, name: 'Bombe', cost: 9, effect: { kind: 'bomb', damage: 12 } },
   'thunder-flask': { id: 'thunder-flask', tier: 2, name: 'Tordenkolbe', cost: 15, effect: { kind: 'bomb', damage: 20 } },
   'smoke-bomb': { id: 'smoke-bomb', tier: 1, name: 'Røgbombe', cost: 12, effect: { kind: 'flee' } },
-  'whetstone': { id: 'whetstone', tier: 2, name: 'Slibesten', cost: 14, effect: { kind: 'permDmg', amount: 1 } },
+  'whetstone': { id: 'whetstone', tier: 2, name: 'Slibesten', cost: 14, effect: { kind: 'itemBuff', slot: 'weapon', dmg: 1 } },
+  'armor-solder': { id: 'armor-solder', tier: 2, name: 'Panserlod', cost: 14, effect: { kind: 'itemBuff', slot: 'armor', armor: 1 } },
+  'wool-lining': { id: 'wool-lining', tier: 1, name: 'Uldfór', cost: 9, effect: { kind: 'itemBuff', slot: 'armor', maxHp: 8 } },
   'fate-stone': { id: 'fate-stone', tier: 1, name: 'Skæbnesten', cost: 10, effect: { kind: 'grant', nudges: 1, rerolls: 1 } },
   'gold-pouch': { id: 'gold-pouch', tier: 1, name: 'Guldpose', cost: 0, effect: { kind: 'gold', amount: 15 } }, // sælges ikke (arbitrage)
   'fate-die': { id: 'fate-die', tier: 1, name: 'Skæbneterning', cost: 10, effect: { kind: 'twinRoll' } },
@@ -244,13 +246,21 @@ export function isPreCombatConsumable(id: ConsumableId): boolean {
   return kind === 'bomb' || kind === 'flee';
 }
 
+const SLOT_LABEL: Record<EquipmentKind, string> = { weapon: 'dit våben', armor: 'din rustning', boots: 'dine støvler' };
+
 export function consumableEffectText(id: ConsumableId): string {
   const e = CONSUMABLES[id].effect;
   switch (e.kind) {
     case 'heal': return `+${e.amount} HP`;
     case 'bomb': return `${e.damage} skade før kampen`;
     case 'flee': return 'Undgå kampen (ikke bossen)';
-    case 'permDmg': return `Permanent +${e.amount} DMG`;
+    case 'itemBuff': {
+      const parts: string[] = [];
+      if (e.dmg) parts.push(`+${e.dmg} DMG`);
+      if (e.armor) parts.push(`+${e.armor} ARM`);
+      if (e.maxHp) parts.push(`+${e.maxHp} max HP`);
+      return `${parts.join(' & ')} på ${SLOT_LABEL[e.slot]} (mistes ved udskiftning)`;
+    }
     case 'grant': return `+${e.nudges} nudge & +${e.rerolls} reroll`;
     case 'gold': return `+${e.amount} guld`;
     case 'twinRoll': return 'Næste kast: rul to, vælg én';

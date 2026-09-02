@@ -3,9 +3,8 @@
 // treasure, shop, level-up, game over) renderes som fullscreen-scener
 // af PixelGame — se SceneShell/ScenePhases/CombatScene.
 
-import { useState } from 'react';
+import { CONFIG } from '../core/config';
 import { availableNudges } from '../core/equipment';
-import { CONSUMABLES, consumableEffectText, isPreCombatConsumable } from '../core/items';
 import type { Action } from '../core/engine';
 import type { CSSProperties } from 'react';
 import type { GameState } from '../core/types';
@@ -13,11 +12,11 @@ import { describeDest } from '../ui/preview';
 import { PixelDie, type DiceRollFx } from './PixelDie';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { PixelTileArt } from './PixelTileArt';
-import { ConsumableIcon } from './ConsumableIcon';
 
 interface Props {
   dispatch: (action: Action) => void;
   movementSteps?: number | null;
+  onOpenInventory?: () => void;
   rollFx: DiceRollFx;
   state: GameState;
 }
@@ -67,9 +66,8 @@ function DestinationCard({ disabled, disabledReason, onSelect, primary, state, s
   );
 }
 
-export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state }: Props) {
+export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInventory, rollFx, state }: Props) {
   const { hero, phase } = state;
-  const [armedSlot, setArmedSlot] = useState<number | null>(null);
 
   if (movementSteps !== null) {
     return (
@@ -106,38 +104,10 @@ export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state
           <RollAltar fx={{ stage: 'idle', value: state.rolls % 6 + 1 }} />
           <span className="pixel-roll-button-copy"><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b><em>{state.twinRollArmed ? 'SKÆBNETERNING AKTIV: RUL TO, VÆLG ÉN' : 'KLIK FOR AT KASTE'}</em></span>
         </button>
-        {hero.consumables.length > 0 ? (
-          <div className="pixel-consumable-row" aria-label="Brug consumable">
-            {hero.consumables.map((id, slot) => {
-              const preCombat = isPreCombatConsumable(id);
-              const armed = armedSlot === slot;
-              return (
-                <button
-                  className={`pixel-consumable-use ${armed ? 'is-armed' : ''}`}
-                  disabled={preCombat}
-                  key={`${id}-${slot}`}
-                  onBlur={() => setArmedSlot(null)}
-                  onClick={() => {
-                    // To-trins-brug: første klik armerer, andet klik bruger —
-                    // så et nysgerrigt klik ikke koster item'et
-                    if (armed) {
-                      setArmedSlot(null);
-                      dispatch({ type: 'USE_CONSUMABLE', slot });
-                    } else {
-                      setArmedSlot(slot);
-                    }
-                  }}
-                  type="button"
-                >
-                  <ConsumableIcon assetId={id} />
-                  <span className="pixel-consumable-copy">
-                    <b>{armed ? `Brug ${CONSUMABLES[id].name}?` : CONSUMABLES[id].name}</b>
-                    <small>{armed ? 'Klik igen for at bruge' : preCombat ? 'Bruges før kamp' : consumableEffectText(id)}</small>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        {hero.consumables.length > 0 && onOpenInventory ? (
+          <button className="pixel-secondary-button pixel-inventory-open" onClick={onOpenInventory} type="button">
+            🎒 INVENTORY ({hero.consumables.length}/{CONFIG.consumableSlots}) — TRYK I
+          </button>
         ) : null}
         <div className="pixel-roll-rule"><small>1 × D6</small><b>RUL · VURDÉR · MANIPULÉR</b></div>
       </section>

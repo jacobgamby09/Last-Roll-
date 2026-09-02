@@ -42,6 +42,45 @@ describe('engine-kontrakter', () => {
     }
   });
 
+  it('item-buffs stakker på slottet og mistes ved udskiftning', () => {
+    let s = newGame(1);
+    s.hero.gold = 100;
+    s.hero.consumables = ['whetstone', 'whetstone'];
+    const baseDmgMin = s.hero.dmgMin;
+
+    // To slibesten på startvåbnet: stakker
+    s = reducer(s, { type: 'USE_CONSUMABLE', slot: 0 });
+    s = reducer(s, { type: 'USE_CONSUMABLE', slot: 0 });
+    expect(s.hero.dmgMin).toBe(baseDmgMin + 2);
+    expect(s.hero.slotBuffs.weapon.dmg).toBe(2);
+
+    // Panserlod + Uldfór på samme rustning: forskellige buffs stakker også
+    s.hero.consumables = ['armor-solder', 'wool-lining'];
+    const baseMaxHp = s.hero.maxHp;
+    s = reducer(s, { type: 'USE_CONSUMABLE', slot: 0 });
+    s = reducer(s, { type: 'USE_CONSUMABLE', slot: 0 });
+    expect(s.hero.armor).toBe(1);
+    expect(s.hero.maxHp).toBe(baseMaxHp + 8);
+    expect(s.hero.slotBuffs.armor).toEqual({ dmg: 0, armor: 1, maxHp: 8 });
+
+    // Udskift våbnet: våben-buffen mistes, rustnings-buffen består
+    s.phase = { t: 'equipment', itemId: 'rune-blade', source: 'treasure', cost: 0, resume: { t: 'idle' } };
+    s = reducer(s, { type: 'EQUIP_OFFER' });
+    expect(s.hero.loadout.weapon).toBe('rune-blade');
+    expect(s.hero.slotBuffs.weapon).toEqual({ dmg: 0, armor: 0, maxHp: 0 });
+    expect(s.hero.dmgMin).toBe(13); // Runeklingens rene range, uden buff
+    expect(s.hero.dmgMax).toBe(16);
+    expect(s.hero.slotBuffs.armor.armor).toBe(1); // rustningens buffs urørte
+    expect(s.hero.armor).toBe(1);
+
+    // Udskift rustningen: armor- OG maxHp-buff mistes sammen
+    s.phase = { t: 'equipment', itemId: 'shield-vest', source: 'treasure', cost: 0, resume: { t: 'idle' } };
+    s = reducer(s, { type: 'EQUIP_OFFER' });
+    expect(s.hero.armor).toBe(2); // Skjoldvestens egne +2, buffen væk
+    expect(s.hero.maxHp).toBe(baseMaxHp); // Uldfór-buffen trukket fra
+    expect(s.hero.slotBuffs.armor).toEqual({ dmg: 0, armor: 0, maxHp: 0 });
+  });
+
   it('dice-peek-kontrakten: næste RNG-træk i idle er præcis ét d6 = det faktiske roll', () => {
     for (const seed of [0, 7, 99]) {
       let s = newGame(seed);

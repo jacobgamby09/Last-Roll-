@@ -76,16 +76,31 @@ function equipmentDeltaLabel(state: GameState, itemId: EquipmentAssetId): string
   const o = itemStats(offered);
   const c = itemStats(EQUIPMENT_DEFS[currentId]);
   const hero = state.hero;
+  const buffs = hero.slotBuffs[offered.slot]; // item-buffs mistes ved udskiftning
   const parts: string[] = [];
-  if (o.dmgMin !== c.dmgMin || o.dmgMax !== c.dmgMax) {
-    parts.push(`DMG ${hero.dmgMin}-${hero.dmgMax} → ${hero.dmgMin + o.dmgMin - c.dmgMin}-${hero.dmgMax + o.dmgMax - c.dmgMax}`);
+  const dDmgMin = o.dmgMin - c.dmgMin - buffs.dmg;
+  const dDmgMax = o.dmgMax - c.dmgMax - buffs.dmg;
+  if (dDmgMin !== 0 || dDmgMax !== 0) {
+    parts.push(`DMG ${hero.dmgMin}-${hero.dmgMax} → ${hero.dmgMin + dDmgMin}-${hero.dmgMax + dDmgMax}`);
   }
-  if (o.armor !== c.armor) parts.push(`ARM ${hero.armor} → ${hero.armor + o.armor - c.armor}`);
-  if (o.maxHp !== c.maxHp) parts.push(`MAX HP ${hero.maxHp} → ${hero.maxHp + o.maxHp - c.maxHp}`);
+  const dArmor = o.armor - c.armor - buffs.armor;
+  if (dArmor !== 0) parts.push(`ARM ${hero.armor} → ${hero.armor + dArmor}`);
+  const dMaxHp = o.maxHp - c.maxHp - buffs.maxHp;
+  if (dMaxHp !== 0) parts.push(`MAX HP ${hero.maxHp} → ${hero.maxHp + dMaxHp}`);
   if (o.bootsCharges !== c.bootsCharges || offered.slot === 'boots') {
     parts.push(`GRATIS NUDGE ${hero.bootsNudgeCharges} → ${o.bootsCharges}`);
   }
   return parts.length > 0 ? parts.join(' · ') : 'SAMME STATS — NY EFFEKT';
+}
+
+// Advarsel når det udstyrede item bærer buffs, der mistes ved udskiftning
+function buffLossLabel(state: GameState, itemId: EquipmentAssetId): string | null {
+  const buffs = state.hero.slotBuffs[EQUIPMENT_DEFS[itemId].slot];
+  const parts: string[] = [];
+  if (buffs.dmg) parts.push(`+${buffs.dmg} DMG`);
+  if (buffs.armor) parts.push(`+${buffs.armor} ARM`);
+  if (buffs.maxHp) parts.push(`+${buffs.maxHp} max HP`);
+  return parts.length > 0 ? `Du mister forbedringer: ${parts.join(' & ')}` : null;
 }
 
 export function EquipmentOffer({ state, dispatch }: PhaseProps) {
@@ -114,6 +129,9 @@ export function EquipmentOffer({ state, dispatch }: PhaseProps) {
         </article>
       </div>
       <strong className="pixel-equipment-delta">{equipmentDeltaLabel(state, phase.itemId as EquipmentAssetId)}</strong>
+      {buffLossLabel(state, phase.itemId as EquipmentAssetId)
+        ? <strong className="pixel-buff-loss">⚠ {buffLossLabel(state, phase.itemId as EquipmentAssetId)}</strong>
+        : null}
       <div className="pixel-equipment-offer-actions">
         <button className="pixel-equip-button" disabled={hero.gold < phase.cost} onClick={() => dispatch({ type: 'EQUIP_OFFER' })} type="button">{equipLabel}</button>
         <button className="pixel-secondary-button" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })} type="button">{keepLabel}</button>

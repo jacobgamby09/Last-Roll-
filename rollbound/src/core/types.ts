@@ -29,6 +29,7 @@ export interface Hero {
   rerolls: number;
   loadout: EquipmentLoadout;
   consumables: ConsumableId[]; // max CONFIG.consumableSlots
+  slotBuffs: SlotBuffs;
 }
 
 export type WeaponVisualId =
@@ -79,17 +80,28 @@ export interface ItemDef {
 // 'bomb'/'flee' bruges i pre-combat-beatet; resten i idle på boardet.
 export type ConsumableId =
   | 'elixir' | 'grand-elixir' | 'bomb' | 'thunder-flask' | 'smoke-bomb'
-  | 'whetstone' | 'fate-stone' | 'gold-pouch' | 'fate-die' | 'teleport-scroll';
+  | 'whetstone' | 'armor-solder' | 'wool-lining'
+  | 'fate-stone' | 'gold-pouch' | 'fate-die' | 'teleport-scroll';
 
 export type ConsumableEffect =
   | { kind: 'heal'; amount: number }
   | { kind: 'bomb'; damage: number }                       // pre-combat: åbningsskade
   | { kind: 'flee' }                                       // pre-combat: undgå kampen (ikke bossen)
-  | { kind: 'permDmg'; amount: number }                    // permanent skift af hele rangen
+  | { kind: 'itemBuff'; slot: EquipmentKind; dmg?: number; armor?: number; maxHp?: number } // buffer ITEMET — mistes ved udskiftning; stakker frit
   | { kind: 'grant'; nudges: number; rerolls: number }
   | { kind: 'gold'; amount: number }
   | { kind: 'twinRoll' }                                   // næste kast: rul to, vælg én
   | { kind: 'teleport' };                                  // flyt 1-6 efter eget valg
+// ('permDmg' udgik 2026-09-02: Slibesten blev til en itemBuff — se GDD-changelog)
+
+// Akkumulerede buffs pr. udstyrs-slot (fra itemBuff-consumables).
+// Ryddes — og trækkes fra heroens stats — når slottets item udskiftes.
+export interface SlotBuff {
+  dmg: number; // forskyder begge ender af rangen
+  armor: number;
+  maxHp: number;
+}
+export type SlotBuffs = Record<EquipmentKind, SlotBuff>;
 
 export interface ConsumableDef {
   id: ConsumableId;

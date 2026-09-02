@@ -26,11 +26,19 @@ export function equipItem(hero: Hero, itemId: EquipmentId) {
   const oldStats = itemStats(ITEMS[currentId]);
   const newStats = itemStats(next);
 
+  // Buffs (Slibesten m.fl.) er bundet til ITEMET: de mistes ved udskiftning
+  const buffs = hero.slotBuffs[next.slot];
+  hero.dmgMin -= buffs.dmg;
+  hero.dmgMax -= buffs.dmg;
+  hero.armor -= buffs.armor;
+  const buffMaxHp = buffs.maxHp;
+  hero.slotBuffs[next.slot] = { dmg: 0, armor: 0, maxHp: 0 };
+
   hero.dmgMin += newStats.dmgMin - oldStats.dmgMin;
   hero.dmgMax += newStats.dmgMax - oldStats.dmgMax;
   hero.armor += newStats.armor - oldStats.armor;
 
-  const maxHpDelta = newStats.maxHp - oldStats.maxHp;
+  const maxHpDelta = newStats.maxHp - oldStats.maxHp - buffMaxHp;
   if (maxHpDelta !== 0) {
     hero.maxHp += maxHpDelta;
     if (maxHpDelta > 0) hero.hp += maxHpDelta;

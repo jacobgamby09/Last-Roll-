@@ -11,6 +11,15 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Item-buffs + inventory-scene (IMPLEMENTERET)
+
+**Buff-consumables binder sig til ITEMET, ikke spilleren** — og mistes, når slottets item udskiftes. Stakning er fri (flere Slibesten på samme våben; Panserlod + Uldfór på samme rustning): *jo mere du investerer, jo mere har du at tabe*. Tre buff-items (12 consumables i alt): **Slibesten** (konverteret: +1 DMG på våbnet), **Panserlod** (+1 ARM på rustningen, tier 2), **Uldfór** (+8 max HP på rustningen, tier 1). Buffs bor i `slotBuffs` pr. slot på heroen; `equipItem` trækker dem fra ved udskiftning (testet i engine.test).
+
+- **Equip/Keep-sammenligningen advarer eksplicit:** "⚠ Du mister forbedringer: +2 DMG" — og delta-beregningen indregner tabet. HUD-slots viser ★ + "Forbedret: …" i tooltippet.
+- **Inventory-scene:** ITEMS-blokken i HUD (eller tasten `I`) åbner et fullscreen-overlay, hvor consumables inspiceres og bruges — med kontekst-preview pr. kort ("Trækølle: DMG 7-12 → 8-13", "HP 43 → 63"). Bomber/Røgbombe vises med grunden "bruges i forbered-dig-beatet". Idle-panelets brugsknapper (kilden til et auto-brug-uheld i playtest) er fjernet til fordel for scenen.
+- Kalibrering: ~EV-neutral som forventet — balanced 56,3 % (10k runs), uændret boss.
+- Codex-note: Panserlod og Uldfór afventer ikoner (glyf-fallback + coverage-test der fanger et tredje umappet item).
+
 ### 2026-09-02 · Consumables + pre-combat-beat (IMPLEMENTERET) — playtest-gaten er nået
 
 **10 consumables, 2 slots** (balance-data i items.ts): Helbredende eliksir (+20), Stor eliksir (+40), Bombe (12 åbningsskade), Tordenkolbe (20), Røgbombe (undgå kampen — gratis flugt i v1, virker ikke på bossen), Slibesten (permanent +1 dmg), Skæbnesten (+1 nudge & +1 reroll), Guldpose (+15, sælges ikke — arbitrage), Skæbneterning (næste kast: rul to, vælg én), Teleport-rulle (flyt 1-6 valgfrit).

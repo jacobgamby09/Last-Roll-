@@ -3,6 +3,7 @@ import { CONFIG } from '../core/config';
 import { newGame, peekRoll, reducer, type Action } from '../core/engine';
 import type { GameState } from '../core/types';
 import { CombatScene, type CombatView } from './CombatScene';
+import { InventoryScene } from './InventoryScene';
 import { PixelActionPanel } from './PixelActionPanel';
 import { PixelBoard } from './PixelBoard';
 import type { DiceRollFx } from './PixelDie';
@@ -76,6 +77,7 @@ export function PixelGame() {
   const [movementSteps, setMovementSteps] = useState<number | null>(null);
   const [rollFx, setRollFx] = useState<DiceRollFx>({ stage: 'idle', value: 1 });
   const [combatView, setCombatView] = useState<CombatView | null>(null);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
   const movementTimer = useRef<number | null>(null);
   const rollFxTimers = useRef<number[]>([]);
   const prevStateRef = useRef(state);
@@ -90,12 +92,28 @@ export function PixelGame() {
     prevStateRef.current = state;
     if (state.seed !== prev.seed) {
       setCombatView(null);
+      setInventoryOpen(false);
       return;
     }
     if (state.lastCombat && state.combatSeq !== prev.combatSeq) {
       setCombatView({ script: state.lastCombat, heroBefore: prev.hero, pos: state.pos, seq: state.combatSeq });
+      setInventoryOpen(false);
     }
+    // Teleport-rulle/Skæbneterning skifter fase: aflever spilleren direkte i vælgeren
+    if (inventoryOpen && (state.phase.t === 'teleport' || state.phase.t === 'chooseRoll')) {
+      setInventoryOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+
+  // Tastaturgenvej: I åbner/lukker inventory
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === 'i' || e.key === 'I') && !combatView) setInventoryOpen(v => !v);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [combatView]);
 
   useEffect(() => () => {
     if (movementTimer.current !== null) window.clearTimeout(movementTimer.current);
@@ -228,14 +246,17 @@ export function PixelGame() {
             <button disabled={moving || rolling} onClick={() => dispatchWithPresentation({ type: 'RESTART' })} type="button">NYT RUN</button>
           </div>
         </header>
-        <PixelHud state={state} />
+        <PixelHud onOpenInventory={() => setInventoryOpen(true)} state={state} />
         <PixelBoard displayPos={displayPos} moving={moving} state={state} suppressTargets={rolling} />
-        <PixelActionPanel dispatch={dispatchWithPresentation} movementSteps={movementSteps} rollFx={rollFx} state={state} />
+        <PixelActionPanel dispatch={dispatchWithPresentation} movementSteps={movementSteps} onOpenInventory={() => setInventoryOpen(true)} rollFx={rollFx} state={state} />
       </div>
       {combatView ? (
         <CombatScene dispatch={sceneDispatch} onClose={() => setCombatView(null)} state={state} view={combatView} />
       ) : null}
       {scenePhase ? <PhaseScene dispatch={sceneDispatch} state={state} /> : null}
+      {inventoryOpen && !combatView ? (
+        <InventoryScene dispatch={sceneDispatch} onClose={() => setInventoryOpen(false)} state={state} />
+      ) : null}
     </main>
   );
 }

@@ -49,6 +49,11 @@ export function newGame(seed: number): GameState {
       rerolls: CONFIG.hero.rerolls,
       loadout: { ...CONFIG.equipment.starters },
       consumables: [],
+      slotBuffs: {
+        weapon: { dmg: 0, armor: 0, maxHp: 0 },
+        armor: { dmg: 0, armor: 0, maxHp: 0 },
+        boots: { dmg: 0, armor: 0, maxHp: 0 },
+      },
     },
     phase: { t: 'idle' },
     pendingLevelUps: 0,
@@ -508,11 +513,28 @@ export function reducer(prev: GameState, action: Action): GameState {
           log(s, `${def.name}: +${gained} HP.`, 'good');
           break;
         }
-        case 'permDmg':
-          s.hero.dmgMin += def.effect.amount;
-          s.hero.dmgMax += def.effect.amount;
-          log(s, `${def.name}: permanent +${def.effect.amount} Damage.`, 'good');
+        case 'itemBuff': {
+          // Buffen bindes til ITEMET i slottet: stats + slotBuffs (stakker frit).
+          // equipItem trækker slottets buffs fra igen ved udskiftning.
+          const e = def.effect;
+          const buff = s.hero.slotBuffs[e.slot];
+          if (e.dmg) {
+            s.hero.dmgMin += e.dmg;
+            s.hero.dmgMax += e.dmg;
+            buff.dmg += e.dmg;
+          }
+          if (e.armor) {
+            s.hero.armor += e.armor;
+            buff.armor += e.armor;
+          }
+          if (e.maxHp) {
+            s.hero.maxHp += e.maxHp;
+            s.hero.hp += e.maxHp;
+            buff.maxHp += e.maxHp;
+          }
+          log(s, `${def.name}: ${consumableEffectText(def.id)} — anvendt på ${ITEMS[s.hero.loadout[e.slot]].name}.`, 'good');
           break;
+        }
         case 'grant':
           s.hero.nudges += def.effect.nudges;
           s.hero.rerolls += def.effect.rerolls;

@@ -2708,3 +2708,99 @@
 .pixel-hud-tippable.is-tip-pinned .pixel-hud-tip {
   display: flex;
 }
+
+/* ---------- Inventory-scene + item-buffs (2026-09-02) ---------- */
+
+.pixel-inventory {
+  align-items: center;
+  gap: 14px;
+}
+
+.pixel-inventory-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.pixel-inventory-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(260px, 100%);
+  background: #0c0811;
+  border: 2px solid var(--px-line);
+  padding: 16px;
+  text-align: center;
+}
+
+.pixel-inventory-card b {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.pixel-inventory-effect,
+.pixel-inventory-preview,
+.pixel-inventory-reason,
+.pixel-inventory-empty {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--px-copy);
+  line-height: 1.35;
+}
+
+.pixel-inventory-preview { color: var(--px-cyan); }
+.pixel-inventory-reason { color: var(--px-muted); font-style: normal; font-size: 12px; }
+
+.pixel-inventory-card.is-empty {
+  justify-content: center;
+  min-height: 140px;
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.pixel-inventory-emptyslot {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--px-muted);
+}
+
+.pixel-inventory-open { align-self: center; }
+
+/* HUD: ITEMS-blokken er nu en knap, der åbner inventoriet */
+button.pixel-consumable-slots {
+  background: transparent;
+  border: 2px solid transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.pixel-consumable-slots:hover,
+button.pixel-consumable-slots:focus-visible {
+  border-color: var(--px-cyan);
+}
+
+/* Buff-stjerne på udstyrs-slots */
+.pixel-equipment-buff {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 11px;
+  color: var(--px-gold);
+  text-shadow: 0 0 6px rgba(255, 216, 74, 0.6);
+}
+
+.pixel-equipment-slot { position: relative; }
+
+.pixel-buff-loss {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffb37a;
+  text-align: center;
+}

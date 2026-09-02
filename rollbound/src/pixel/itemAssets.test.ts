@@ -14,9 +14,15 @@ describe('item icon batch coverage', () => {
     }
   });
 
-  it('maps all 10 consumables without using equipment or resource icons', () => {
-    expect(Object.keys(CONSUMABLE_ASSETS).sort()).toEqual(Object.keys(CONSUMABLES).sort());
+  it('maps alle consumables på nær de kendte afventende ikoner', () => {
+    // Item-buff-batchen (2026-09-02) tilføjede to consumables, hvis ikoner
+    // afventer produktion — de bruger glyf-fallback. Tilføjes et TREDJE
+    // umappet item, fejler testen, indtil listen her opdateres bevidst.
+    const pendingIcons = ['armor-solder', 'wool-lining'];
+    const unmapped = Object.keys(CONSUMABLES).filter(id => !(id in CONSUMABLE_ASSETS)).sort();
+    expect(unmapped).toEqual(pendingIcons.sort());
     for (const item of Object.values(CONSUMABLES)) {
+      if (pendingIcons.includes(item.id)) continue;
       const asset = CONSUMABLE_ASSETS[item.id];
       expect(asset).toMatchObject({ id: item.id, name: item.name });
       expect(asset?.src).toContain('/consumables/');

@@ -3,7 +3,7 @@ import type { ConsumableId } from '../core/types';
 
 // Glyf-placeholder pr. effekt-familie, indtil consumable-ikoner produceres
 const CONSUMABLE_GLYPHS: Record<string, string> = {
-  heal: '⚗', bomb: '✷', flee: '☁', permDmg: '▲', grant: '✦', gold: '¤', twinRoll: '⚄', teleport: '➹',
+  heal: '⚗', bomb: '✷', flee: '☁', itemBuff: '▲', grant: '✦', gold: '¤', twinRoll: '⚄', teleport: '➹',
 };
 
 export function ConsumableGlyph({ id }: { id: ConsumableId }) {

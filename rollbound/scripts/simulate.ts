@@ -139,7 +139,11 @@ function consumableValue(id: ConsumableId, s: GameState): number {
     case 'heal': return (lowHp ? 8 : 5) + (e.amount >= 40 ? 2 : 0);
     case 'bomb': return e.damage >= 20 ? 7 : 5;
     case 'flee': return 6;
-    case 'permDmg': return 8;
+    case 'itemBuff': {
+      // Buff er mest værd på tier 2-items eller sent i runnet
+      const target = ITEMS[s.hero.loadout[e.slot]];
+      return (e.dmg ? 6 : e.armor ? 5 : 4) + (target.tier === 2 ? 2 : 0);
+    }
     case 'grant': return 7;
     case 'gold': return 4;
     case 'twinRoll': return 6;
@@ -233,7 +237,13 @@ function idleConsumableAction(s: GameState): Action | null {
     if (isPreCombatConsumable(id)) continue;
     const e = CONSUMABLES[id].effect;
     if (e.kind === 'heal' && s.hero.hp / s.hero.maxHp < 0.55) return { type: 'USE_CONSUMABLE', slot };
-    if (e.kind === 'permDmg' || e.kind === 'grant' || e.kind === 'gold') return { type: 'USE_CONSUMABLE', slot };
+    // itemBuff: gem til tier 2-item eller sidste tredjedel (så investeringen ikke mistes ved swap)
+    if (e.kind === 'itemBuff') {
+      const target = ITEMS[s.hero.loadout[e.slot]];
+      if (target.tier === 2 || s.pos > (2 * CONFIG.trackLength) / 3) return { type: 'USE_CONSUMABLE', slot };
+      continue;
+    }
+    if (e.kind === 'grant' || e.kind === 'gold') return { type: 'USE_CONSUMABLE', slot };
     // twinRoll/teleport gemmes ikke i denne simple bot: aktiver straks
     if (e.kind === 'twinRoll' && !s.twinRollArmed) return { type: 'USE_CONSUMABLE', slot };
     if (e.kind === 'teleport') return { type: 'USE_CONSUMABLE', slot };

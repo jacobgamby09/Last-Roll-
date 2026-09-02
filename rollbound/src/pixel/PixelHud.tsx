@@ -5,9 +5,7 @@ import { PICK_LABEL, rotationPick, xpToNext } from '../core/engine';
 import type { GameState } from '../core/types';
 import { approxEnemyStats } from '../ui/preview';
 import { ConsumableIcon } from './ConsumableIcon';
-import { isPreCombatConsumable } from '../core/items';
 import { EquipmentLoadout } from './EquipmentLoadout';
-import { HudTip } from './HudTip';
 import { HERO_FRAMES } from './heroAssets';
 import { ResourceIcon } from './ResourceIcon';
 
@@ -42,7 +40,7 @@ function StatBlock({ icon, label, value }: { icon: ReactNode; label: string; val
   );
 }
 
-export function PixelHud({ state }: { state: GameState }) {
+export function PixelHud({ onOpenInventory, state }: { onOpenInventory?: () => void; state: GameState }) {
   const hero = state.hero;
   const previous = useRef({ hp: hero.hp, level: hero.level, seed: state.seed, xp: hero.xp });
   const feedbackTimer = useRef<number | null>(null);
@@ -103,25 +101,25 @@ export function PixelHud({ state }: { state: GameState }) {
           <span className="pixel-vital-value" aria-hidden="true">{hero.xp} / {xpToNext(hero.level)}</span>
         </div>
       </div>
-      <EquipmentLoadout bootsNudgeCharges={hero.bootsNudgeCharges} loadout={hero.loadout} />
-      <div aria-label={`Consumables: ${hero.consumables.length} af ${CONFIG.consumableSlots}`} className="pixel-consumable-slots">
-        <small>ITEMS {hero.consumables.length}/{CONFIG.consumableSlots}</small>
+      <EquipmentLoadout bootsNudgeCharges={hero.bootsNudgeCharges} loadout={hero.loadout} slotBuffs={hero.slotBuffs} />
+      <button
+        aria-label={`Åbn inventory: ${hero.consumables.length} af ${CONFIG.consumableSlots} items`}
+        className="pixel-consumable-slots"
+        onClick={onOpenInventory}
+        type="button"
+      >
+        <small>ITEMS {hero.consumables.length}/{CONFIG.consumableSlots} · ÅBN (I)</small>
         <div>
           {hero.consumables.length === 0
             ? <span className="pixel-consumable-empty">—</span>
             : hero.consumables.map((id, i) => (
-              <HudTip
-                className="pixel-consumable-held"
-                key={`${id}-${i}`}
-                label={CONSUMABLES[id].name}
-                lines={[consumableEffectText(id), isPreCombatConsumable(id) ? 'Bruges før en kamp' : 'Bruges fra panelet under boardet']}
-              >
+              <span className="pixel-consumable-held" key={`${id}-${i}`} title={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`}>
                 <ConsumableIcon assetId={id} size="hud" />
                 <span>{CONSUMABLES[id].name}</span>
-              </HudTip>
+              </span>
             ))}
         </div>
-      </div>
+      </button>
       <div className="pixel-stats-grid">
         <StatBlock icon={<ResourceIcon assetId="damage" size="hud" />} label="DMG" value={`${hero.dmgMin}-${hero.dmgMax}`} />
         <StatBlock icon={<ResourceIcon assetId="armor" size="hud" />} label="ARM" value={hero.armor} />
