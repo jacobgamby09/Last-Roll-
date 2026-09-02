@@ -18,6 +18,8 @@ The current visual direction has been approved by the user:
 - Tile connections use a broken, near-black plum pixel-stone trail behind the assets; never use a solid gray connector bar.
 - Never put the diorama assets back inside visible square tile cards.
 
+Design decision 2026-09-02 (not yet implemented): **the exact HP-cost preview for fights is removed from the design.** It was a prototype feature. No exact price on board chips, destination cards, or as a boss-price HUD panel, and no lethal/safe auto-flags. Combat tiles (Enemy/Elite/Boss) become inspectable via hover/click, showing enemy type and approximate stats (rounded or ranged HP/DMG/ARM). See `GDD.md` changelog and the combat-information rules in `AGENTS.md`. Implementation belongs to the upcoming combat-flow slice.
+
 ## Repository state
 
 - Branch: `main`
@@ -228,15 +230,20 @@ The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` me
 
 The board, first functional equipment slice, and first non-equipment resource family are complete. **The balance revalidation is done (2026-09-02):** the simulation now models non-stacking equipment (`CONFIG.equipment` in `sim/simulate.js`, results in `sim/FINDINGS.md` section "Opfølgning 4"). Balanced bot wins **55.7%** under the live ruleset with boss 105/10/2 — inside the 55–70% target band, so no boss rebalance is needed. Aggressive dropped to 33% (stacking damage is gone) and shop-Boots at 18g is strictly dominated by the 8g Nudge.
 
+Formal playtesting is deliberately deferred until the playtest gate is reached: combat screen + first item batch + consumables (decided 2026-09-02).
+
 Next work:
 
-1. Playtest whether the comparison pause feels worthwhile or interrupts the Roll → Resolve rhythm too often, especially on combat drops.
-2. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
-3. Then decide whether the next content slice is a second item per slot (which also restores the aggressive archetype's damage ceiling) or better Event trade-offs.
+1. Combat script in core: the engine exposes the blow-by-blow sequence of a fight as data (pure refactor of existing deterministic math), so presentation never re-derives rules.
+2. Combat screen in the pixel UI: play back the combat script visually instead of a "lose X HP" log line. In the same slice, remove the exact-price UI (combat tile chips, destination HP forecasts, deadly flags, the boss-price HUD panel) and add hover/click enemy inspection with type + approximate stats per `AGENTS.md`.
+3. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow.
+4. Port the simulation to run on the real engine reducer so every item batch can be revalidated without rule drift.
+5. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
 
 ## Known limitations
 
 - Event content remains placeholder-like and needs actual trade-off design later.
+- The exact-price UI (combat tile chips, destination HP forecasts, deadly flags, boss-price panel) is still live in code but is decided removed; it goes away with the combat-flow slice.
 - Combat is communicated by result/log rather than an animated encounter scene.
 - No sound pass exists.
 - There is deliberately no inventory, rarity, selling, or duplicate conversion; equipped upgrades are filtered instead.
@@ -246,6 +253,7 @@ Next work:
 ## Guardrails for the next contributor
 
 - Do not change game-core behavior while working on visual assets.
+- Do not reintroduce exact HP-cost forecasts for fights (board chips, destination previews, boss-price panels, lethal flags) once removed; combat tiles expose type and approximate stats via hover/click only.
 - Do not replace seeded RNG or move balance values out of `src/core/config.ts`.
 - Do not reintroduce visible rectangular board-tile cards.
 - Do not fade visited Blank / Road dioramas or replace the broken dark trail with solid connector bars.

@@ -543,9 +543,16 @@ Current category colors:
 * Blank — muted slate
 * Boss — ivory and red
 
-Color must not be the only identifier. Every tile family should also have a readable silhouette and a compact text label or consequence chip where necessary.
+Color must not be the only identifier. Every tile family should also have a readable silhouette and a compact text label or consequence chip where necessary. Consequence chips are for non-combat facts (e.g. Camp healing, Gold amounts) only.
 
-The board remains the primary visual focus. Decorative effects must not obscure the upcoming path, the hero, possible destinations, or visible HP costs and rewards.
+The board remains the primary visual focus. Decorative effects must not obscure the upcoming path, the hero, possible destinations, or the tile information overlays.
+
+Combat information follows these rules (decided 2026-09-02; replaces the prototype's exact-price preview):
+
+* Never display an exact HP cost for any fight — not as board chips, not in destination previews, not in the HUD, and not as a boss-price panel. The exact-price forecast was a prototype feature tied to fully deterministic combat and is removed together with the real combat flow.
+* Enemy, Elite, and Boss tiles are inspectable instead: hovering or clicking a visible combat tile shows the enemy type and approximate stats (rounded or ranged HP / Damage / Armor) — never a computed damage forecast.
+* Do not auto-flag a fight as lethal or safe (no skull markers or readiness verdicts). Evaluating a fight from approximate information is the player's job.
+* The Boss's approximate stats stay discoverable from the start of the run so the player can judge what "strong enough" means — but as stats, not as a price.
 
 Equipment presentation uses a separate icon grammar:
 
