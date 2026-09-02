@@ -1,4 +1,5 @@
 import type { ArmorVisualId, BootsVisualId, EquipmentKind as CoreEquipmentKind, WeaponVisualId } from '../core/types';
+import { ITEMS } from '../core/items';
 import clothShirt from '../assets/pixel/equipment/cloth-shirt-v1.png';
 import rustedSword from '../assets/pixel/equipment/rusted-sword-v1.png';
 import trailBoots from '../assets/pixel/equipment/trail-boots-v1.png';
@@ -19,9 +20,7 @@ export interface EquipmentAsset {
   tier: EquipmentTier;
 }
 
-// Partial: batch B udvidede kataloget til 30 items; ikoner produceres i
-// batches efter equipment-asset-kontrakten. Manglende id'er falder tilbage
-// til slot-placeholder i EquipmentIcon.
+// Partial bevarer den eksplicitte fallback ved fremtidige, endnu umappede items.
 export const EQUIPMENT_ASSETS: Partial<Record<EquipmentAssetId, EquipmentAsset>> = {
   'wood-club': {
     alt: 'En simpel trækølle lavet af en knudret gren',
@@ -72,6 +71,50 @@ export const EQUIPMENT_ASSETS: Partial<Record<EquipmentAssetId, EquipmentAsset>>
     tier: 'upgrade',
   },
 };
+
+// Kun katalogførte id'er og v1-filer registreres; øvrige filer ændrer ikke mapping.
+const ADDITIONAL_ART = {
+  "wild-axe": "En rå økse med ujævnt jernhoved",
+  "dagger": "En let dolk med kort spids klinge",
+  "hunting-spear": "Et langt jagtspyd med bladformet spids",
+  "twin-daggers": "To krydsede små dolke",
+  "war-hammer": "En tung krigshammer med massivt jernhoved",
+  "blood-blade": "En krum klinge med blodrøde detaljer",
+  "executioner-axe": "En bred halvmåneformet bøddeløkse",
+  "rune-blade": "En lys klinge med cyan runeindlæg",
+  "wanderer-coat": "En slidstærk rejsekofte",
+  "camp-cloak": "En grøn kappe til lejrlivet",
+  "riveted-harness": "Et læderharnisk med jernnitter",
+  "thorn-mail": "En brynje med tydelige udadvendte pigge",
+  "shield-vest": "En bred og tung panservest",
+  "duelist-jacket": "En let elegant duelistvams",
+  "blood-plate": "En brystplade med blodrøde detaljer",
+  "sacrifice-plate": "En lys ceremoniel brystplade med ildevarslende detaljer",
+  "heavy-greaves": "Et par klodsede jerngrever",
+  "light-runners": "Et par lette sko med vingede detaljer",
+  "scout-boots": "Et par robuste spejderstøvler",
+  "goldthread-shoes": "Et par sko med gyldne syninger",
+  "elven-boots": "Et par elegante grønne elverstøvler",
+  "pilgrim-shoes": "Et par slidte pilgrimssko med hellige detaljer",
+  "shadow-shoes": "Et par mørke sko med magenta kanter",
+  "iron-shod": "Et par jernbeslåede støvler"
+} as const satisfies Partial<Record<EquipmentAssetId, string>>;
+
+const sources = import.meta.glob<string>('../assets/pixel/equipment/*-v1.png', {
+  eager: true,
+  import: 'default',
+  query: '?url',
+});
+
+for (const id of Object.keys(ADDITIONAL_ART) as Array<keyof typeof ADDITIONAL_ART>) {
+  const src = sources[`../assets/pixel/equipment/${id}-v1.png`];
+  if (src) {
+    const item = ITEMS[id];
+    EQUIPMENT_ASSETS[id] = {
+      id, src, alt: ADDITIONAL_ART[id], name: item.name, kind: item.slot, tier: 'upgrade',
+    };
+  }
+}
 
 export const EQUIPMENT_PAIRS = [
   { kind: 'weapon', starter: 'wood-club', upgrade: 'rusted-sword' },

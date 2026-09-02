@@ -271,7 +271,7 @@ This slot helps connect RPG progression with board gameplay.
 
 ### Current prototype equipment rules
 
-The first functional equipment slice uses exactly one starter and one upgrade per slot:
+The current catalog has 30 gear items (10 per slot), defined in `rollbound/src/core/items.ts`, with matching icons for all 30. The original functional slice established these starter/upgrade pairs; they remain visual reference pairs, not the full current loot pool:
 
 * Weapon: Trækølle → Slebet klinge (`+3 Damage`)
 * Armor: Stoftunika → Jernplade (`+1 Armor`)
@@ -282,6 +282,8 @@ Treasure, combat drops, and Shops present equipment as an offer. The player comp
 Equipment effects are fixed per item and are not permanent stat consumables. Equipping replaces the effect in that slot. An already equipped upgrade is removed from future Treasure and drop pools and disabled in Shops; the prototype therefore needs no inventory or duplicate-conversion rule.
 
 The Stivinderstøvler charge pays for the next valid Nudge before the normal Nudge resource is spent. The Boots asset and charge are displayed in the equipment slot, while the normal Nudge count remains a separate resource.
+
+Current item effects and damage ranges are authoritative in `items.ts`; the flat upgrade examples above describe the original slice. Stivinderstøvler now recharge at Camp. See `PROGRESS.md` for the completed item/consumable batches and their current loot model.
 
 ## Spells
 
@@ -566,6 +568,15 @@ Equipment presentation uses a separate icon grammar:
 * Boots / Utility and Nudge are separate concepts. Stivinderstøvler currently provide one visible free Nudge charge, but a Nudge resource reward must never be presented as Boots or silently replace equipped Boots.
 * Item names, effects, prices, comparison states, and rarity treatment belong to the UI layer and must not be baked into bitmap assets.
 * The canonical production rules live in `rollbound/design/equipment-asset-contract-v1.md`.
+
+Consumables use their own icon family:
+
+* Source assets are `48 × 48` transparent RGBA, maximum `36 × 36` visible art, horizontally centered with bottom-exclusive baseline `y = 42`.
+* Bottles, bombs, stones, pouches, dice and scrolls are standalone objects with no platform, frame, baked text or external glow.
+* The 10 current consumables map through `consumableAssets.ts` and `ConsumableIcon`; missing or failed art uses the unchanged `ConsumableGlyph` fallback.
+* HUD, idle use, Shop, Treasure and pre-combat display the held/offered item's own icon. Consumables never replace equipment or numeric resource icons.
+* Full names, effects, prices, slot counts and disabled reasons belong to the UI and remain readable on mobile.
+* The canonical production and integration rules live in `rollbound/design/consumable-asset-contract-v1.md`.
 
 Non-equipment resources use a separate icon grammar:
 

@@ -2,6 +2,8 @@
 
 ## Scope
 
+2026-09-02 update: the technical icon contract now covers all **30 gear items** (10 per slot). The first-slice pairs and effect examples below are historical references, not the full loot pool or current balance. Current IDs/effects live in `src/core/items.ts`; production/QA for the 24 added icons is recorded in `item-icon-batch-v1.md`. The six approved original PNGs remain unchanged. Consumables follow the separate `consumable-asset-contract-v1.md`.
+
 This contract covers presentation assets and the prototype's first functional equipment slice. It includes fixed item effects, current-vs-new comparison, explicit equip/keep choices, and truthful HUD replacement. It does not add an inventory, rarity, duplicate conversion, or extra slots.
 
 Starter visual families:
@@ -69,7 +71,7 @@ ImageGen output is source material. Before runtime use:
 
 ## QA
 
-- Equipment Lab must show all six icons as three starter → upgrade pairs at HUD and choice-card sizes.
+- Equipment Lab must retain the six original icons as three starter → upgrade pairs and show the full 30-item catalog at HUD and choice-card sizes.
 - A deterministic new run must show the three starter asset IDs in the HUD.
 - A confirmed equipment offer must update only its corresponding visual slot and fixed effect.
 - Keeping the current item must leave the loadout, stats, Boots charges, and Shop Gold unchanged.

@@ -11,8 +11,9 @@ interface Props {
 const SLOT_GLYPH = { weapon: '⚔', armor: '⛨', boots: '⇶' } as const;
 
 export function EquipmentIcon({ assetId, decorative = true, size = 'card' }: Props) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const asset = EQUIPMENT_ASSETS[assetId];
+  const failed = asset !== undefined && failedSrc === asset.src;
   const def = ITEMS[assetId];
 
   // Eksplicit fallback for items uden produceret ikon endnu (batch-leverance):
@@ -41,7 +42,7 @@ export function EquipmentIcon({ assetId, decorative = true, size = 'card' }: Pro
     >
       {failed
         ? <span className="pixel-equipment-error">!</span>
-        : <img alt="" draggable={false} onError={() => setFailed(true)} src={asset.src} />}
+        : <img alt="" draggable={false} onError={() => setFailedSrc(asset.src)} src={asset.src} />}
     </span>
   );
 }

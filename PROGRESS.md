@@ -6,7 +6,9 @@ This file is the current operational handoff for Claude, Codex, or another contr
 
 ## Current status
 
-Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. The seven-enemy combat sprite batch is complete; simulation on the real engine is the next implementation workstream.
+Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. Combat sprites, simulation on the real engine, damage ranges, the 30-item gear roster and 10 consumables with 2 slots are implemented. The icon batch is complete: **30/30 gear + 10/10 consumables mapped**, including 34 new PNGs and the six preserved approved equipment icons. **The playtest gate is reached; the next milestone is 5–10 human runs**, not another content or balance batch.
+
+This icon batch changes presentation only. Claude's upstream Batch C calibration is balanced **56.4%** / aggressive **41.8%** / cautious **38.4%** over 10,000 engine-sim runs, with boss HP 85 / DMG 8–12 / ARM 2. Those are the upstream results, not a new simulation or balance change made during icon production.
 
 The current visual direction has been approved by the user:
 
@@ -24,8 +26,8 @@ Design decision 2026-09-02 (IMPLEMENTED same day): **the exact HP-cost preview f
 
 - Branch: `main`
 - Remote: `https://github.com/jacobgamby09/Last-Roll-.git`
-- Upstream baseline for this batch: `66b61de` (approved boss concept, elite height bands and mobile 4:5 aspect), after `2ea5597` (fullscreen scenes) and `6b6665c` (combat script).
-- The earlier hero-status correction and v0.9 simulation revalidation are already in repository history, not pending local work. This change adds the seven combat sprites, their manifest registration, normalization/verification scripts and handoff notes.
+- Upstream baseline for the item-icon batch: `374f575` (Claude's completed Batch C consumables and pre-combat flow).
+- Combat sprites, engine simulation, damage ranges and the gear/consumable rules are already upstream history. This batch adds 34 item PNGs, full manifests/component integration, scoped readability corrections, icon regression checks and handoff documentation. It does not change `src/core/` or balance.
 - Preserve all existing local changes. Do not reset or overwrite the worktree.
 
 ## Run and QA
@@ -39,27 +41,40 @@ npm run lint
 npm run build
 npm test
 python scripts/verify_combat_assets.py
+python scripts/verify_item_assets.py
 ```
 
-The optional asset verification command requires Pillow; the runtime app does not depend on Python.
+The optional asset verification commands require Pillow; the runtime app does not depend on Python.
 
 Useful routes:
 
 - `/?seed=2` — deterministic board containing Blank, Combat, Camp, Gold and Treasure in the first visible section.
+- `/?seed=299` — consumable acquisition and pre-combat QA seed (Bombe in the first Treasure).
+- `/?seed=15` — seeded Shop QA.
 - `/?ui=tiles` — Tile Lab for all tile families, normalized assets, hero scale and manifest coverage.
-- `/?ui=equipment` — Gear Lab for the Weapon, Armor and Boots/Utility icon contract at lab, card and HUD sizes.
+- `/?ui=equipment` — full Gear/Consumable Lab: all 30 gear and 10 consumables with names, effects and lab/card/HUD sizes; starter-to-upgrade reference pairs are retained.
 - `/?ui=resources` — Resource Lab for Damage, Armor, Life/HP, XP, Gold, Nudge and Reroll at lab, card and HUD sizes.
 - `/?ui=classic` — original prototype UI retained as a behavioral reference and fallback.
 
-Latest verification:
+Latest item-icon batch verification (2026-09-02):
 
 - `npm run lint` passes.
 - `npm run build` passes.
-- `npm test` passes (2 files, 5 tests).
+- `npm test` passes (4 files, 20 tests).
+- `python scripts/verify_item_assets.py` passes `40/40`: all canvases are `48 × 48` RGBA, artwork is at most `36 × 36`, and the shared bottom-exclusive baseline is `y=42`. All 34 new images have binary alpha; partial alpha in the six approved legacy icons is deliberately preserved rather than silently rewriting them.
+- Gear Lab reports `30/30 GEAR MAPPED` and `10/10 CONSUMABLES MAPPED`; all 40 IDs have registered production assets.
+- All 30 gear IDs render through the actual Shop, Treasure, EquipmentOffer and PixelHud components at `1280 × 900` and `390 × 844` in ignored deterministic fixtures. There are no missing images, fallbacks, copy overflows or horizontal page overflows. The broad fixture coverage is not a claim that every item was naturally obtained in a full run.
+- Real seed 2 verifies Treasure → Elverstøvler comparison → Equip on desktop: only Boots changes (`worn-sandals` → `elven-boots`), while other slots/stats/resources remain unchanged. Repeating the same route on mobile verifies Keep leaves the loadout/resources unchanged and returns to Roll. See `rollbound/design/item-icons-gear-qa-v1.md`.
+- Missing-manifest and failed-image gear fallbacks are explicitly verified and retain accessible labels. Icon load failure is keyed to the failing source, so replacing equipment cannot inherit the previous image's failed state.
+- Consumable QA passes 32 actual-component fixture states across `1280 × 800` and `390 × 844`: all 10 HUD/idle/Treasure icons, all nine saleable Shop items (Gold-pouch is intentionally not sold), the three pre-combat items, Boss-blocked Smoke Bomb and full-slot explanations. All expected PNGs load at natural `48 × 48`; no unexpected fallback/overflow or whole-button disabled fading. Keyboard focus and decorative icon accessibility are verified.
+- Real seed 299 verifies Treasure Bombe → HUD → pre-combat 12 opening damage → combat payout on both viewports (`+15 XP`, `+2 Gold`, `50/50 HP`); real seed 15 verifies seeded Shop icons. Missing-entry/load-error consumable glyph fallbacks remain intact. See `rollbound/design/item-icons-consumable-qa-v1.md` for exact fixture versus gameplay coverage.
+
+Historical verification archive — the following checks were performed during earlier slices. Their exact seeds, item pools, flat damage values, prices and test counts describe those revisions and are **not** current balance claims:
+
 - Combat sprites: all seven verified in the live seed 2 combat scene at `1280 × 800` and `390 × 844`, including attack, hit and fallen states; reduced-motion verified on mobile. Non-Goblin art was temporarily aliased onto the seed 2 Goblin for QA, then restored to the canonical mapping. No fallback, overflow, browser error or warning detected.
 - Combat PNG contract verification passes `7/7`: `64 × 80` RGBA, binary alpha, bottom baseline and tier height bands. See `rollbound/design/combat-sprite-batch-v1.md` for exact prompts, normalization and the existing scene floor-offset observation.
 - Tile Lab reports `13/13 ASSETS MAPPED`.
-- Gear Lab reports `6/6 ASSETS MAPPED`.
+- The first-slice Gear Lab reported `6/6 ASSETS MAPPED` (superseded by the current full catalog).
 - Resource Lab reports `7/7 ASSETS MAPPED`.
 - Resource Lab verifies enlarged control-resource presentation: Nudge `38/46 px` and Reroll `36/44 px` at HUD/card sizes.
 - Seed 2 renders Camp, Gold, Treasure and Trap correctly from the asset manifest.
@@ -96,11 +111,13 @@ Latest verification:
 - Normal and elite drop rates behind configuration.
 - Pixel UI is the default; Classic UI remains available.
 - Hero movement is animated field-by-field in the UI while the reducer remains deterministic and UI-free.
-- Combat resolves through a combat script: `simulateFight` in `src/core/combat.ts` produces the blow-by-blow event list, the reducer applies its result atomically and stores it as `state.lastCombat` (with `state.combatSeq` as the new-fight signal for the UI, since structuredClone breaks reference identity). Equivalence with the old closed-form math, run determinism, and the dice-peek contract are locked by `npm test` (vitest: `combat.test.ts`, `engine.test.ts`).
-- Fullscreen scene system (2026-09-02): every interactive phase renders as a takeover on the shared `SceneShell` (`src/pixel/SceneShell.tsx`) — combat playback (`CombatScene.tsx`, driven 1:1 by `lastCombat`: intro → accelerating exchange → outcome → payout inside the scene, click/space skips, reduced-motion jumps to the static result, timing in `presentation.ts`), plus treasure, equipment comparison, shop, level-up and game over via `ScenePhases.tsx`. Victory payout shows XP/gold/drop deltas, rotation level-up fanfares, and embeds the drop Equip/Keep comparison; defeat ends inside the scene. The bottom action panel now only owns idle/rolled/movement/roll-fx. All seven configured enemies now use dedicated combat sprites; tile-diorama fallback remains for unknown/unmapped enemies and failed asset loads (`combatSpriteAssets.ts` + `combat-sprite-contract-v1.md`).
+- Combat resolves through a combat script: `simulateFight` in `src/core/combat.ts` produces the blow-by-blow event list with seeded damage rolls; the reducer applies its result atomically and stores it as `state.lastCombat` (with `state.combatSeq` as the new-fight signal for the UI, since structuredClone breaks reference identity). Tests cover degenerate-range equivalence with the old closed-form math, damage bounds, run determinism and the dice-peek contract.
+- Fullscreen scene system (2026-09-02): encounter/choice phases render as takeovers on the shared `SceneShell` (`src/pixel/SceneShell.tsx`) — combat playback (`CombatScene.tsx`, driven 1:1 by `lastCombat`: intro → accelerating exchange → outcome → payout inside the scene, click/space skips, reduced-motion jumps to the static result, timing in `presentation.ts`), plus treasure, equipment comparison, shop, level-up, pre-combat and game over via `ScenePhases.tsx`. Victory payout shows XP/gold/drop deltas, rotation level-up fanfares, and embeds the drop Equip/Keep comparison; defeat ends inside the scene. The bottom action panel owns idle consumable use, rolled/movement/roll-fx, `chooseRoll` and `teleport` decisions. All seven configured enemies use dedicated combat sprites; tile-diorama fallback remains for unknown/unmapped enemies and failed asset loads (`combatSpriteAssets.ts` + `combat-sprite-contract-v1.md`).
 - Equipment is now a reducer-owned offer flow for Treasure, combat drops, and Shops with explicit Equip/Keep actions.
-- Equipment effects replace the effect in one slot rather than stacking permanent bonuses; equipped upgrades are removed from future loot and disabled in Shops.
-- The first upgrade effects are Slebet klinge `+3 Damage`, Jernplade `+1 Armor`, and Stivinderstøvler `1 free Nudge charge`.
+- Equipment effects replace the effect in one slot rather than stacking permanent bonuses; ownership checks prevent re-equipping the same item. The full roster is 10 Weapons, 10 Armor and 10 Boots / Utility items with data-driven effects in `src/core/items.ts`.
+- Weapons own damage ranges (for example Trækølle `7–12`, Slebet klinge `11–14`); the old `+3 Damage` presentation belongs to the first-slice history. Jernplade gives `+1 Armor`, and Stivinderstøvler provide one free Nudge charge that recharges at Camp.
+- Ten consumables use two held-item slots. Idle-use consumables, pre-combat bombs/flee, `chooseRoll` and `teleport` phases are supported in pixel and classic UI. The pre-combat beat appears only when relevant consumables are held; Røgbombe deliberately does not work on Boss.
+- Shops generate five seeded, single-purchase offers with gear/consumable/service thirds; consumable purchases require a free slot. Normal enemy drops are utility/consumable, while elites guarantee gear. Labels, prices, charges and disabled reasons remain UI text, not part of PNGs.
 
 ## Current visual implementation
 
@@ -117,18 +134,27 @@ Important files:
 - `rollbound/scripts/normalize_combat_asset.py` — targeted alpha cleanup and bottom-aligned nearest-neighbor `64 × 80` normalization.
 - `rollbound/scripts/verify_combat_assets.py` — seven-asset canvas, alpha, baseline and height-band regression checks.
 - `rollbound/design/combat-sprite-batch-v1.md` — generation provenance, exact prompts, normalization settings, live QA and layout observations.
-- `rollbound/src/pixel/equipmentAssets.ts` — equipment icon manifest and semantic mapping.
-- `rollbound/src/pixel/EquipmentIcon.tsx` — shared icon renderer with explicit error fallback.
+- `rollbound/src/pixel/equipmentAssets.ts` — 30-item equipment icon manifest and semantic mapping; an explicit ID allowlist registers only the intended versioned art.
+- `rollbound/src/pixel/EquipmentIcon.tsx` — shared icon renderer with source-keyed error fallback.
+- `rollbound/src/pixel/consumableAssets.ts` — separate 10-item consumable manifest.
+- `rollbound/src/pixel/ConsumableIcon.tsx` — shared consumable renderer for HUD, idle-use, Shop, Treasure and pre-combat, with explicit glyph fallback.
+- `rollbound/src/pixel/ConsumableGlyph.tsx` — the existing glyph implementation moved unchanged to avoid a component import cycle; `ScenePhases.tsx` keeps its re-export.
 - `rollbound/src/pixel/EquipmentLoadout.tsx` — three-slot HUD renderer driven by the hero's visual loadout IDs.
-- `rollbound/src/core/equipment.ts` — fixed item definitions, effect replacement, ownership checks, and Boots/Nudge accounting.
-- `rollbound/src/pixel/EquipmentLab.tsx` — deterministic equipment style and scale QA.
+- `rollbound/src/core/items.ts` — authoritative gear/consumable catalog and effect vocabulary; `equipment.ts` applies replacement, ownership checks and Boots/Nudge accounting.
+- `rollbound/src/pixel/EquipmentLab.tsx` — full deterministic 30-gear/10-consumable catalog and scale QA.
 - `rollbound/src/pixel/resourceAssets.ts` — non-equipment resource manifest and Treasure mapping.
 - `rollbound/src/pixel/ResourceIcon.tsx` — shared resource renderer with explicit error fallback.
 - `rollbound/src/pixel/ResourceLab.tsx` — deterministic resource silhouette and scale QA.
 - `rollbound/scripts/normalize_hud_asset.py` — deterministic nearest-neighbor normalization for `48 × 48` HUD assets.
+- `rollbound/scripts/normalize_item_asset.py` — targeted alpha cleanup, nearest-neighbor item normalization and shared equipment/consumable baseline.
+- `rollbound/scripts/verify_item_assets.py` — all 40 item PNGs' dimensions, alpha, silhouette and baseline regression checks.
 - `rollbound/src/pixel/pixel.css` — visual system and asset-as-tile states.
 - `rollbound/design/tile-asset-contract-v1.md` — canonical production and alpha-pass contract.
 - `rollbound/design/equipment-asset-contract-v1.md` — canonical equipment production, mapping and normalization contract.
+- `rollbound/design/consumable-asset-contract-v1.md` — separate consumable production and semantic contract.
+- `rollbound/design/item-icon-batch-v1.md` — item-batch production/integration handoff, QA and links to family prompt records.
+- `rollbound/design/item-icons-gear-qa-v1.md` — all-gear fixture coverage, real seed 2 Equip/Keep and comparison readability findings.
+- `rollbound/design/item-icons-consumable-qa-v1.md` — consumable fixture coverage, real seeds 299/15, disabled states and fallback/accessibility verification.
 - `rollbound/design/resource-asset-contract-v1.md` — canonical resource production, semantic mapping and QA contract.
 - `rollbound/design/readability-contract-v1.md` — canonical typography, responsive, disabled-state and accessibility contract.
 - `rollbound/design/dice-roll-visual-contract-v1.md` — canonical D6 asset, pip, animation, reduced-motion and RNG-boundary contract.
@@ -156,14 +182,15 @@ Enemy combat assets are seven normalized `64 × 80` RGBA single-frame sprites in
 
 The HUD also uses `hero-portrait-v1.png`, a dedicated normalized `80 × 80` RGBA bust matching the board hero.
 
-Current normalized `48 × 48` RGBA equipment assets:
+Current normalized `48 × 48` RGBA equipment assets: **30/30**, stored as `src/assets/pixel/equipment/<id>-v1.png`:
 
-- `wood-club-v1.png`
-- `rusted-sword-v1.png`
-- `cloth-shirt-v1.png`
-- `worn-plate-v1.png`
-- `worn-sandals-v1.png`
-- `trail-boots-v1.png`
+- Weapon: `wood-club`, `rusted-sword`, `wild-axe`, `dagger`, `hunting-spear`, `twin-daggers`, `war-hammer`, `blood-blade`, `executioner-axe`, `rune-blade`.
+- Armor: `cloth-shirt`, `worn-plate`, `wanderer-coat`, `camp-cloak`, `riveted-harness`, `thorn-mail`, `shield-vest`, `duelist-jacket`, `blood-plate`, `sacrifice-plate`.
+- Boots / Utility: `worn-sandals`, `trail-boots`, `heavy-greaves`, `light-runners`, `scout-boots`, `goldthread-shoes`, `elven-boots`, `pilgrim-shoes`, `shadow-shoes`, `iron-shod`.
+
+The original six approved starter/upgrade PNGs are preserved unchanged. The 24 additions use binary alpha, maximum `36 × 36` visible silhouettes and shared bottom-exclusive `y=42` alignment; no per-item CSS resizing.
+
+Current consumable assets: **10/10**, stored as `src/assets/pixel/consumables/<id>-v1.png`: `elixir`, `grand-elixir`, `bomb`, `thunder-flask`, `smoke-bomb`, `whetstone`, `fate-stone`, `gold-pouch`, `fate-die`, `teleport-scroll`. They share the `48 × 48` technical contract but remain a separate icon family from equipment and resource counters. Skæbneterning uses hard colored pixel highlights, not baked external glow.
 
 Important: the core now owns one real equipped item per slot plus a separate Boots Nudge charge. It has comparison and replacement choices, but deliberately still has no inventory, rarity, or duplicate-conversion system.
 
@@ -180,6 +207,8 @@ Current normalized `48 × 48` RGBA non-equipment resource assets:
 The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`, a normalized blank-face `64 × 64` RGBA body. Runtime pips are code-generated and are not baked into the bitmap.
 
 ## Most recent completed work
+
+Chronological history follows. Earlier entries describe the state at the time; later decisions supersede removed UI and older balance numbers.
 
 1. Removed the visible dark square, double neon frame and corner brackets from board tiles.
 2. Kept the `88 × 88` tile element as an invisible technical cell.
@@ -248,22 +277,43 @@ The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`,
 
 The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` mentions visible tile frames. Treat it only as the origin mockup. The newer rules in `AGENTS.md` and `tile-asset-contract-v1.md` supersede that part of the prompt.
 
+## Completed engine and item milestones (Claude, 2026-09-02)
+
+These are completed upstream milestones, not a future-work list. The intermediate calibration numbers document the progression to Batch C; only the final Batch C configuration is current.
+
+1. damage ranges are live. `dmgMin`/`dmgMax` on hero and all enemies, rolls drawn from the run's seeded RNG inside `simulateFight` (rng is now a required parameter), shift-model bonuses, `fightOutcome` downgraded to an EV heuristic for bots only. Calibration: variance cost win rate as predicted (46.4% at boss 105) → boss reduced to **90 HP** → balanced **57.7%** / aggressive 34.0% / cautious 28.2% (10k engine-sim runs). Track deaths roughly doubled — forced fights can now go wrong, which is the intended price of variance. Tests rewritten: degenerate-range equivalence with the closed form, roll-bounds/well-formedness properties, EV sanity, per-seed determinism (6 tests green). Combat scene got slower pacing (all timing in `presentation.ts`), stat lines under both HP plates (DMG range, ARM, hero level) and larger damage floats scaled by roll size.
+
+2. the data-driven item system is live with the full approved roster — 30 gear items in `src/core/items.ts` (balance data, 18-kind effect vocabulary), weapons own their damage ranges, combat mods execute in `simulateFight` with new event kinds, and board hooks cover dieTransform (via the new core-owned `peekRoll`), freeRerollOn1, visibility, goldBonus, campHeal/campNudge, trapImmune and camp recharge. Loot model: treasure = tier-weighted choose-1-of-3, elites drop guaranteed gear, normal enemies drop utility only, and the shop generates **5 seeded slots, each 100% random gear/service, single-purchase** (`ShopOffer[]` + `BUY {index}`). Trail-boots now recharge at camp; the bot values items via `gearScore`. Calibration: boss 90→85 → balanced **55.3%** / aggressive 38.3% / cautious 40.5% (10k runs) — archetype spread narrowed sharply (was 34/58/28). At this milestone the 24 new items still used slot-placeholder glyphs; the completed icon batch has now replaced those placeholders.
+
+3. batch C is live — **the playtest gate is reached.** Ten consumables with 2 slots (`CONSUMABLES` in `src/core/items.ts`): heals, bombs (opening damage as `cast` events in the combat script), Røgbombe (flee, blocked vs the boss), permanent whetstone, nudge/reroll stone, gold pouch, Skæbneterning (roll two choose one → new `chooseRoll` phase) and Teleport-rulle (choose 1-6 → new `teleport` phase with destination previews). The pre-combat beat renders as a fullscreen scene (enemy, approximate stats, use/fight buttons) ONLY when the player holds relevant consumables. Shop slots now roll thirds gear/consumable/service; consumable purchases require a free slot ("SLOTS FULDE"). Normal enemy drops are 50/50 utility/consumable. HUD shows held items (`ITEMS x/2`); idle panel has use-buttons; the classic UI handles all new phases. Fixed in passing: the combat scene mis-derived HP on `lifesteal` events. Calibration unchanged at boss 85: balanced **56.4%** / aggressive 41.8% / cautious 38.4% (10k runs).
+
+## Completed item-icon batch (Codex, 2026-09-02)
+
+- Produced 24 new gear and 10 consumable PNGs with built-in ImageGen, preserving original source outputs and the six approved legacy equipment assets. Normalized new art with targeted alpha cleanup, nearest-neighbor sampling, a maximum 36×36 silhouette and shared baseline on 48×48 RGBA canvases. Exact prompts, raw sources and family QA are documented under `rollbound/design/`.
+- Mapped all 30 gear and all 10 consumables. Added the separate consumable manifest/component; moved the old glyph implementation unchanged into a standalone fallback module and re-exported it from ScenePhases to avoid import cycles. Replaced icon usage in HUD, idle-use, Shop, Treasure and pre-combat without altering reducer logic.
+- Expanded EquipmentLab into the full gear/consumable catalog with names, effects and native HUD/card scale examples. Asset failures track the failing source rather than sticking to a component after the item changes.
+- Fixed scoped presentation issues found during QA: the HUD grid now gives consumables their own wrapping row without squeezing the original stats areas; equipment descriptions span their comparison card width; relevant long copy wraps and disabled explanations remain readable. No per-item CSS size hack, balance change or new mechanic was introduced.
+- Passed lint, production build, all 20 tests in four files and the 40/40 item-PNG contract check. Broad actual-component fixtures are distinguished from real gameplay in the gear and consumable QA records. No temporary fixture/debug hook was added to production source.
+
 ## Recommended next work
 
-The board, first functional equipment slice, and first non-equipment resource family are complete. **The balance revalidation is done (2026-09-02):** the simulation now models non-stacking equipment (`CONFIG.equipment` in `sim/simulate.js`, results in `sim/FINDINGS.md` section "Opfølgning 4"). Balanced bot wins **55.7%** under the live ruleset with boss 105/10/2 — inside the 55–70% target band, so no boss rebalance is needed. Aggressive dropped to 33% (stacking damage is gone) and shop-Boots at 18g is strictly dominated by the 8g Nudge.
+**The playtest gate is reached:** combat screen + item batch + consumables are implemented and their production icons are mapped.
 
-Formal playtesting is deliberately deferred until the playtest gate is reached: combat screen + first item batch + consumables (decided 2026-09-02).
+1. Play **5–10 human runs**. Observe whether Roll → Evaluate → Nudge/Reroll/Accept produces the situational decisions described in AGENTS.md. Record concrete seed/roll/choice examples and whether the revised item offers, pre-combat tools and movement consumables are understandable and fun. Do not infer fun from the sim win rate alone.
+2. Optionally address the separately documented combat floor-line/hero-baseline discrepancy as a focused presentation-only pass. This is not an icon defect and should not introduce per-enemy offsets or gameplay changes.
+3. Use the playtest findings to choose the next scoped iteration; do not automatically expand content, add systems or rebalance before those observations.
 
-Next work (combat script, fullscreen scenes, combat screen, the seven enemy sprites AND sim-on-engine are DONE, 2026-09-02):
+## Simulation authority and calibration history
 
-1. DONE (2026-09-02): damage ranges are live. `dmgMin`/`dmgMax` on hero and all enemies, rolls drawn from the run's seeded RNG inside `simulateFight` (rng is now a required parameter), shift-model bonuses, `fightOutcome` downgraded to an EV heuristic for bots only. Calibration: variance cost win rate as predicted (46.4% at boss 105) → boss reduced to **90 HP** → balanced **57.7%** / aggressive 34.0% / cautious 28.2% (10k engine-sim runs). Track deaths roughly doubled — forced fights can now go wrong, which is the intended price of variance. Tests rewritten: degenerate-range equivalence with the closed form, roll-bounds/well-formedness properties, EV sanity, per-seed determinism (6 tests green). Combat scene got slower pacing (all timing in `presentation.ts`), stat lines under both HP plates (DMG range, ARM, hero level) and larger damage floats scaled by roll size.
-2. DONE (2026-09-02): the data-driven item system is live with the full approved roster — 30 gear items in `src/core/items.ts` (balance data, 18-kind effect vocabulary), weapons own their damage ranges, combat mods execute in `simulateFight` with new event kinds, and board hooks cover dieTransform (via the new core-owned `peekRoll`), freeRerollOn1, visibility, goldBonus, campHeal/campNudge, trapImmune and camp recharge. Loot model: treasure = tier-weighted choose-1-of-3, elites drop guaranteed gear, normal enemies drop utility only, and the shop generates **5 seeded slots, each 100% random gear/service, single-purchase** (`ShopOffer[]` + `BUY {index}`). Trail-boots now recharge at camp; the bot values items via `gearScore`. Calibration: boss 90→85 → balanced **55.3%** / aggressive 38.3% / cautious 40.5% (10k runs) — archetype spread narrowed sharply (was 34/58/28). The 24 new items render a slot-placeholder glyph until their icons are produced per the equipment asset contract.
-3. DONE (2026-09-02): batch C is live — **the playtest gate is reached.** Ten consumables with 2 slots (`CONSUMABLES` in `src/core/items.ts`): heals, bombs (opening damage as `cast` events in the combat script), Røgbombe (flee, blocked vs the boss), permanent whetstone, nudge/reroll stone, gold pouch, Skæbneterning (roll two choose one → new `chooseRoll` phase) and Teleport-rulle (choose 1-6 → new `teleport` phase with destination previews). The pre-combat beat renders as a fullscreen scene (enemy, approximate stats, use/fight buttons) ONLY when the player holds relevant consumables. Shop slots now roll thirds gear/consumable/service; consumable purchases require a free slot ("SLOTS FULDE"). Normal enemy drops are 50/50 utility/consumable. HUD shows held items (`ITEMS x/2`); idle panel has use-buttons; the classic UI handles all new phases. Fixed in passing: the combat scene mis-derived HP on `lifesteal` events. Calibration unchanged at boss 85: balanced **56.4%** / aggressive 41.8% / cautious 38.4% (10k runs).
-4. Icon batch: 24 gear + 10 consumable icons (Codex track — full brief in `design/handoff-item-icons.md`, format per `equipment-asset-contract-v1.md`). Placeholder glyphs are the explicit fallback meanwhile.
-5. Combat scene floor-line polish (sprites' feet vs. ground line, documented in `combat-sprite-batch-v1.md`) — presentation only.
-6. PLAYTEST: the gate (combat screen + item batch + consumables) is complete — the next milestone is playing it and judging the core-loop decisions per `AGENTS.md` success criteria.
+**The balance authority is `rollbound/scripts/simulate.ts`**, invoked with `npm run sim -- 10000` from `rollbound/`. It runs heuristic bots directly on the real engine reducer, including gear and consumable policies. Current upstream Batch C results: balanced **56.4%** / aggressive **41.8%** / cautious **38.4%**, boss HP **85**, DMG **8–12**, ARM **2**. This icon-only batch did not modify the configuration or rerun calibration.
 
-Simulation: **the balance authority is now `rollbound/scripts/simulate.ts`** (`npm run sim -- 10000` from `rollbound/`), running heuristic bots directly on the real engine reducer. Cross-validated 2026-09-02 against the historical JS sim within ~1 pp: balanced **56.9%** / aggressive 34.2% / cautious 27.0% (10k runs, boss 105/10/2). The `sim/` folder is frozen history of the v0.1→v0.9 calibration (see `sim/FINDINGS.md` Opfølgning 5) and must not be extended.
+Historical checkpoints retained for provenance:
+
+- The frozen v0.9 non-stacking JS simulation reported balanced **55.7%** at boss 105/10/2, with aggressive around 33%. Its approximate Boots-charge model and the old Shop dominance observation describe that old ruleset, not current items.
+- Engine-sim migration cross-validation reported balanced **56.9%** / aggressive **34.2%** / cautious **27.0%** over 10k runs at the old boss 105/10/2, within roughly one percentage point of the JS simulation.
+- Damage-range and Batch B calibrations are recorded in the completed milestones above; Batch C supersedes their boss/win-rate settings.
+
+The root `sim/` directory is frozen history of the v0.1→v0.9 calibration (see `sim/FINDINGS.md`, Opfølgning 4–5) and must not be extended. Human play patterns can differ from the heuristic bots even when both use the same reducer.
 
 ## Known limitations
 
@@ -272,13 +322,13 @@ Simulation: **the balance authority is now `rollbound/scripts/simulate.ts`** (`n
 - Enemy art has one frame per character; hit/attack/fallen feedback uses existing CSS. Additional frames and backdrops remain future scope.
 - No sound pass exists.
 - There is deliberately no inventory, rarity, selling, or duplicate conversion; equipped upgrades are filtered instead.
-- Balance is revalidated for the non-stacking ruleset (v0.9: balanced 55.7%), but the sim bot approximates the Boots charge as +1 Nudge and always equips strict upgrades; human decision patterns may differ.
+- The current engine simulation covers the live gear/consumable rules, but its item/route policies are heuristics. Human adaptation, comprehension and enjoyment still require the planned playtest.
 
 ## Guardrails for the next contributor
 
 - Do not change game-core behavior while working on visual assets.
 - Do not reintroduce exact HP-cost forecasts for fights (board chips, destination previews, boss-price panels, lethal flags) once removed; combat tiles expose type and approximate stats via hover/click only.
-- Do not replace seeded RNG or move balance values out of `src/core/config.ts`.
+- Do not replace seeded RNG. Keep balance data in the existing core data files (`src/core/config.ts` and `src/core/items.ts`), never in icon manifests or presentation components.
 - Do not reintroduce visible rectangular board-tile cards.
 - Do not fade visited Blank / Road dioramas or replace the broken dark trail with solid connector bars.
 - Do not bake labels, costs, rewards, numbers, glows, or selection states into PNG assets.
@@ -292,5 +342,5 @@ Simulation: **the balance authority is now `rollbound/scripts/simulate.ts`** (`n
 - Never apply equipment-slot frames or colors to non-equipment resource icons.
 - Preserve true alpha transparency and nearest-neighbor downsampling.
 - Use versioned filenames; do not overwrite an approved asset silently.
-- Verify new assets in Tile Lab and on at least one deterministic playable seed.
+- Verify new assets in their relevant Tile/Gear/Resource Lab and on at least one deterministic playable seed; distinguish fixture rendering coverage from naturally reached gameplay.
 - Update this file when the completed-work list or recommended next work changes.

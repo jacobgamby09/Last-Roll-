@@ -2,6 +2,8 @@
 
 Handoff-prompt til Codex, 2026-09-02. Læs `AGENTS.md` → `PROGRESS.md` → `rollbound/design/equipment-asset-contract-v1.md` før start.
 
+**Status: udført 2026-09-02.** 34 nye ikoner er produceret og integreret; dækningen er 30/30 gear + 10/10 consumables. Se `item-icon-batch-v1.md` for leverance/proveniens og de to `item-icons-*-qa-v1.md`-rapporter for browser-QA. Opgaveteksten nedenfor bevares som historisk brief.
+
 ## Status siden sprite-batchen (alt committet og pushet til `main`)
 
 Claude har bygget item-systemet færdigt i tre slices:

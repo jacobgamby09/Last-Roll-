@@ -8,27 +8,18 @@ import { EQUIPMENT_DEFS, equippedIdForKind, equipmentEffectText } from '../core/
 import { CONSUMABLES, consumableEffectText, isPreCombatConsumable, ITEMS, itemStats } from '../core/items';
 import { PICK_LABEL } from '../core/engine';
 import type { Action } from '../core/engine';
-import type { ConsumableId, GameState, LevelPick } from '../core/types';
+import type { GameState, LevelPick } from '../core/types';
 import { approxEnemyStats } from '../ui/preview';
 import { combatSpriteFor } from './combatSpriteAssets';
+import { ConsumableIcon } from './ConsumableIcon';
 import { EquipmentIcon } from './EquipmentIcon';
 import { equipmentAssetIdForTreasure, type EquipmentAssetId } from './equipmentAssets';
 import { PixelTileArt } from './PixelTileArt';
 import { ResourceIcon } from './ResourceIcon';
 import { resourceAssetIdForTreasure, type ResourceAssetId } from './resourceAssets';
 
-// Glyf-placeholder pr. effekt-familie, indtil consumable-ikoner produceres
-const CONSUMABLE_GLYPHS: Record<string, string> = {
-  heal: '⚗', bomb: '✷', flee: '☁', permDmg: '▲', grant: '✦', gold: '¤', twinRoll: '⚄', teleport: '➹',
-};
-
-export function ConsumableGlyph({ id }: { id: ConsumableId }) {
-  return (
-    <span aria-hidden="true" className="pixel-consumable-glyph">
-      {CONSUMABLE_GLYPHS[CONSUMABLES[id].effect.kind] ?? '·'}
-    </span>
-  );
-}
+// Preserve the existing public fallback without a ScenePhases ↔ icon cycle.
+export { ConsumableGlyph } from './ConsumableGlyph';
 
 interface PhaseProps {
   state: GameState;
@@ -64,7 +55,7 @@ export function TreasureChoice({ state, dispatch }: PhaseProps) {
           return (
             <button className="pixel-item-choice" key={`${option.key}-${index}`} onClick={() => dispatch({ type: 'PICK_TREASURE', index })} type="button">
               {option.consumableId
-                ? <ConsumableGlyph id={option.consumableId} />
+                ? <ConsumableIcon assetId={option.consumableId} />
                 : equipmentAssetId
                   ? <EquipmentIcon assetId={equipmentAssetId} />
                   : resourceAssetId
@@ -166,7 +157,7 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
             const status = offer.sold ? 'SOLGT' : slotsFull ? 'SLOTS FULDE' : goldStatus(hero.gold, offer.cost);
             return (
               <button aria-label={`${def.name}, ${consumableEffectText(offer.consumableId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
-                <ConsumableGlyph id={offer.consumableId} />
+                <ConsumableIcon assetId={offer.consumableId} />
                 <span className="pixel-item-copy"><small>{def.name.toUpperCase()}</small><span>{consumableEffectText(offer.consumableId)}</span>{status ? <em>{status}</em> : null}</span>
                 <b>{offer.cost} G</b>
               </button>
@@ -214,8 +205,9 @@ export function PreCombatPanel({ state, dispatch }: PhaseProps) {
           const def = CONSUMABLES[id];
           const bossBlocked = def.effect.kind === 'flee' && tile === 'boss';
           return (
-            <button className="pixel-secondary-button" disabled={bossBlocked} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })} type="button">
-              {def.name.toUpperCase()} — {consumableEffectText(id)}{bossBlocked ? ' (VIRKER IKKE PÅ BOSSEN)' : ''}
+            <button className="pixel-consumable-use" disabled={bossBlocked} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })} type="button">
+              <ConsumableIcon assetId={id} />
+              <span className="pixel-consumable-copy"><b>{def.name.toUpperCase()}</b><small>{consumableEffectText(id)}{bossBlocked ? ' (VIRKER IKKE PÅ BOSSEN)' : ''}</small></span>
             </button>
           );
         })}

@@ -12,7 +12,7 @@ import { describeDest } from '../ui/preview';
 import { PixelDie, type DiceRollFx } from './PixelDie';
 import { PIXEL_TILE_META } from './pixelMeta';
 import { PixelTileArt } from './PixelTileArt';
-import { ConsumableGlyph } from './ScenePhases';
+import { ConsumableIcon } from './ConsumableIcon';
 
 interface Props {
   dispatch: (action: Action) => void;
@@ -117,8 +117,8 @@ export function PixelActionPanel({ dispatch, movementSteps = null, rollFx, state
                   title={consumableEffectText(id)}
                   type="button"
                 >
-                  <ConsumableGlyph id={id} />
-                  <span><b>{CONSUMABLES[id].name.toUpperCase()}</b><small>{preCombat ? 'BRUGES FØR KAMP' : consumableEffectText(id)}</small></span>
+                  <ConsumableIcon assetId={id} />
+                  <span className="pixel-consumable-copy"><b>{CONSUMABLES[id].name.toUpperCase()}</b><small>{preCombat ? 'BRUGES FØR KAMP' : consumableEffectText(id)}</small></span>
                 </button>
               );
             })}

@@ -1,6 +1,6 @@
 # Rollbound — prototype v1
 
-Boardgame-inspireret roguelike. Se `../AGENTS.md` for designinstruks og `../sim/FINDINGS.md` for balance-kalibrering.
+Boardgame-inspireret roguelike. Se `../AGENTS.md` for designinstruks og `../PROGRESS.md` for aktuel status. Playtest-gaten er nået: combat screen, 30 gear-items og 10 consumables er implementeret med fuld ikondækning. Balancesimuleringen kører nu på den rigtige engine via `npm run sim -- 10000`; `../sim/` er historik.
 
 ## Kør
 
@@ -12,10 +12,24 @@ npm run dev
 ## Struktur
 
 - `src/core/` — UI-fri game engine (ren reducer, seedet RNG, deterministisk combat)
-  - `config.ts` — **alle balance-tal**. Board/combat-baseline er v0.8; den nye equipment-adfærd kræver en ny samlet balance-simulering.
-  - `equipment.ts` — datadrevne item-definitioner, slot-erstatning og Nudge-betaling fra Boots.
+  - `config.ts` — board, enemies, hero-baseline og øvrige konfigurerbare balance-tal.
+  - `items.ts` — 30 gear-items og 10 consumables med stats, effekter og priser.
+  - `equipment.ts` — slot-erstatning og Nudge-betaling fra Boots.
   - `engine.ts` — state machine: ROLL → NUDGE/REROLL/ACCEPT → resolve → upgrade
 - `src/ui/` — React-komponenter (HUD, track, action-panel, log)
+- `src/pixel/` — pixel-UI, fullscreen scenes og separate asset-manifests.
+- `scripts/simulate.ts` — bots på den aktuelle reducer; balanceautoritet.
+
+## Verificering
+
+```text
+npm run lint
+npm run build
+npm test
+python scripts/verify_item_assets.py
+```
+
+Python-checket kræver Pillow; spillet har ingen Python-afhængighed. Browser- og asset-QA er dokumenteret i `design/item-icon-batch-v1.md`.
 
 ## Config-flags til playtest
 
@@ -32,9 +46,10 @@ Et run kan reproduceres fra sit seed (vises i UI).
 - Boardet bruger en asset-as-tile-model: den synlige tile er dioramaet, mens en usynlig 88×88-celle bevarer layout, hitbox og forbindelser.
 - Tretten normaliserede tile-assets dækker nu hele boardet: tre Blank-varianter, Combat, to Camp-varianter, Gold, Treasure, Shop, Event, Elite, Trap og Boss. Dertil kommer en fire-frame idle/walk-helt.
 - Alle tilefamilier bruger nu rigtige PNG-dioramaer; de tidligere CSS-tegnede placeholders er fjernet fra runtime.
-- Equipment-laget har seks 48×48 PNG-ikoner uden tile-platform: Trækølle, Stoftunika og Slidte sandaler som start-loadout samt Slebet klinge, Jernplade og Stivinderstøvler som upgrade-assets.
+- Equipment-laget har 30 egne 48×48 PNG-ikoner uden tile-platform. De seks oprindelige starter/upgrade-assets er bevaret.
 - Equipment er nu en funktionel vertikal slice: Treasure, drops og Shop åbner en sammenligning mellem nuværende og nyt item med `Udstyr`/`Behold nuværende`. Shoppen trækker først Gold ved `Køb & udstyr`.
-- Slebet klinge giver `+3 Damage`, Jernplade giver `+1 Armor`, og Stivinderstøvler giver én gratis Nudge-charge. Allerede udstyrede upgrades fjernes fra loot-puljen og deaktiveres i Shoppen.
+- Stats og effekter følger `items.ts`; våben har egne damage-ranges, og Boots påvirker board-navigation. Allerede udstyrede upgrades fjernes fra loot-puljen og deaktiveres i Shoppen.
+- Ti consumables har egne ikoner i de to item-slots, idle-panelet, Shop, Treasure og pre-combat. `ConsumableIcon` bevarer den oprindelige glyf som fallback ved manglende billede eller load-fejl.
 - Nudge er en separat board-control-ressource med sit eget terning-og-pile-asset. Den må ikke præsenteres som Boots eller skifte det viste Boots-asset.
 - Damage, Armor, HP, XP, Gold, Nudge og Reroll har nu en separat familie af syv 48×48 HUD-symboler. De bruges i HUD, Treasure og Shop uden equipment-slotbehandling.
 - Hero Status-blokken bruger et fritstående 80×80 bust-portræt, Level og næste bonus i samme statuslinje, ubrudte HP/XP-barer med værdier uden for fyldet samt korte damage-, heal-, XP- og level-feedbackeffekter.
@@ -44,7 +59,7 @@ Et run kan reproduceres fra sit seed (vises i UI).
 - Genererings- og alpha-prompts er gemt i `design/sprite-production-prompts-v1.md`, så næste asset-batch kan følge samme visuelle kontrakt.
 - Normaliserede enkelt-assets ligger i `src/assets/pixel/tiles/`, `src/assets/pixel/equipment/` og `src/assets/pixel/hero/`; runtime-mappingen bor i `src/pixel/tileAssets.ts`, `src/pixel/equipmentAssets.ts` og `src/pixel/heroAssets.ts`.
 - Den deterministiske asset-testside findes på `?ui=tiles`. Kontrakt og normaliseringsprompts er dokumenteret i `design/tile-asset-contract-v1.md`.
-- Equipment-testen findes på `?ui=equipment`; kontrakten og prompts findes i `design/equipment-asset-contract-v1.md`.
+- Gear Lab findes på `?ui=equipment` og viser 30/30 gear + 10/10 consumables. Kontrakter: `design/equipment-asset-contract-v1.md` og `design/consumable-asset-contract-v1.md`. Nye prompts, proveniens og QA: `design/item-icon-batch-v1.md`.
 - Resource-testen findes på `?ui=resources`; kontrakten og prompts findes i `design/resource-asset-contract-v1.md`.
 - Den tværgående typografi-, responsive- og accessibility-kontrakt findes i `design/readability-contract-v1.md`.
 - Terningens asset-, pip-, timing- og determinismekontrakt findes i `design/dice-roll-visual-contract-v1.md`.
