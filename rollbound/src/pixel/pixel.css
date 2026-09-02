@@ -2658,3 +2658,49 @@
 
 /* Disabled-grunde skal kunne læses uden anstrengelse */
 .pixel-item-copy em { color: #e8b7a0; }
+
+/* ---------- HUD-item-inspektion (hover/klik på udstyr og consumables) ---------- */
+
+.pixel-hud-tippable {
+  position: relative;
+  cursor: help;
+}
+
+.pixel-hud-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--px-panel);
+  border: 2px solid var(--px-line);
+  box-shadow: 4px 4px 0 #050307;
+  padding: 8px 12px;
+  z-index: 45;
+  min-width: 190px;
+  max-width: 260px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.pixel-hud-tip b {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--px-ivory);
+}
+
+.pixel-hud-tip span {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--px-copy);
+  line-height: 1.35;
+}
+
+.pixel-hud-tippable:hover .pixel-hud-tip,
+.pixel-hud-tippable:focus-visible .pixel-hud-tip,
+.pixel-hud-tippable.is-tip-pinned .pixel-hud-tip {
+  display: flex;
+}

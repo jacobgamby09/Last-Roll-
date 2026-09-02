@@ -1,7 +1,9 @@
-import { ITEMS } from '../core/items';
+import { equipmentEffectText } from '../core/equipment';
+import { ITEMS, itemStats } from '../core/items';
 import type { EquipmentLoadout as EquipmentLoadoutState } from '../core/types';
 import { EquipmentIcon } from './EquipmentIcon';
 import { type EquipmentAssetId, type EquipmentKind } from './equipmentAssets';
+import { HudTip } from './HudTip';
 
 const SLOTS: ReadonlyArray<{ key: EquipmentKind; label: string }> = [
   { key: 'weapon', label: 'VÅBEN' },
@@ -16,15 +18,19 @@ export function EquipmentLoadout({ bootsNudgeCharges, loadout }: { bootsNudgeCha
       <div className="pixel-equipment-slots">
         {SLOTS.map(slot => {
           const assetId = loadout[slot.key] as EquipmentAssetId;
-          const itemName = ITEMS[assetId].name;
+          const def = ITEMS[assetId];
+          const lines = [equipmentEffectText(assetId)];
+          if (slot.key === 'boots' && itemStats(def).bootsCharges > 0) {
+            lines.push(`${bootsNudgeCharges} charge klar`);
+          }
           return (
-            <div aria-label={`${slot.label}: ${itemName}${slot.key === 'boots' && bootsNudgeCharges > 0 ? `, ${bootsNudgeCharges} gratis Nudge tilbage` : ''}`} className={`pixel-equipment-slot is-${slot.key}`} key={slot.key}>
+            <HudTip className={`pixel-equipment-slot is-${slot.key}`} key={slot.key} label={def.name} lines={lines}>
               <EquipmentIcon assetId={assetId} size="hud" />
               <span>{slot.label}</span>
               {slot.key === 'boots' && bootsNudgeCharges > 0
                 ? <b className="pixel-equipment-charge" title="Gratis Nudge fra Boots">±{bootsNudgeCharges}</b>
                 : null}
-            </div>
+            </HudTip>
           );
         })}
       </div>

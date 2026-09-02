@@ -5,7 +5,9 @@ import { PICK_LABEL, rotationPick, xpToNext } from '../core/engine';
 import type { GameState } from '../core/types';
 import { approxEnemyStats } from '../ui/preview';
 import { ConsumableIcon } from './ConsumableIcon';
+import { isPreCombatConsumable } from '../core/items';
 import { EquipmentLoadout } from './EquipmentLoadout';
+import { HudTip } from './HudTip';
 import { HERO_FRAMES } from './heroAssets';
 import { ResourceIcon } from './ResourceIcon';
 
@@ -108,10 +110,15 @@ export function PixelHud({ state }: { state: GameState }) {
           {hero.consumables.length === 0
             ? <span className="pixel-consumable-empty">—</span>
             : hero.consumables.map((id, i) => (
-              <span aria-label={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`} className="pixel-consumable-held" key={`${id}-${i}`} title={`${CONSUMABLES[id].name}: ${consumableEffectText(id)}`}>
+              <HudTip
+                className="pixel-consumable-held"
+                key={`${id}-${i}`}
+                label={CONSUMABLES[id].name}
+                lines={[consumableEffectText(id), isPreCombatConsumable(id) ? 'Bruges før en kamp' : 'Bruges fra panelet under boardet']}
+              >
                 <ConsumableIcon assetId={id} size="hud" />
                 <span>{CONSUMABLES[id].name}</span>
-              </span>
+              </HudTip>
             ))}
         </div>
       </div>
