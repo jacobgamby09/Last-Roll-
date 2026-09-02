@@ -10,8 +10,7 @@ export interface ConsumableAsset {
 
 // Explicit ID/version allowlist: adding a PNG alone never changes item mapping.
 // Missing files are deliberately omitted so ConsumableIcon renders the glyph.
-// Partial: 'armor-solder' og 'wool-lining' (item-buff-batchen 2026-09-02)
-// afventer ikoner og bruger glyf-fallback indtil da.
+// Partial preserves the explicit fallback for future, unmapped items.
 const ART_DESCRIPTIONS: Partial<Record<ConsumableId, string>> = {
   elixir: 'A small bottle of healing elixir',
   'grand-elixir': 'A large, richly ornamented elixir bottle',
@@ -19,6 +18,8 @@ const ART_DESCRIPTIONS: Partial<Record<ConsumableId, string>> = {
   'thunder-flask': 'A flask with a cyan lightning motif',
   'smoke-bomb': 'A smoke bomb in muted smoky colors',
   whetstone: 'A worn whetstone',
+  'armor-solder': 'A copper-tipped brazing iron on a riveted repair plate',
+  'wool-lining': 'A soft folded wool lining patch with brown cloth backing',
   'fate-stone': 'A violet fate stone',
   'gold-pouch': 'A drawstring leather pouch of gold',
   'fate-die': 'A die with fate-colored pixel highlights',

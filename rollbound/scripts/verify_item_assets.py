@@ -6,10 +6,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1] / "src/assets/pixel"
 FAMILIES = {
     "equipment": ["wood-club","rusted-sword","cloth-shirt","worn-plate","worn-sandals","trail-boots","wild-axe","dagger","hunting-spear","twin-daggers","war-hammer","blood-blade","executioner-axe","rune-blade","wanderer-coat","camp-cloak","riveted-harness","thorn-mail","shield-vest","duelist-jacket","blood-plate","sacrifice-plate","heavy-greaves","light-runners","scout-boots","goldthread-shoes","elven-boots","pilgrim-shoes","shadow-shoes","iron-shod"],
-    "consumables": ["elixir","grand-elixir","bomb","thunder-flask","smoke-bomb","whetstone","fate-stone","gold-pouch","fate-die","teleport-scroll"],
+    "consumables": ["elixir","grand-elixir","bomb","thunder-flask","smoke-bomb","whetstone","fate-stone","gold-pouch","fate-die","teleport-scroll","armor-solder","wool-lining"],
 }
 # The approved pre-batch assets contain partial-alpha edge pixels. Preserve them;
-# the stricter binary-alpha production rule applies to the 34 new icons only.
+# the stricter binary-alpha production rule applies to all newer icons.
 APPROVED_LEGACY = {"wood-club", "rusted-sword", "cloth-shirt", "worn-plate", "worn-sandals", "trail-boots"}
 
 def main() -> None:
@@ -38,8 +38,9 @@ def main() -> None:
                 seen[digest] = path.name
                 total += 1
                 print(f"PASS {family}/{path.name}: {box}")
-    print(f"{total}/40 distinct item assets pass (30 gear + 10 consumables)")
-    print("Binary alpha: 34 new assets; 6 approved legacy assets preserved with their original alpha")
+    expected = sum(len(ids) for ids in FAMILIES.values())
+    print(f"{total}/{expected} distinct item assets pass ({len(FAMILIES['equipment'])} gear + {len(FAMILIES['consumables'])} consumables)")
+    print(f"Binary alpha: {total - len(APPROVED_LEGACY)} newer assets; 6 approved legacy assets preserved with their original alpha")
 
 if __name__ == "__main__":
     main()
