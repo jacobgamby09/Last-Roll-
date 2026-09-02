@@ -32,7 +32,7 @@ export function LevelUpChoice({ state, dispatch }: PhaseProps) {
   if (state.phase.t !== 'levelup') return null;
   return (
     <div className="pixel-phase-block">
-      <div className="pixel-panel-title">LEVEL {state.hero.level} · VÆLG OPGRADERING</div>
+      <div className="pixel-panel-title">LEVEL {state.hero.level} · CHOOSE UPGRADE</div>
       <div className="pixel-choice-grid">
         {LEVEL_PICKS.map(pick => (
           <button key={pick} onClick={() => dispatch({ type: 'PICK_LEVELUP', pick })} type="button">{PICK_LABEL[pick]}</button>
@@ -47,7 +47,7 @@ export function TreasureChoice({ state, dispatch }: PhaseProps) {
   const { options } = state.phase;
   return (
     <div className="pixel-phase-block">
-      <div className="pixel-panel-title">SKAT · VÆLG 1 AF {options.length}</div>
+      <div className="pixel-panel-title">TREASURE · CHOOSE 1 OF {options.length}</div>
       <div className="pixel-choice-grid">
         {options.map((option, index) => {
           const equipmentAssetId = option.equipmentId ?? equipmentAssetIdForTreasure(option.key);
@@ -88,9 +88,9 @@ function equipmentDeltaLabel(state: GameState, itemId: EquipmentAssetId): string
   const dMaxHp = o.maxHp - c.maxHp - buffs.maxHp;
   if (dMaxHp !== 0) parts.push(`MAX HP ${hero.maxHp} → ${hero.maxHp + dMaxHp}`);
   if (o.bootsCharges !== c.bootsCharges || offered.slot === 'boots') {
-    parts.push(`GRATIS NUDGE ${hero.bootsNudgeCharges} → ${o.bootsCharges}`);
+    parts.push(`FREE NUDGE ${hero.bootsNudgeCharges} → ${o.bootsCharges}`);
   }
-  return parts.length > 0 ? parts.join(' · ') : 'SAMME STATS — NY EFFEKT';
+  return parts.length > 0 ? parts.join(' · ') : 'SAME STATS — NEW EFFECT';
 }
 
 // Advarsel når det udstyrede item bærer buffs, der mistes ved udskiftning
@@ -100,7 +100,7 @@ function buffLossLabel(state: GameState, itemId: EquipmentAssetId): string | nul
   if (buffs.dmg) parts.push(`+${buffs.dmg} DMG`);
   if (buffs.armor) parts.push(`+${buffs.armor} ARM`);
   if (buffs.maxHp) parts.push(`+${buffs.maxHp} max HP`);
-  return parts.length > 0 ? `Du mister forbedringer: ${parts.join(' & ')}` : null;
+  return parts.length > 0 ? `You lose improvements: ${parts.join(' & ')}` : null;
 }
 
 export function EquipmentOffer({ state, dispatch }: PhaseProps) {
@@ -108,21 +108,21 @@ export function EquipmentOffer({ state, dispatch }: PhaseProps) {
   const { hero, phase } = state;
   const offered = EQUIPMENT_DEFS[phase.itemId];
   const currentId = equippedIdForKind(hero, offered.slot) as EquipmentAssetId;
-  const equipLabel = phase.cost > 0 ? `KØB & UDSTYR · ${phase.cost} G` : 'UDSTYR';
-  const keepLabel = phase.source === 'shop' ? 'BEHOLD NUVÆRENDE · TILBAGE TIL SHOP' : 'BEHOLD NUVÆRENDE';
+  const equipLabel = phase.cost > 0 ? `BUY & EQUIP · ${phase.cost} G` : 'EQUIP';
+  const keepLabel = phase.source === 'shop' ? 'KEEP CURRENT · BACK TO SHOP' : 'KEEP CURRENT';
 
   return (
     <div className="pixel-phase-block pixel-equipment-offer">
-      <div className="pixel-equipment-compare" aria-label="Sammenlign nuværende og nyt udstyr">
+      <div className="pixel-equipment-compare" aria-label="Compare current and new gear">
         <article>
-          <small>NUVÆRENDE</small>
+          <small>CURRENT</small>
           <EquipmentIcon assetId={currentId} size="card" />
           <b>{EQUIPMENT_DEFS[currentId].name}</b>
           <span>{equipmentEffectText(currentId)}</span>
         </article>
         <i aria-hidden="true">→</i>
         <article className="is-new">
-          <small>NYT</small>
+          <small>NEW</small>
           <EquipmentIcon assetId={phase.itemId as EquipmentAssetId} size="card" />
           <b>{offered.name}</b>
           <span>{equipmentEffectText(phase.itemId)}</span>
@@ -141,13 +141,13 @@ export function EquipmentOffer({ state, dispatch }: PhaseProps) {
 }
 
 function goldStatus(gold: number, cost: number): string | undefined {
-  return gold < cost ? `MANGLER ${cost - gold} GULD` : undefined;
+  return gold < cost ? `NEED ${cost - gold} MORE GOLD` : undefined;
 }
 
 const SERVICE_META: Record<string, { name: string; effect: (shop: typeof CONFIG.shop) => string; resourceId: ResourceAssetId }> = {
-  heal: { name: 'LÆGEURT', effect: shop => `+${shop.heal.hp} HP`, resourceId: 'life' },
+  heal: { name: 'HEALING HERB', effect: shop => `+${shop.heal.hp} HP`, resourceId: 'life' },
   nudge: { name: 'NUDGE', effect: () => '+1 NUDGE', resourceId: 'nudge' },
-  reroll: { name: 'SKÆBNETERNING', effect: () => '+1 REROLL', resourceId: 'reroll' },
+  reroll: { name: 'FATE DIE', effect: () => '+1 REROLL', resourceId: 'reroll' },
 };
 
 export function ShopPanel({ state, dispatch }: PhaseProps) {
@@ -155,14 +155,14 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
   const { hero, phase } = state;
   return (
     <div className="pixel-phase-block shop-panel">
-      <div className="pixel-panel-title">SHOP · {hero.gold} GULD</div>
+      <div className="pixel-panel-title">SHOP · {hero.gold} GOLD</div>
       <div className="pixel-shop-grid">
         {phase.offers.map((offer, index) => {
           if (offer.kind === 'gear') {
             const def = ITEMS[offer.itemId];
-            const status = offer.sold ? 'SOLGT' : goldStatus(hero.gold, offer.cost);
+            const status = offer.sold ? 'SOLD' : goldStatus(hero.gold, offer.cost);
             return (
-              <button aria-label={`${def.name}, ${equipmentEffectText(offer.itemId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
+              <button aria-label={`${def.name}, ${equipmentEffectText(offer.itemId)}, ${offer.cost} gold${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
                 <EquipmentIcon assetId={offer.itemId as EquipmentAssetId} />
                 <span className="pixel-item-copy"><small>{def.name}</small><span>{equipmentEffectText(offer.itemId)}</span>{status ? <em>{status}</em> : null}</span>
                 <b>{offer.cost} G</b>
@@ -172,9 +172,9 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
           if (offer.kind === 'consumable') {
             const def = CONSUMABLES[offer.consumableId];
             const slotsFull = hero.consumables.length >= CONFIG.consumableSlots;
-            const status = offer.sold ? 'SOLGT' : slotsFull ? 'SLOTS FULDE' : goldStatus(hero.gold, offer.cost);
+            const status = offer.sold ? 'SOLD' : slotsFull ? 'SLOTS FULL' : goldStatus(hero.gold, offer.cost);
             return (
-              <button aria-label={`${def.name}, ${consumableEffectText(offer.consumableId)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
+              <button aria-label={`${def.name}, ${consumableEffectText(offer.consumableId)}, ${offer.cost} gold${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
                 <ConsumableIcon assetId={offer.consumableId} />
                 <span className="pixel-item-copy"><small>{def.name}</small><span>{consumableEffectText(offer.consumableId)}</span>{status ? <em>{status}</em> : null}</span>
                 <b>{offer.cost} G</b>
@@ -183,12 +183,12 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
           }
           const meta = SERVICE_META[offer.service];
           const status = offer.sold
-            ? 'SOLGT'
+            ? 'SOLD'
             : offer.service === 'heal' && hero.hp >= hero.maxHp
-              ? 'FULD HP'
+              ? 'FULL HP'
               : goldStatus(hero.gold, offer.cost);
           return (
-            <button aria-label={`${meta.name}, ${meta.effect(CONFIG.shop)}, ${offer.cost} guld${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
+            <button aria-label={`${meta.name}, ${meta.effect(CONFIG.shop)}, ${offer.cost} gold${status ? `, ${status}` : ''}`} className="pixel-shop-item" disabled={Boolean(status)} key={index} onClick={() => dispatch({ type: 'BUY', index })} type="button">
               <ResourceIcon assetId={meta.resourceId} />
               <span className="pixel-item-copy"><small>{meta.name}</small><span>{meta.effect(CONFIG.shop)}</span>{status ? <em>{status}</em> : null}</span>
               <b>{offer.cost} G</b>
@@ -196,7 +196,7 @@ export function ShopPanel({ state, dispatch }: PhaseProps) {
           );
         })}
       </div>
-      <button className="pixel-secondary-button" onClick={() => dispatch({ type: 'LEAVE_SHOP' })} type="button">FORLAD SHOPPEN →</button>
+      <button className="pixel-secondary-button" onClick={() => dispatch({ type: 'LEAVE_SHOP' })} type="button">LEAVE THE SHOP →</button>
     </div>
   );
 }
@@ -215,7 +215,7 @@ export function PreCombatPanel({ state, dispatch }: PhaseProps) {
           : <span className="combat-sprite combat-sprite-fallback"><PixelTileArt type={fallbackTile} variant={0} /></span>}
         <b>{enemy.name.toUpperCase()}</b>
         <span>{approxEnemyStats(enemy)}</span>
-        {openingDamage > 0 ? <em className="precombat-armed">KLARGJORT: {openingDamage} ÅBNINGSSKADE</em> : null}
+        {openingDamage > 0 ? <em className="precombat-armed">PRIMED: {openingDamage} OPENING DAMAGE</em> : null}
       </div>
       <div className="precombat-actions">
         {state.hero.consumables.map((id, slot) => {
@@ -225,11 +225,11 @@ export function PreCombatPanel({ state, dispatch }: PhaseProps) {
           return (
             <button className="pixel-consumable-use" disabled={bossBlocked} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })} type="button">
               <ConsumableIcon assetId={id} />
-              <span className="pixel-consumable-copy"><b>{def.name}</b><small>{consumableEffectText(id)}{bossBlocked ? ' (virker ikke på bossen)' : ''}</small></span>
+              <span className="pixel-consumable-copy"><b>{def.name}</b><small>{consumableEffectText(id)}{bossBlocked ? ' (does not work on the boss)' : ''}</small></span>
             </button>
           );
         })}
-        <button className="pixel-roll-button precombat-fight" onClick={() => dispatch({ type: 'FIGHT' })} type="button">⚔ KÆMP</button>
+        <button className="pixel-roll-button precombat-fight" onClick={() => dispatch({ type: 'FIGHT' })} type="button">⚔ FIGHT</button>
       </div>
     </div>
   );
@@ -240,9 +240,9 @@ export function OverPanel({ state, dispatch }: PhaseProps) {
   const { phase, hero } = state;
   return (
     <div className={`pixel-phase-block pixel-game-over ${phase.won ? 'won' : 'lost'}`}>
-      <div><small>{phase.won ? 'RUN GENNEMFØRT' : 'RUN SLUT'}</small><b>{phase.won ? 'SEJR' : 'DU FALDT'}</b><span>{phase.cause}</span></div>
-      <span className="pixel-over-stats">{state.rolls} RULL · {state.fights} KAMPE · LEVEL {hero.level} · SEED {state.seed}</span>
-      <button className="pixel-roll-button" onClick={() => dispatch({ type: 'RESTART' })} type="button">NYT RUN</button>
+      <div><small>{phase.won ? 'RUN COMPLETE' : 'RUN OVER'}</small><b>{phase.won ? 'VICTORY' : 'YOU FELL'}</b><span>{phase.cause}</span></div>
+      <span className="pixel-over-stats">{state.rolls} ROLLS · {state.fights} FIGHTS · LEVEL {hero.level} · SEED {state.seed}</span>
+      <button className="pixel-roll-button" onClick={() => dispatch({ type: 'RESTART' })} type="button">NEW RUN</button>
     </div>
   );
 }

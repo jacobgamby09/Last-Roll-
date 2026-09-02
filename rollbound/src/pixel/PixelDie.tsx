@@ -21,7 +21,7 @@ export function PixelDie({ value, rolling = false }: { value: number; rolling?: 
   return (
     <span
       aria-hidden={rolling || undefined}
-      aria-label={rolling ? undefined : `Terning viser ${value}`}
+      aria-label={rolling ? undefined : `Die shows ${value}`}
       className={`pixel-die ${rolling ? 'is-rolling' : ''}`}
       data-value={value}
       role={rolling ? undefined : 'img'}

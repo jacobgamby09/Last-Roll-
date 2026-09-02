@@ -21,13 +21,13 @@ export function ActionPanel({ state, dispatch }: Props) {
     return (
       <div className="panel">
         <button className="btn btn-roll" onClick={() => dispatch({ type: 'ROLL' })}>
-          🎲 Rul terningen{state.twinRollArmed ? ' (Skæbneterning: rul to, vælg én)' : ''}
+          🎲 Roll the die{state.twinRollArmed ? ' (Fate Die: roll two, pick one)' : ''}
         </button>
         {hero.consumables.length > 0 && (
           <div className="dest-row">
             {hero.consumables.map((id, slot) => (
               <button className="btn" disabled={isPreCombatConsumable(id)} key={`${id}-${slot}`} onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}>
-                {CONSUMABLES[id].name} — {isPreCombatConsumable(id) ? 'bruges før kamp' : consumableEffectText(id)}
+                {CONSUMABLES[id].name} — {isPreCombatConsumable(id) ? 'used before a fight' : consumableEffectText(id)}
               </button>
             ))}
           </div>
@@ -39,7 +39,7 @@ export function ActionPanel({ state, dispatch }: Props) {
   if (phase.t === 'chooseRoll') {
     return (
       <div className="panel">
-        <div className="panel-title">Skæbneterningen — vælg én</div>
+        <div className="panel-title">The Fate Die — pick one</div>
         <div className="dest-row">
           {phase.rolls.map((roll, index) => {
             const info = describeDest(state, roll);
@@ -59,13 +59,13 @@ export function ActionPanel({ state, dispatch }: Props) {
   if (phase.t === 'teleport') {
     return (
       <div className="panel">
-        <div className="panel-title">Teleport-rullen — vælg destination</div>
+        <div className="panel-title">Teleport Scroll — choose destination</div>
         <div className="dest-row">
           {[1, 2, 3, 4, 5, 6].map(steps => {
             const info = describeDest(state, steps);
             return (
               <button className="dest-card" key={steps} onClick={() => dispatch({ type: 'TELEPORT_MOVE', steps })}>
-                <span className="dest-tag">Flyt {steps}</span>
+                <span className="dest-tag">Move {steps}</span>
                 <span className="dest-title">{info.title}</span>
                 <span className="dest-detail">{info.detail}</span>
               </button>
@@ -80,7 +80,7 @@ export function ActionPanel({ state, dispatch }: Props) {
     const enemy = enemyForTile(state.pos, phase.tile);
     return (
       <div className="panel">
-        <div className="panel-title">⚔ {enemy.name} — {approxEnemyStats(enemy)}{phase.openingDamage > 0 ? ` · klargjort: ${phase.openingDamage} åbningsskade` : ''}</div>
+        <div className="panel-title">⚔ {enemy.name} — {approxEnemyStats(enemy)}{phase.openingDamage > 0 ? ` · primed: ${phase.openingDamage} opening damage` : ''}</div>
         <div className="dest-row">
           {hero.consumables.map((id, slot) => {
             if (!isPreCombatConsumable(id)) return null;
@@ -92,7 +92,7 @@ export function ActionPanel({ state, dispatch }: Props) {
             );
           })}
         </div>
-        <button className="btn btn-roll" onClick={() => dispatch({ type: 'FIGHT' })}>⚔ Kæmp</button>
+        <button className="btn btn-roll" onClick={() => dispatch({ type: 'FIGHT' })}>⚔ Fight</button>
       </div>
     );
   }
@@ -103,12 +103,12 @@ export function ActionPanel({ state, dispatch }: Props) {
     const nudgeTag = hero.bootsNudgeCharges > 0 ? 'Boots-Nudge' : 'Nudge';
     const candidates = [
       { dir: -1 as const, r: roll - 1, tag: `${nudgeTag} −1`, ok: roll - 1 >= 1 && nudgeCount > 0 && !phase.wasReroll },
-      { dir: 0 as const, r: roll, tag: 'Accepter', ok: true },
+      { dir: 0 as const, r: roll, tag: 'Accept', ok: true },
       { dir: 1 as const, r: roll + 1, tag: `${nudgeTag} +1`, ok: roll + 1 <= 6 && nudgeCount > 0 && !phase.wasReroll },
     ];
     return (
       <div className="panel">
-        <div className="roll-result">🎲 Du slog {roll}</div>
+        <div className="roll-result">🎲 You rolled {roll}</div>
         <div className="dest-row">
           {candidates.map(c => {
             const info = c.ok ? describeDest(state, c.r) : null;
@@ -127,7 +127,7 @@ export function ActionPanel({ state, dispatch }: Props) {
                     <span className="dest-detail">{info.detail}</span>
                   </>
                 ) : (
-                  <span className="dest-detail">{c.dir !== 0 && nudgeCount <= 0 ? 'Ingen nudges' : 'Ikke muligt'}</span>
+                  <span className="dest-detail">{c.dir !== 0 && nudgeCount <= 0 ? 'No nudges' : 'Not possible'}</span>
                 )}
               </button>
             );
@@ -138,7 +138,7 @@ export function ActionPanel({ state, dispatch }: Props) {
           disabled={hero.rerolls <= 0 || phase.wasReroll}
           onClick={() => dispatch({ type: 'REROLL' })}
         >
-          🔄 Reroll ({hero.rerolls} tilbage) — nyt resultat SKAL accepteres
+          🔄 Reroll ({hero.rerolls} left) — the new result MUST be accepted
         </button>
       </div>
     );
@@ -148,7 +148,7 @@ export function ActionPanel({ state, dispatch }: Props) {
     const picks: LevelPick[] = ['dmg', 'hp', 'armor'];
     return (
       <div className="panel">
-        <div className="panel-title">⬆️ Level up! Vælg din bonus ({state.pendingLevelUps} tilbage)</div>
+        <div className="panel-title">⬆️ Level up! Choose your bonus ({state.pendingLevelUps} left)</div>
         <div className="dest-row">
           {picks.map(p => (
             <button key={p} className="dest-card" onClick={() => dispatch({ type: 'PICK_LEVELUP', pick: p })}>
@@ -163,7 +163,7 @@ export function ActionPanel({ state, dispatch }: Props) {
   if (phase.t === 'treasure') {
     return (
       <div className="panel">
-        <div className="panel-title">🎁 Skattekiste — vælg 1 af {phase.options.length}</div>
+        <div className="panel-title">🎁 Treasure chest — choose 1 of {phase.options.length}</div>
         <div className="dest-row">
           {phase.options.map((o, i) => (
             <button key={o.key + i} className="dest-card" onClick={() => dispatch({ type: 'PICK_TREASURE', index: i })}>
@@ -181,23 +181,23 @@ export function ActionPanel({ state, dispatch }: Props) {
     const currentId = equippedIdForKind(hero, offered.slot);
     return (
       <div className="panel">
-        <div className="panel-title">Nyt udstyr: {offered.name}</div>
+        <div className="panel-title">New gear: {offered.name}</div>
         <div className="dest-row">
-          <div className="dest-card"><span className="dest-tag">Nuværende</span><span className="dest-title">{EQUIPMENT_DEFS[currentId].name}</span><span className="dest-detail">{equipmentEffectText(currentId)}</span></div>
-          <div className="dest-card"><span className="dest-tag">Nyt</span><span className="dest-title">{offered.name}</span><span className="dest-detail">{equipmentEffectText(phase.itemId)}</span></div>
+          <div className="dest-card"><span className="dest-tag">Current</span><span className="dest-title">{EQUIPMENT_DEFS[currentId].name}</span><span className="dest-detail">{equipmentEffectText(currentId)}</span></div>
+          <div className="dest-card"><span className="dest-tag">New</span><span className="dest-title">{offered.name}</span><span className="dest-detail">{equipmentEffectText(phase.itemId)}</span></div>
         </div>
-        <button className="btn btn-roll" disabled={hero.gold < phase.cost} onClick={() => dispatch({ type: 'EQUIP_OFFER' })}>{phase.cost > 0 ? `Køb og udstyr (${phase.cost} guld)` : 'Udstyr'}</button>
-        <button className="btn" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })}>Behold nuværende</button>
+        <button className="btn btn-roll" disabled={hero.gold < phase.cost} onClick={() => dispatch({ type: 'EQUIP_OFFER' })}>{phase.cost > 0 ? `Buy & equip (${phase.cost} gold)` : 'Equip'}</button>
+        <button className="btn" onClick={() => dispatch({ type: 'KEEP_EQUIPMENT' })}>Keep current</button>
       </div>
     );
   }
 
   if (phase.t === 'shop') {
     const sh = CONFIG.shop;
-    const serviceLabel = { heal: `Heling (+${sh.heal.hp} HP)`, nudge: '+1 Nudge', reroll: '+1 Reroll' } as const;
+    const serviceLabel = { heal: `Healing (+${sh.heal.hp} HP)`, nudge: '+1 Nudge', reroll: '+1 Reroll' } as const;
     return (
       <div className="panel">
-        <div className="panel-title">🏪 Shop — du har 💰 {hero.gold}</div>
+        <div className="panel-title">🏪 Shop — you have 💰 {hero.gold}</div>
         <div className="shop-rows">
           {phase.offers.map((offer, index) => {
             const label = offer.kind === 'gear'
@@ -210,14 +210,14 @@ export function ActionPanel({ state, dispatch }: Props) {
               && !(offer.kind === 'consumable' && hero.consumables.length >= CONFIG.consumableSlots);
             return (
               <button key={index} className="shop-row" disabled={!ok} onClick={() => dispatch({ type: 'BUY', index })}>
-                <span>{label}{offer.sold ? ' — SOLGT' : ''}</span>
+                <span>{label}{offer.sold ? ' — SOLD' : ''}</span>
                 <span className="shop-cost">{offer.cost} 💰</span>
               </button>
             );
           })}
         </div>
         <button className="btn" onClick={() => dispatch({ type: 'LEAVE_SHOP' })}>
-          Forlad shoppen →
+          Leave the shop →
         </button>
       </div>
     );
@@ -228,13 +228,13 @@ export function ActionPanel({ state, dispatch }: Props) {
   return (
     <div className="panel">
       <div className={`over ${phase.won ? 'won' : 'lost'}`}>
-        <div className="over-title">{phase.won ? '🏆 SEJR!' : '💀 RUNNET ER SLUT'}</div>
+        <div className="over-title">{phase.won ? '🏆 VICTORY!' : '💀 THE RUN IS OVER'}</div>
         <div className="over-cause">{phase.cause}</div>
         <div className="over-stats">
-          {state.rolls} rolls · {state.fights} kampe · Level {hero.level} · Seed {state.seed}
+          {state.rolls} rolls · {state.fights} fights · Level {hero.level} · Seed {state.seed}
         </div>
         <button className="btn btn-roll" onClick={() => dispatch({ type: 'RESTART' })}>
-          🎲 Nyt run
+          🎲 New run
         </button>
       </div>
     </div>

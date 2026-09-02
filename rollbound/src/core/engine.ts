@@ -59,7 +59,7 @@ export function newGame(seed: number): GameState {
     pendingLevelUps: 0,
     rolls: 0,
     fights: 0,
-    log: [{ text: `Runnet begynder. Nå felt ${CONFIG.trackLength} med et build, der kan slå bossen.`, kind: 'info' }],
+    log: [{ text: `The run begins. Reach tile ${CONFIG.trackLength} with a build strong enough to slay the boss.`, kind: 'info' }],
     lastCombat: null,
     combatSeq: 0,
     twinRollArmed: false,
@@ -242,8 +242,8 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType, openingDamage =
   if (script.result.winner === 'enemy') {
     const enemyBlows = script.events.filter(e => e.actor === 'enemy').length;
     s.hero.hp = 0;
-    s.phase = { t: 'over', won: false, cause: `Dræbt af ${enemy.name} på felt ${s.pos}` };
-    log(s, `${enemy.name} fælder dig efter ${enemyBlows} slag.`, 'bad');
+    s.phase = { t: 'over', won: false, cause: `Slain by ${enemy.name} on tile ${s.pos}` };
+    log(s, `${enemy.name} cuts you down after ${enemyBlows} blows.`, 'bad');
     return;
   }
   const hpLoss = s.hero.hp - script.result.heroHpAfter;
@@ -252,7 +252,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType, openingDamage =
   s.hero.gold += enemy.gold;
   log(
     s,
-    `Du besejrer ${enemy.name} på ${script.result.turns} slag: −${hpLoss} HP, +${enemy.xp} XP, +${enemy.gold} guld.`,
+    `You defeat ${enemy.name} in ${script.result.turns} blows: −${hpLoss} HP, +${enemy.xp} XP, +${enemy.gold} gold.`,
     'combat',
   );
   const dropChance = type === 'elite' ? CONFIG.drops.elite : CONFIG.drops.normal;
@@ -264,7 +264,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType, openingDamage =
       const def = drawWeighted(rng, pool);
       if (def) {
         equipmentDrop = def.id;
-        log(s, `${enemy.name} efterlader ${def.name}. Vurdér det nye udstyr.`, 'good');
+        log(s, `${enemy.name} leaves ${def.name} behind. Consider the new gear.`, 'good');
       }
     }
     if (!equipmentDrop) {
@@ -274,7 +274,7 @@ function runCombat(s: GameState, rng: RngCursor, type: TileType, openingDamage =
         ? consumableTreasure(Object.values(CONSUMABLES)[rng.int(0, Object.values(CONSUMABLES).length - 1)].id)
         : TREASURE_POOL[Math.floor(rng.rand() * TREASURE_POOL.length)];
       applyImmediateTreasure(s, item);
-      log(s, `${enemy.name} dropper ${item.name} (${item.desc})!`, 'good');
+      log(s, `${enemy.name} drops ${item.name} (${item.desc})!`, 'good');
     }
   }
   gainXp(s, enemy.xp);
@@ -290,12 +290,12 @@ function bossFight(s: GameState, rng: RngCursor, openingDamage = 0) {
   if (script.result.winner === 'hero') {
     const hpLoss = s.hero.hp - script.result.heroHpAfter;
     s.hero.hp = script.result.heroHpAfter;
-    log(s, `${CONFIG.boss.name} falder efter ${script.result.turns} slag! Du mistede ${hpLoss} HP.`, 'good');
-    s.phase = { t: 'over', won: true, cause: `Sejr med ${s.hero.hp} HP tilbage` };
+    log(s, `${CONFIG.boss.name} falls after ${script.result.turns} blows! You lost ${hpLoss} HP.`, 'good');
+    s.phase = { t: 'over', won: true, cause: `Victory with ${s.hero.hp} HP to spare` };
   } else {
     s.hero.hp = 0;
-    log(s, `${CONFIG.boss.name} var for stærk. Dit build manglede mere.`, 'bad');
-    s.phase = { t: 'over', won: false, cause: 'Faldt til bossen' };
+    log(s, `${CONFIG.boss.name} was too strong. Your build needed more.`, 'bad');
+    s.phase = { t: 'over', won: false, cause: 'Fell to the boss' };
   }
 }
 
@@ -303,51 +303,51 @@ function resolveTile(s: GameState, rng: RngCursor) {
   const type = s.track[s.pos];
   switch (type) {
     case 'blank':
-      log(s, 'Stille vej. Ingen hændelser.');
+      log(s, 'Quiet road. Nothing happens.');
       s.phase = { t: 'idle' };
       break;
     case 'gold': {
       const gained = gainFieldGold(s, CONFIG.goldTile);
-      log(s, `Du finder ${gained} guld.`, 'good');
+      log(s, `You find ${gained} gold.`, 'good');
       s.phase = { t: 'idle' };
       break;
     }
     case 'camp': {
       const healBonus = loadoutEffect(s.hero.loadout, 'campHealBonus')?.amount ?? 0;
       const gained = heal(s, CONFIG.camp.heal + healBonus);
-      log(s, gained > 0 ? `Lejren heler dig +${gained} HP.` : 'Lejren er rar, men du var på fuld HP.', 'good');
+      log(s, gained > 0 ? `The camp heals you +${gained} HP.` : 'The camp is cozy, but you were already at full HP.', 'good');
       // Board-hooks: boots-recharge og Pilgrimssko
       const boots = itemStats(ITEMS[s.hero.loadout.boots]);
       if (boots.rechargeAtCamp && s.hero.bootsNudgeCharges < boots.bootsCharges) {
         s.hero.bootsNudgeCharges = boots.bootsCharges;
-        log(s, `${ITEMS[s.hero.loadout.boots].name} genoplades.`, 'good');
+        log(s, `${ITEMS[s.hero.loadout.boots].name} recharges.`, 'good');
       }
       const campNudge = loadoutEffect(s.hero.loadout, 'campNudge')?.amount ?? 0;
       if (campNudge > 0) {
         s.hero.nudges += campNudge;
-        log(s, `Pilgrimsskoene giver +${campNudge} Nudge.`, 'good');
+        log(s, `${ITEMS[s.hero.loadout.boots].name} grant +${campNudge} nudge.`, 'good');
       }
       s.phase = { t: 'idle' };
       break;
     }
     case 'trap': {
       if (loadoutEffect(s.hero.loadout, 'trapImmune')) {
-        log(s, 'Skyggeskoene bærer dig uden om fælden.', 'good');
+        log(s, `${ITEMS[s.hero.loadout.boots].name} carry you past the trap.`, 'good');
         s.phase = { t: 'idle' };
         break;
       }
       if (rng.rand() < 0.5) {
         s.hero.hp -= CONFIG.trap.hpLoss;
-        log(s, `Fælde! Du tager ${CONFIG.trap.hpLoss} skade.`, 'bad');
+        log(s, `A trap! You take ${CONFIG.trap.hpLoss} damage.`, 'bad');
         if (s.hero.hp <= 0) {
           s.hero.hp = 0;
-          s.phase = { t: 'over', won: false, cause: `Dræbt af en fælde på felt ${s.pos}` };
+          s.phase = { t: 'over', won: false, cause: `Killed by a trap on tile ${s.pos}` };
           return;
         }
       } else {
         const lost = Math.min(CONFIG.trap.goldLoss, s.hero.gold);
         s.hero.gold -= lost;
-        log(s, `Fælde! Du taber ${lost} guld.`, 'bad');
+        log(s, `A trap! You lose ${lost} gold.`, 'bad');
       }
       s.phase = { t: 'idle' };
       break;
@@ -355,13 +355,13 @@ function resolveTile(s: GameState, rng: RngCursor) {
     case 'event': {
       if (rng.rand() < 0.5) {
         const gained = gainFieldGold(s, CONFIG.event.gold);
-        log(s, `Skæbnen smiler: +${gained} guld.`, 'good');
+        log(s, `Fate smiles: +${gained} gold.`, 'good');
       } else {
         s.hero.hp -= CONFIG.event.hpLoss;
-        log(s, `Skæbnen bider: −${CONFIG.event.hpLoss} HP.`, 'bad');
+        log(s, `Fate bites: −${CONFIG.event.hpLoss} HP.`, 'bad');
         if (s.hero.hp <= 0) {
           s.hero.hp = 0;
-          s.phase = { t: 'over', won: false, cause: `Et event på felt ${s.pos} blev enden` };
+          s.phase = { t: 'over', won: false, cause: `An event on tile ${s.pos} was the end` };
           return;
         }
       }
@@ -382,7 +382,7 @@ function resolveTile(s: GameState, rng: RngCursor) {
         const pick = drawWeighted(rng, candidates);
         if (pick) options.push(pick);
       }
-      log(s, 'En skattekiste! Vælg 1 af 3.');
+      log(s, 'A treasure chest! Choose 1 of 3.');
       s.phase = { t: 'treasure', options };
       break;
     }
@@ -409,14 +409,14 @@ function resolveTile(s: GameState, rng: RngCursor) {
         const cost = service === 'heal' ? CONFIG.shop.heal.cost : service === 'nudge' ? CONFIG.shop.nudge : CONFIG.shop.reroll;
         offers.push({ kind: 'service', service, cost, sold: false });
       }
-      log(s, 'Du træder ind i shoppen.');
+      log(s, 'You enter the shop.');
       s.phase = { t: 'shop', offers };
       break;
     }
     case 'enemy':
     case 'elite':
       if (hasPreCombatOption(s, type)) {
-        log(s, `${enemyForTile(s.pos, type).name} spærrer vejen. Gør dig klar.`);
+        log(s, `${enemyForTile(s.pos, type).name} blocks the path. Prepare yourself.`);
         s.phase = { t: 'preCombat', tile: type, openingDamage: 0 };
       } else {
         runCombat(s, rng, type);
@@ -424,7 +424,7 @@ function resolveTile(s: GameState, rng: RngCursor) {
       break;
     case 'boss':
       if (hasPreCombatOption(s, 'boss')) {
-        log(s, `${CONFIG.boss.name} venter. Gør dig klar.`);
+        log(s, `${CONFIG.boss.name} awaits. Prepare yourself.`);
         s.phase = { t: 'preCombat', tile: 'boss', openingDamage: 0 };
       } else {
         bossFight(s, rng);
@@ -437,7 +437,7 @@ function move(s: GameState, rng: RngCursor, steps: number) {
   s.pos = Math.min(s.pos + steps, CONFIG.trackLength);
   if (s.pos >= CONFIG.trackLength) {
     if (hasPreCombatOption(s, 'boss')) {
-      log(s, `${CONFIG.boss.name} venter. Gør dig klar.`);
+      log(s, `${CONFIG.boss.name} awaits. Prepare yourself.`);
       s.phase = { t: 'preCombat', tile: 'boss', openingDamage: 0 };
     } else {
       bossFight(s, rng);
@@ -464,25 +464,25 @@ export function reducer(prev: GameState, action: Action): GameState {
           applyDieTransform(rng.d6(), s.hero.loadout),
           applyDieTransform(rng.d6(), s.hero.loadout),
         ];
-        log(s, `Rul #${s.rolls}: Skæbneterningen viser 🎲 ${rolls[0]} og 🎲 ${rolls[1]} — vælg én.`);
+        log(s, `Roll #${s.rolls}: the Fate Die shows 🎲 ${rolls[0]} and 🎲 ${rolls[1]} — pick one.`);
         s.phase = { t: 'chooseRoll', rolls };
         break;
       }
       const roll = applyDieTransform(rng.d6(), s.hero.loadout);
-      log(s, `Rul #${s.rolls}: 🎲 ${roll}.`);
+      log(s, `Roll #${s.rolls}: 🎲 ${roll}.`);
       s.phase = { t: 'rolled', roll, wasReroll: false };
       break;
     }
     case 'CHOOSE_ROLL': {
       if (s.phase.t !== 'chooseRoll') break;
       const roll = s.phase.rolls[action.index];
-      log(s, `Du vælger ${roll}.`);
+      log(s, `You pick ${roll}.`);
       s.phase = { t: 'rolled', roll, wasReroll: false };
       break;
     }
     case 'TELEPORT_MOVE': {
       if (s.phase.t !== 'teleport' || action.steps < 1 || action.steps > 6) break;
-      log(s, `Teleport-rullen bærer dig ${action.steps} felter frem.`);
+      log(s, `The Teleport Scroll carries you ${action.steps} tiles ahead.`);
       move(s, rng, action.steps);
       break;
     }
@@ -498,9 +498,9 @@ export function reducer(prev: GameState, action: Action): GameState {
         s.hero.consumables.splice(action.slot, 1);
         if (def.effect.kind === 'bomb' && s.phase.t === 'preCombat') {
           s.phase.openingDamage += def.effect.damage;
-          log(s, `${def.name} gøres klar (${def.effect.damage} skade ved kampstart).`, 'good');
+          log(s, `${def.name} is primed (${def.effect.damage} damage at the start of the fight).`, 'good');
         } else {
-          log(s, `${def.name}! Du glider uden om kampen — ingen XP, ingen bytte.`, 'info');
+          log(s, `${def.name}! You slip past the fight — no XP, no spoils.`, 'info');
           s.phase = { t: 'idle' };
         }
         break;
@@ -532,24 +532,24 @@ export function reducer(prev: GameState, action: Action): GameState {
             s.hero.hp += e.maxHp;
             buff.maxHp += e.maxHp;
           }
-          log(s, `${def.name}: ${consumableEffectText(def.id)} — anvendt på ${ITEMS[s.hero.loadout[e.slot]].name}.`, 'good');
+          log(s, `${def.name}: ${consumableEffectText(def.id)} — applied to ${ITEMS[s.hero.loadout[e.slot]].name}.`, 'good');
           break;
         }
         case 'grant':
           s.hero.nudges += def.effect.nudges;
           s.hero.rerolls += def.effect.rerolls;
-          log(s, `${def.name}: +${def.effect.nudges} Nudge & +${def.effect.rerolls} Reroll.`, 'good');
+          log(s, `${def.name}: +${def.effect.nudges} nudge & +${def.effect.rerolls} reroll.`, 'good');
           break;
         case 'gold':
           s.hero.gold += def.effect.amount;
-          log(s, `${def.name}: +${def.effect.amount} guld.`, 'good');
+          log(s, `${def.name}: +${def.effect.amount} gold.`, 'good');
           break;
         case 'twinRoll':
           s.twinRollArmed = true;
-          log(s, `${def.name} aktiveret: næste kast ruller to terninger.`, 'good');
+          log(s, `${def.name} armed: your next roll throws two dice.`, 'good');
           break;
         case 'teleport':
-          log(s, `${def.name} lyser op — vælg din destination.`, 'good');
+          log(s, `${def.name} glows — choose your destination.`, 'good');
           s.phase = { t: 'teleport' };
           break;
       }
@@ -586,7 +586,7 @@ export function reducer(prev: GameState, action: Action): GameState {
       if (!freeOn1 && s.hero.rerolls <= 0) break;
       if (!freeOn1) s.hero.rerolls--;
       const roll = applyDieTransform(rng.d6(), s.hero.loadout);
-      log(s, `${freeOn1 ? 'Elverstøvlerne omslår 1\'eren gratis' : 'Reroll'}: ${s.phase.roll} → 🎲 ${roll}. Resultatet er endeligt.`);
+      log(s, `${freeOn1 ? 'The Elven Boots reroll the 1 for free' : 'Reroll'}: ${s.phase.roll} → 🎲 ${roll}. The result is final.`);
       move(s, rng, roll);
       break;
     }
@@ -603,11 +603,11 @@ export function reducer(prev: GameState, action: Action): GameState {
       const item = s.phase.options[action.index];
       if (!item) break;
       if (item.equipmentId) {
-        log(s, `Du finder ${item.name}. Vurdér det mod dit nuværende udstyr.`, 'good');
+        log(s, `You find ${item.name}. Compare it with your current gear.`, 'good');
         offerEquipment(s, item.equipmentId, 'treasure', { t: 'idle' });
       } else {
         applyImmediateTreasure(s, item);
-        log(s, `Du tager ${item.name} (${item.desc}).`, 'good');
+        log(s, `You take ${item.name} (${item.desc}).`, 'good');
         s.phase = { t: 'idle' };
       }
       break;
@@ -625,23 +625,23 @@ export function reducer(prev: GameState, action: Action): GameState {
         h.gold -= offer.cost;
         offer.sold = true;
         gainConsumable(s, offer.consumableId);
-        log(s, `Købt: ${CONSUMABLES[offer.consumableId].name} (${consumableEffectText(offer.consumableId)}).`, 'good');
+        log(s, `Bought: ${CONSUMABLES[offer.consumableId].name} (${consumableEffectText(offer.consumableId)}).`, 'good');
       } else if (offer.service === 'heal') {
         if (h.hp >= h.maxHp) break;
         h.gold -= offer.cost;
         offer.sold = true;
         const gained = heal(s, CONFIG.shop.heal.hp);
-        log(s, `Købt: heling (+${gained} HP).`, 'good');
+        log(s, `Bought: healing (+${gained} HP).`, 'good');
       } else if (offer.service === 'nudge') {
         h.gold -= offer.cost;
         offer.sold = true;
         h.nudges++;
-        log(s, 'Købt: +1 Nudge.', 'good');
+        log(s, 'Bought: +1 nudge.', 'good');
       } else {
         h.gold -= offer.cost;
         offer.sold = true;
         h.rerolls++;
-        log(s, 'Købt: +1 Reroll.', 'good');
+        log(s, 'Bought: +1 reroll.', 'good');
       }
       break;
     }
@@ -655,20 +655,20 @@ export function reducer(prev: GameState, action: Action): GameState {
         const sold = resume.offers.find(o => o.kind === 'gear' && o.itemId === itemId && !o.sold);
         if (sold) sold.sold = true;
       }
-      log(s, `${source === 'shop' ? 'Købt og udstyret' : 'Udstyret'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
+      log(s, `${source === 'shop' ? 'Bought & equipped' : 'Equipped'}: ${item.name} (${equipmentEffectText(itemId)}).`, 'good');
       s.phase = resume;
       break;
     }
     case 'KEEP_EQUIPMENT': {
       if (s.phase.t !== 'equipment') break;
       const item = EQUIPMENT_DEFS[s.phase.itemId];
-      log(s, `Du beholder dit nuværende udstyr og efterlader ${item.name}.`);
+      log(s, `You keep your current gear and leave ${item.name} behind.`);
       s.phase = s.phase.resume;
       break;
     }
     case 'LEAVE_SHOP': {
       if (s.phase.t !== 'shop') break;
-      log(s, 'Du forlader shoppen.');
+      log(s, 'You leave the shop.');
       s.phase = { t: 'idle' };
       break;
     }

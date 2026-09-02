@@ -15,10 +15,10 @@ export function ClassicGame() {
         <h1>ROLLBOUND</h1>
         <div className="header-meta">
           <a href={window.location.pathname} className="btn btn-small">Pixel UI</a>
-          <span>Level-model: {CONFIG.levelUpMode === 'rotation' ? 'Rotation' : 'Valg'}</span>
+          <span>Level model: {CONFIG.levelUpMode === 'rotation' ? 'Rotation' : 'Choice'}</span>
           <span>Seed {state.seed}</span>
           <button className="btn btn-small" onClick={() => dispatch({ type: 'RESTART' })}>
-            Nyt run
+            New run
           </button>
         </div>
       </header>

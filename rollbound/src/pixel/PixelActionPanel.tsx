@@ -22,9 +22,9 @@ interface Props {
 }
 
 const ROLL_STAGE_COPY: Record<Exclude<DiceRollFx['stage'], 'idle'>, { eyebrow: string; detail: string }> = {
-  anticipation: { eyebrow: 'KASTET LADES', detail: 'Terningen samler momentum' },
-  tumble: { eyebrow: 'I BEVÆGELSE', detail: 'Udfaldet er endnu skjult' },
-  impact: { eyebrow: 'RESULTATET LÅSES', detail: 'Mulige destinationer afsløres' },
+  anticipation: { eyebrow: 'CHARGING THE THROW', detail: 'The die gathers momentum' },
+  tumble: { eyebrow: 'IN MOTION', detail: 'The outcome is still hidden' },
+  impact: { eyebrow: 'RESULT LOCKING IN', detail: 'Possible destinations revealed' },
 };
 
 function RollAltar({ fx }: { fx: DiceRollFx }) {
@@ -60,8 +60,8 @@ function DestinationCard({ disabled, disabledReason, onSelect, primary, state, s
     >
       <small>{tag}</small>
       {info ? <PixelTileArt type={info.type} variant={info.posTo} /> : <span className="pixel-disabled-mark">×</span>}
-      <b>{info?.title ?? 'IKKE MULIGT'}</b>
-      <span>{info?.detail ?? disabledReason ?? 'Ikke muligt'}</span>
+      <b>{info?.title ?? 'NOT POSSIBLE'}</b>
+      <span>{info?.detail ?? disabledReason ?? 'Not possible'}</span>
     </button>
   );
 }
@@ -74,8 +74,8 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
       <section className="pixel-action-panel is-moving" aria-live="polite">
         <PixelDie value={movementSteps} />
         <div className="pixel-movement-copy">
-          <small>TRÆK LÅST</small>
-          <b>BEVÆGER {movementSteps} FELTER</b>
+          <small>MOVE LOCKED</small>
+          <b>MOVING {movementSteps} TILES</b>
           <span className="pixel-movement-track" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
         </div>
       </section>
@@ -89,7 +89,7 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
         <RollAltar fx={rollFx} />
         <div className="pixel-roll-stage-copy">
           <small>{copy.eyebrow}</small>
-          <b>SKÆBNEN RULLER</b>
+          <b>FATE IS ROLLING</b>
           <span>{copy.detail}</span>
         </div>
       </section>
@@ -99,17 +99,17 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
   if (phase.t === 'idle') {
     return (
       <section className="pixel-action-panel is-idle">
-        <div className="pixel-last-event"><small>SENESTE</small><span>{state.log.at(-1)?.text}</span></div>
-        <button aria-label="Rul en sekssidet terning" className="pixel-roll-button" onClick={() => dispatch({ type: 'ROLL' })} type="button">
+        <div className="pixel-last-event"><small>LATEST</small><span>{state.log.at(-1)?.text}</span></div>
+        <button aria-label="Roll a six-sided die" className="pixel-roll-button" onClick={() => dispatch({ type: 'ROLL' })} type="button">
           <RollAltar fx={{ stage: 'idle', value: state.rolls % 6 + 1 }} />
-          <span className="pixel-roll-button-copy"><small>NÆSTE TRÆK</small><b>RUL TERNINGEN</b><em>{state.twinRollArmed ? 'SKÆBNETERNING AKTIV: RUL TO, VÆLG ÉN' : 'KLIK FOR AT KASTE'}</em></span>
+          <span className="pixel-roll-button-copy"><small>NEXT MOVE</small><b>ROLL THE DIE</b><em>{state.twinRollArmed ? 'FATE DIE ARMED: ROLL TWO, PICK ONE' : 'CLICK TO THROW'}</em></span>
         </button>
         {hero.consumables.length > 0 && onOpenInventory ? (
           <button className="pixel-secondary-button pixel-inventory-open" onClick={onOpenInventory} type="button">
-            🎒 INVENTORY ({hero.consumables.length}/{CONFIG.consumableSlots}) — TRYK I
+            🎒 INVENTORY ({hero.consumables.length}/{CONFIG.consumableSlots}) — PRESS I
           </button>
         ) : null}
-        <div className="pixel-roll-rule"><small>1 × D6</small><b>RUL · VURDÉR · MANIPULÉR</b></div>
+        <div className="pixel-roll-rule"><small>1 × D6</small><b>ROLL · EVALUATE · MANIPULATE</b></div>
       </section>
     );
   }
@@ -117,14 +117,14 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
   if (phase.t === 'chooseRoll') {
     return (
       <section className="pixel-action-panel is-rolled">
-        <div className="pixel-roll-result"><span>SKÆBNETERNINGEN · <b>VÆLG ÉN</b></span></div>
+        <div className="pixel-roll-result"><span>THE FATE DIE · <b>PICK ONE</b></span></div>
         <div className="pixel-destinations">
           {phase.rolls.map((roll, index) => {
             const info = describeDest(state, roll);
             const meta = PIXEL_TILE_META[info.type];
             return (
               <button className="pixel-destination" key={index} onClick={() => dispatch({ type: 'CHOOSE_ROLL', index: index as 0 | 1 })} style={{ '--card-accent': meta.color } as CSSProperties} type="button">
-                <small>TERNING {index + 1}</small>
+                <small>DIE {index + 1}</small>
                 <PixelDie value={roll} />
                 <b>{info.title}</b>
                 <span>{info.detail}</span>
@@ -139,14 +139,14 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
   if (phase.t === 'teleport') {
     return (
       <section className="pixel-action-panel is-rolled">
-        <div className="pixel-roll-result"><span>TELEPORT-RULLEN · <b>VÆLG DESTINATION</b></span></div>
+        <div className="pixel-roll-result"><span>TELEPORT SCROLL · <b>CHOOSE DESTINATION</b></span></div>
         <div className="pixel-destinations pixel-teleport-grid">
           {[1, 2, 3, 4, 5, 6].map(steps => {
             const info = describeDest(state, steps);
             const meta = PIXEL_TILE_META[info.type];
             return (
               <button className="pixel-destination" key={steps} onClick={() => dispatch({ type: 'TELEPORT_MOVE', steps })} style={{ '--card-accent': meta.color } as CSSProperties} type="button">
-                <small>FLYT {steps}</small>
+                <small>MOVE {steps}</small>
                 <PixelTileArt type={info.type} variant={info.posTo} />
                 <b>{info.title}</b>
                 <span>{info.detail}</span>
@@ -162,33 +162,33 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
     const nudgeCount = availableNudges(hero);
     const bootsPay = hero.bootsNudgeCharges > 0;
     const noNudgeReason = nudgeCount <= 0
-      ? 'INGEN NUDGES TILBAGE'
+      ? 'NO NUDGES LEFT'
       : phase.wasReroll
-        ? 'REROLL ER ENDELIGT'
+        ? 'REROLL IS FINAL'
         : undefined;
     const candidates = [
       {
         action: { type: 'NUDGE', dir: -1 } as Action,
         disabled: phase.roll <= 1 || nudgeCount <= 0 || phase.wasReroll,
-        disabledReason: phase.roll <= 1 ? 'TERNINGEN KAN IKKE GÅ UNDER 1' : noNudgeReason,
+        disabledReason: phase.roll <= 1 ? 'THE DIE CANNOT GO BELOW 1' : noNudgeReason,
         primary: false,
         steps: phase.roll - 1,
-        tag: bootsPay ? 'NUDGE −1 · BOOTS GRATIS' : 'NUDGE −1',
+        tag: bootsPay ? 'NUDGE −1 · BOOTS FREE' : 'NUDGE −1',
       },
-      { action: { type: 'ACCEPT' } as Action, disabled: false, primary: true, steps: phase.roll, tag: `ACCEPTER ${phase.roll}` },
+      { action: { type: 'ACCEPT' } as Action, disabled: false, primary: true, steps: phase.roll, tag: `ACCEPT ${phase.roll}` },
       {
         action: { type: 'NUDGE', dir: 1 } as Action,
         disabled: phase.roll >= 6 || nudgeCount <= 0 || phase.wasReroll,
-        disabledReason: phase.roll >= 6 ? 'TERNINGEN KAN IKKE GÅ OVER 6' : noNudgeReason,
+        disabledReason: phase.roll >= 6 ? 'THE DIE CANNOT GO ABOVE 6' : noNudgeReason,
         primary: false,
         steps: phase.roll + 1,
-        tag: bootsPay ? 'NUDGE +1 · BOOTS GRATIS' : 'NUDGE +1',
+        tag: bootsPay ? 'NUDGE +1 · BOOTS FREE' : 'NUDGE +1',
       },
     ];
 
     return (
       <section className="pixel-action-panel is-rolled">
-        <div className="pixel-roll-result"><PixelDie value={phase.roll} /><span>DU SLOG <b>{phase.roll}</b></span></div>
+        <div className="pixel-roll-result"><PixelDie value={phase.roll} /><span>YOU ROLLED <b>{phase.roll}</b></span></div>
         <div className="pixel-destinations">
           {candidates.map(candidate => (
             <DestinationCard
@@ -205,7 +205,7 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
           onClick={() => dispatch({ type: 'REROLL' })}
           type="button"
         >
-          ↻ REROLL ({hero.rerolls}) — DET NYE RESULTAT ER ENDELIGT
+          ↻ REROLL ({hero.rerolls}) — THE NEW RESULT IS FINAL
         </button>
       </section>
     );

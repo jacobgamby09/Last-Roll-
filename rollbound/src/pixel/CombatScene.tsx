@@ -125,22 +125,22 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
 
   const tickerFor = (e: NonNullable<typeof lastEvent>): string => {
     switch (e.kind) {
-      case 'cast': return `Bomben rammer ${script.enemy.name} for ${e.damage}!`;
-      case 'thorns': return `TUR ${e.turn} · Tornene flænser ${script.enemy.name} for ${e.damage}`;
-      case 'lifesteal': return `TUR ${e.turn} · Du suger ${e.damage} HP`;
-      case 'block': return `TUR ${e.turn} · Du blokerer ${script.enemy.name}s angreb!`;
+      case 'cast': return `The bomb hits ${script.enemy.name} for ${e.damage}!`;
+      case 'thorns': return `TURN ${e.turn} · Thorns tear into ${script.enemy.name} for ${e.damage}`;
+      case 'lifesteal': return `TURN ${e.turn} · You drain ${e.damage} HP`;
+      case 'block': return `TURN ${e.turn} · You block ${script.enemy.name}'s attack!`;
       default:
-        return `TUR ${e.turn} · ${e.actor === 'hero'
-          ? `Du rammer ${script.enemy.name} for ${e.damage}${e.note === 'firstStrike' ? ' (FØRSTE HUG!)' : e.note === 'execute' ? ' (NÅDESTØD!)' : ''}`
-          : `${script.enemy.name} rammer dig for ${e.damage}`}`;
+        return `TURN ${e.turn} · ${e.actor === 'hero'
+          ? `You hit ${script.enemy.name} for ${e.damage}${e.note === 'firstStrike' ? ' (FIRST STRIKE!)' : e.note === 'execute' ? ' (EXECUTE!)' : ''}`
+          : `${script.enemy.name} hits you for ${e.damage}`}`;
     }
   };
 
   const ticker = stage === 'payout'
-    ? (won ? `${script.enemy.name} falder!` : `${script.enemy.name} fælder dig.`)
+    ? (won ? `${script.enemy.name} falls!` : `${script.enemy.name} cuts you down.`)
     : lastEvent
       ? tickerFor(lastEvent)
-      : isBoss ? 'Den endelige prøve …' : 'Kampen begynder …';
+      : isBoss ? 'The final trial …' : 'The fight begins …';
 
   // Flydende tal: skade på fjenden (hero-events undtagen lifesteal),
   // skade på helten (enemy attack), heal på helten (lifesteal)
@@ -160,7 +160,7 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
       accent={accent}
       className={`pixel-combat-scene is-${stage} ${isBoss ? 'is-boss' : ''} ${cursor < 0 && stage === 'play' ? 'is-intro' : ''}`}
       onSceneClick={skip}
-      subtitle={`FELT ${view.pos}`}
+      subtitle={`TILE ${view.pos}`}
       title={script.enemy.name.toUpperCase()}
     >
       <div className="combat-duel" aria-live="polite">
@@ -168,7 +168,7 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
           <HpPlate
             current={heroHp}
             max={heroBefore.maxHp}
-            name={`DIG · LV ${heroBefore.level}`}
+            name={`YOU · LV ${heroBefore.level}`}
             side="hero"
             statline={`DMG ${heroBefore.dmgMin}-${heroBefore.dmgMax} · ARM ${heroBefore.armor}`}
           />
@@ -199,15 +199,15 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
         </div>
       </div>
       <div className="combat-ticker">{ticker}</div>
-      {stage === 'play' ? <div className="combat-skip-hint">KLIK ELLER SPACE FOR AT SPRINGE TIL RESULTAT</div> : null}
+      {stage === 'play' ? <div className="combat-skip-hint">CLICK OR SPACE TO SKIP TO THE RESULT</div> : null}
 
       {stage === 'payout' ? (
         <div className={`combat-payout ${won ? 'won' : 'lost'}`} onClick={e => e.stopPropagation()}>
-          <b className="combat-payout-title">{won ? 'SEJR' : 'DU FALDT'}</b>
+          <b className="combat-payout-title">{won ? 'VICTORY' : 'YOU FELL'}</b>
           {won ? (
             <div className="combat-payout-rows">
               {script.enemy.xp > 0 ? <span><ResourceIcon assetId="xp" size="mini" /> +{script.enemy.xp} XP</span> : null}
-              {goldDelta > 0 ? <span><ResourceIcon assetId="gold" size="mini" /> +{goldDelta} GULD</span> : null}
+              {goldDelta > 0 ? <span><ResourceIcon assetId="gold" size="mini" /> +{goldDelta} GOLD</span> : null}
               {nudgeDelta > 0 ? <span><ResourceIcon assetId="nudge" size="mini" /> +{nudgeDelta} NUDGE (DROP)</span> : null}
               {maxHpDelta > 0 && levelsGained.length === 0 ? <span><ResourceIcon assetId="life" size="mini" /> +{maxHpDelta} MAX HP (DROP)</span> : null}
             </div>
@@ -222,7 +222,7 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
           {state.phase.t === 'levelup' ? <LevelUpChoice dispatch={dispatch} state={state} /> : null}
           {state.phase.t === 'over' ? <OverPanel dispatch={dispatch} state={state} /> : null}
           {state.phase.t === 'idle' ? (
-            <button autoFocus className="pixel-roll-button combat-continue" onClick={onClose} type="button">VIDERE →</button>
+            <button autoFocus className="pixel-roll-button combat-continue" onClick={onClose} type="button">CONTINUE →</button>
           ) : null}
         </div>
       ) : null}

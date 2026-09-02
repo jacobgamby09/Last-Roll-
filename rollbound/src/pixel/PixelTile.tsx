@@ -19,7 +19,7 @@ interface PixelTileProps {
 
 export function PixelHero({ moving = false }: { moving?: boolean }) {
   return (
-    <span className={`pixel-hero ${moving ? 'is-walking' : ''}`} aria-label="Din helt" role="img">
+    <span className={`pixel-hero ${moving ? 'is-walking' : ''}`} aria-label="Your hero" role="img">
       <img alt="" className="hero-frame hero-idle-a" draggable={false} src={HERO_FRAMES.idleA} />
       <img alt="" className="hero-frame hero-idle-b" draggable={false} src={HERO_FRAMES.idleB} />
       <img alt="" className="hero-frame hero-walk-a" draggable={false} src={HERO_FRAMES.walkA} />
@@ -52,7 +52,7 @@ export function PixelTile({ chip, current = false, heroMoving = false, pos, prim
       aria-current={current ? 'step' : undefined}
       className={`pixel-tile tile-${type} ${stateClasses}`}
       style={style}
-      aria-label={`Felt ${pos}: ${meta.label}${inspectLabel}${chip ? `, ${chip.text}` : ''}${primary ? ', primær destination' : reachable ? ', mulig destination med Nudge' : visited ? ', besøgt' : ''}`}
+      aria-label={`Tile ${pos}: ${meta.label}${inspectLabel}${chip ? `, ${chip.text}` : ''}${primary ? ', primary destination' : reachable ? ', possible destination with nudge' : visited ? ', visited' : ''}`}
       role="listitem"
       tabIndex={isCombat ? 0 : undefined}
       onClick={isCombat ? () => setPinnedTip(v => !v) : undefined}

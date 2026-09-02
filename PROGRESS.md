@@ -8,6 +8,8 @@ This file is the current operational handoff for Claude, Codex, or another contr
 
 Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. Combat sprites, simulation on the real engine, damage ranges, the 30-item gear roster and 10 consumables with 2 slots are implemented. The icon batch is complete: **30/30 gear + 10/10 consumables mapped**, including 34 new PNGs and the six preserved approved equipment icons. **The playtest gate is reached; the next milestone is 5–10 human runs**, not another content or balance batch.
 
+**The game language is English (2026-09-02):** all player-facing strings — item/enemy names, effect texts, engine log, every scene, HUD, board labels, tooltips, aria/alt texts and labs — are direct English strings (no i18n framework). Code comments and dev tooling (sim output, test names) stay Danish. Danish → English name map examples: Slibesten → Whetstone, Panserlod → Armor Solder, Uldfór → Wool Lining, Skæbneterning → Fate Die, Røgbombe → Smoke Bomb. New player-facing text must be written in English.
+
 This icon batch changes presentation only. Claude's upstream Batch C calibration is balanced **56.4%** / aggressive **41.8%** / cautious **38.4%** over 10,000 engine-sim runs, with boss HP 85 / DMG 8–12 / ARM 2. Those are the upstream results, not a new simulation or balance change made during icon production.
 
 The current visual direction has been approved by the user:

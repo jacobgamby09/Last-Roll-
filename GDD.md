@@ -11,6 +11,10 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Spillets sprog er engelsk (IMPLEMENTERET)
+
+Alle spiller-vendte tekster er konverteret til engelsk: item-/enemy-navne, effekt-tekster, engine-log, alle scener (combat, shop, treasure, equipment, level-up, inventory, pre-combat, game over), HUD, board-labels, tooltips, aria-labels/alt-tekster og labs. Ingen i18n-framework — direkte engelske strenge (guideline 13: simpleste version). Danske navne → engelske: fx Slibesten → Whetstone, Panserlod → Armor Solder, Uldfór → Wool Lining, Skæbneterning → Fate Die, Røgbombe → Smoke Bomb, Elverstøvler → Elven Boots. Kode-kommentarer og dev-tooling (sim-output, testnavne) forbliver danske. `index.html` er `lang="en"`. EV-neutral pr. definition; sim-sanity 2000 runs: balanced 56,1 %.
+
 ### 2026-09-02 · Item-buffs + inventory-scene (IMPLEMENTERET)
 
 **Buff-consumables binder sig til ITEMET, ikke spilleren** — og mistes, når slottets item udskiftes. Stakning er fri (flere Slibesten på samme våben; Panserlod + Uldfór på samme rustning): *jo mere du investerer, jo mere har du at tabe*. Tre buff-items (12 consumables i alt): **Slibesten** (konverteret: +1 DMG på våbnet), **Panserlod** (+1 ARM på rustningen, tier 2), **Uldfór** (+8 max HP på rustningen, tier 1). Buffs bor i `slotBuffs` pr. slot på heroen; `equipItem` trækker dem fra ved udskiftning (testet i engine.test).

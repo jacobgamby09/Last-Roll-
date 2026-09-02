@@ -17,43 +17,43 @@ export interface ResourceAsset {
 
 export const RESOURCE_ASSETS: Record<ResourceAssetId, ResourceAsset> = {
   damage: {
-    alt: 'Rødt sværd og slagspark for Damage',
+    alt: 'Red sword and impact spark for damage',
     id: 'damage',
     name: 'Damage',
     src: damageSword,
   },
   armor: {
-    alt: 'Cyan skjold for Armor',
+    alt: 'Cyan shield for armor',
     id: 'armor',
     name: 'Armor',
     src: armorShield,
   },
   life: {
-    alt: 'Rødt pixelhjerte for liv og healing',
+    alt: 'Red pixel heart for life and healing',
     id: 'life',
-    name: 'Liv / HP',
+    name: 'Life / HP',
     src: lifeHeart,
   },
   xp: {
-    alt: 'Cyan-violet essensstjerne for erfaring',
+    alt: 'Cyan-violet essence star for experience',
     id: 'xp',
-    name: 'Erfaring / XP',
+    name: 'Experience / XP',
     src: xpEssence,
   },
   gold: {
-    alt: 'Tre stablede guldmønter',
+    alt: 'Three stacked gold coins',
     id: 'gold',
-    name: 'Guld',
+    name: 'Gold',
     src: goldCoins,
   },
   nudge: {
-    alt: 'Terning med pile mod venstre og højre for Nudge',
+    alt: 'Die with arrows pointing left and right for nudge',
     id: 'nudge',
     name: 'Nudge',
     src: nudgeDie,
   },
   reroll: {
-    alt: 'Terning omsluttet af en cirkelpil for Reroll',
+    alt: 'Die wrapped in a circular arrow for reroll',
     id: 'reroll',
     name: 'Reroll',
     src: rerollDie,

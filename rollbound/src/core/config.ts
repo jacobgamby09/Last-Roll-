@@ -40,12 +40,12 @@ export const CONFIG = {
   } satisfies Record<string, EnemyDef>,
 
   elites: {
-    early: { name: 'Goblin-høvding', hp: 35, dmgMin: 7,  dmgMax: 11, armor: 1, xp: 40, gold: 12 },
-    mid:   { name: 'Skyggeridder',   hp: 50, dmgMin: 9,  dmgMax: 15, armor: 2, xp: 60, gold: 16 },
-    late:  { name: 'Trold-konge',    hp: 70, dmgMin: 10, dmgMax: 18, armor: 3, xp: 80, gold: 20 },
+    early: { name: 'Goblin Chieftain', hp: 35, dmgMin: 7,  dmgMax: 11, armor: 1, xp: 40, gold: 12 },
+    mid:   { name: 'Shadow Knight',   hp: 50, dmgMin: 9,  dmgMax: 15, armor: 2, xp: 60, gold: 16 },
+    late:  { name: 'Troll King',    hp: 70, dmgMin: 10, dmgMax: 18, armor: 3, xp: 80, gold: 20 },
   } satisfies Record<string, EnemyDef>,
 
-  boss: { name: 'Bossen', hp: 85, dmgMin: 8, dmgMax: 12, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
+  boss: { name: 'The Boss', hp: 85, dmgMin: 8, dmgMax: 12, armor: 2, xp: 0, gold: 0 } satisfies EnemyDef,
 
   goldTile: 12,
   camp: { heal: 20 },
@@ -68,10 +68,10 @@ export const CONFIG = {
 };
 
 export const TREASURE_POOL: TreasureItem[] = [
-  { key: 'weapon', name: 'Slebet klinge',    desc: itemEffectText('rusted-sword'), equipmentId: 'rusted-sword' },
-  { key: 'armor',  name: 'Jernplade',        desc: itemEffectText('worn-plate'), equipmentId: 'worn-plate' },
-  { key: 'boots',  name: 'Stivinderstøvler', desc: itemEffectText('trail-boots'), equipmentId: 'trail-boots' },
-  { key: 'maxhp', name: 'Livskraft-amulet', desc: '+10 Max HP' },
-  { key: 'nudge', name: 'Heldig terning',   desc: '+1 Nudge' },
-  { key: 'gold',  name: 'Guldpung',         desc: '+12 Guld' },
+  { key: 'weapon', name: 'Honed Blade',    desc: itemEffectText('rusted-sword'), equipmentId: 'rusted-sword' },
+  { key: 'armor',  name: 'Iron Plate',        desc: itemEffectText('worn-plate'), equipmentId: 'worn-plate' },
+  { key: 'boots',  name: 'Trail Boots', desc: itemEffectText('trail-boots'), equipmentId: 'trail-boots' },
+  { key: 'maxhp', name: 'Vitality Amulet', desc: '+10 max HP' },
+  { key: 'nudge', name: 'Lucky Die',       desc: '+1 nudge' },
+  { key: 'gold',  name: 'Coin Purse',      desc: '+12 gold' },
 ];

@@ -27,20 +27,20 @@ function PhaseScene({ dispatch, state }: { dispatch: (a: Action) => void; state:
   switch (phase.t) {
     case 'treasure':
       return (
-        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={`FELT ${state.pos}`} title="SKATTEKISTE">
+        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={`TILE ${state.pos}`} title="TREASURE CHEST">
           <TreasureChoice dispatch={dispatch} state={state} />
         </SceneShell>
       );
     case 'shop':
       return (
-        <SceneShell accent={PIXEL_TILE_META.shop.color} subtitle={`FELT ${state.pos}`} title="SHOP">
+        <SceneShell accent={PIXEL_TILE_META.shop.color} subtitle={`TILE ${state.pos}`} title="SHOP">
           <ShopPanel dispatch={dispatch} state={state} />
         </SceneShell>
       );
     case 'equipment': {
-      const sourceLabel = phase.source === 'shop' ? 'SHOP' : phase.source === 'drop' ? 'DROP' : 'SKAT';
+      const sourceLabel = phase.source === 'shop' ? 'SHOP' : phase.source === 'drop' ? 'DROP' : 'TREASURE';
       return (
-        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={sourceLabel} title="NYT UDSTYR">
+        <SceneShell accent={PIXEL_TILE_META.treasure.color} subtitle={sourceLabel} title="NEW GEAR">
           <EquipmentOffer dispatch={dispatch} state={state} />
         </SceneShell>
       );
@@ -55,14 +55,14 @@ function PhaseScene({ dispatch, state }: { dispatch: (a: Action) => void; state:
       const enemy = enemyForTile(state.pos, phase.tile);
       const accent = PIXEL_TILE_META[combatSpriteFor(enemy).fallbackTile].color;
       return (
-        <SceneShell accent={accent} className="pixel-precombat-scene" subtitle={`FELT ${state.pos} · FORBERED DIG`} title={enemy.name.toUpperCase()}>
+        <SceneShell accent={accent} className="pixel-precombat-scene" subtitle={`TILE ${state.pos} · PREPARE YOURSELF`} title={enemy.name.toUpperCase()}>
           <PreCombatPanel dispatch={dispatch} state={state} />
         </SceneShell>
       );
     }
     case 'over':
       return (
-        <SceneShell accent={phase.won ? PIXEL_TILE_META.camp.color : PIXEL_TILE_META.enemy.color} subtitle="RUN SLUT" title={phase.won ? 'SEJR' : 'DU FALDT'}>
+        <SceneShell accent={phase.won ? PIXEL_TILE_META.camp.color : PIXEL_TILE_META.enemy.color} subtitle="RUN OVER" title={phase.won ? 'VICTORY' : 'YOU FELL'}>
           <OverPanel dispatch={dispatch} state={state} />
         </SceneShell>
       );
@@ -242,8 +242,8 @@ export function PixelGame() {
             <a href="?ui=tiles">TILE LAB</a>
             <a href="?ui=equipment">GEAR LAB</a>
             <a href="?ui=resources">RESOURCE LAB</a>
-            <a href="?ui=classic">KLASSISK UI</a>
-            <button disabled={moving || rolling} onClick={() => dispatchWithPresentation({ type: 'RESTART' })} type="button">NYT RUN</button>
+            <a href="?ui=classic">CLASSIC UI</a>
+            <button disabled={moving || rolling} onClick={() => dispatchWithPresentation({ type: 'RESTART' })} type="button">NEW RUN</button>
           </div>
         </header>
         <PixelHud onOpenInventory={() => setInventoryOpen(true)} state={state} />

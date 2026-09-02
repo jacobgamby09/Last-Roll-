@@ -34,7 +34,7 @@ function previewFor(state: GameState, id: ConsumableId): string | null {
     case 'grant':
       return `Nudge ${hero.nudges} → ${hero.nudges + e.nudges} · Reroll ${hero.rerolls} → ${hero.rerolls + e.rerolls}`;
     case 'gold':
-      return `Guld ${hero.gold} → ${hero.gold + e.amount}`;
+      return `Gold ${hero.gold} → ${hero.gold + e.amount}`;
     default:
       return null;
   }
@@ -48,7 +48,7 @@ export function InventoryScene({ dispatch, onClose, state }: Props) {
     <SceneShell accent="#25d9ff" className="pixel-inventory-scene" subtitle={`ITEMS ${hero.consumables.length}/${CONFIG.consumableSlots}`} title="INVENTORY">
       <div className="pixel-phase-block pixel-inventory">
         {hero.consumables.length === 0 ? (
-          <div className="pixel-inventory-empty">Ingen items — de findes i shops, skatte og drops.</div>
+          <div className="pixel-inventory-empty">No items — find them in shops, treasures and drops.</div>
         ) : (
           <div className="pixel-inventory-grid">
             {hero.consumables.map((id, slot) => {
@@ -56,9 +56,9 @@ export function InventoryScene({ dispatch, onClose, state }: Props) {
               const preCombat = isPreCombatConsumable(id);
               const preview = previewFor(state, id);
               const disabledReason = preCombat
-                ? 'Bruges i forbered-dig-beatet før en kamp'
+                ? 'Used in the prepare-yourself beat before a fight'
                 : !canUse
-                  ? 'Kan kun bruges mellem træk'
+                  ? 'Can only be used between moves'
                   : null;
               return (
                 <article className="pixel-inventory-card" key={`${id}-${slot}`}>
@@ -72,7 +72,7 @@ export function InventoryScene({ dispatch, onClose, state }: Props) {
                     onClick={() => dispatch({ type: 'USE_CONSUMABLE', slot })}
                     type="button"
                   >
-                    BRUG
+                    USE
                   </button>
                   {disabledReason ? <em className="pixel-inventory-reason">{disabledReason}</em> : null}
                 </article>
@@ -80,12 +80,12 @@ export function InventoryScene({ dispatch, onClose, state }: Props) {
             })}
             {Array.from({ length: CONFIG.consumableSlots - hero.consumables.length }, (_, i) => (
               <article className="pixel-inventory-card is-empty" key={`empty-${i}`}>
-                <span className="pixel-inventory-emptyslot">TOMT SLOT</span>
+                <span className="pixel-inventory-emptyslot">EMPTY SLOT</span>
               </article>
             ))}
           </div>
         )}
-        <button className="pixel-secondary-button" onClick={onClose} type="button">LUK (I) →</button>
+        <button className="pixel-secondary-button" onClick={onClose} type="button">CLOSE (I) →</button>
       </div>
     </SceneShell>
   );

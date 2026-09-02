@@ -10,15 +10,15 @@ export function EquipmentLab() {
     <main className="pixel-page equipment-lab-page">
       <div className="equipment-lab">
         <header className="pixel-header">
-          <div><small>ASSET-KONTRAKT · 48×48 IKON</small><h1>GEAR LAB</h1></div>
-          <div className="pixel-header-actions"><a href="?">← TIL SPILLET</a></div>
+          <div><small>ASSET CONTRACT · 48×48 ICON</small><h1>GEAR LAB</h1></div>
+          <div className="pixel-header-actions"><a href="?">← BACK TO GAME</a></div>
         </header>
 
-        <section className="equipment-lab-contract" aria-label="Equipment asset-kontrakt">
-          <b>48×48 CANVAS</b><span>36×36 MAX ART</span><span>INGEN PLATFORM</span><span>FÆLLES BASELINE</span>
+        <section className="equipment-lab-contract" aria-label="Equipment asset contract">
+          <b>48×48 CANVAS</b><span>36×36 MAX ART</span><span>NO PLATFORM</span><span>SHARED BASELINE</span>
         </section>
 
-        <section className="equipment-lab-grid" aria-label="Starter- og upgrade-equipment">
+        <section className="equipment-lab-grid" aria-label="Starter and upgrade equipment">
           {EQUIPMENT_PAIRS.map(pair => {
             const starter = EQUIPMENT_ASSETS[pair.starter];
             const upgrade = EQUIPMENT_ASSETS[pair.upgrade];
@@ -43,13 +43,13 @@ export function EquipmentLab() {
           })}
         </section>
 
-        <section className="equipment-lab-sizes" aria-label="Equipment størrelsestest">
+        <section className="equipment-lab-sizes" aria-label="Equipment size test">
           <div><small>HUD · 30 PX</small>{EQUIPMENT_LAB_ASSETS.map(asset => <EquipmentIcon assetId={asset.id} key={asset.id} size="hud" />)}</div>
           <div><small>CARD · 40 PX</small>{EQUIPMENT_LAB_ASSETS.map(asset => <EquipmentIcon assetId={asset.id} key={asset.id} size="card" />)}</div>
           <div><small>MANIFEST</small><b>{EQUIPMENT_LAB_ASSETS.length}/{Object.keys(ITEMS).length} GEAR MAPPED</b></div>
         </section>
 
-        <section className="equipment-lab-grid equipment-lab-catalog" aria-label="Alle equipment-ikoner">
+        <section className="equipment-lab-grid equipment-lab-catalog" aria-label="All equipment icons">
           {Object.values(ITEMS).map(item => (
             <article className={`equipment-lab-sample is-${item.slot}`} key={item.id}>
               <small>{item.slot.toUpperCase()}</small>
@@ -58,7 +58,7 @@ export function EquipmentLab() {
               <p>{itemEffectText(item.id)}</p>
               <div className="equipment-lab-runtime-sizes">
                 <span>HUD <EquipmentIcon assetId={item.id} size="hud" /></span>
-                <span>KORT <EquipmentIcon assetId={item.id} size="card" /></span>
+                <span>CARD <EquipmentIcon assetId={item.id} size="card" /></span>
               </div>
             </article>
           ))}
@@ -66,9 +66,9 @@ export function EquipmentLab() {
 
         <section className="equipment-lab-contract" aria-label="Consumable manifest">
           <b>{Object.keys(CONSUMABLE_ASSETS).length}/{Object.keys(CONSUMABLES).length} CONSUMABLES MAPPED</b>
-          <span>SEPARAT IKON-FAMILIE · GLYF-FALLBACK</span>
+          <span>SEPARATE ICON FAMILY · GLYPH FALLBACK</span>
         </section>
-        <section className="equipment-lab-grid equipment-lab-catalog" aria-label="Alle consumable-ikoner">
+        <section className="equipment-lab-grid equipment-lab-catalog" aria-label="All consumable icons">
           {Object.values(CONSUMABLES).map(item => (
             <article className="equipment-lab-sample" key={item.id}>
               <small>CONSUMABLE</small>
@@ -77,7 +77,7 @@ export function EquipmentLab() {
               <p>{consumableEffectText(item.id)}</p>
               <div className="equipment-lab-runtime-sizes">
                 <span>HUD <ConsumableIcon assetId={item.id} size="hud" /></span>
-                <span>KORT <ConsumableIcon assetId={item.id} size="card" /></span>
+                <span>CARD <ConsumableIcon assetId={item.id} size="card" /></span>
               </div>
             </article>
           ))}

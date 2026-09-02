@@ -47,7 +47,7 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
   }
 
   return (
-    <section className="pixel-board-panel" aria-label="Spillebane">
+    <section className="pixel-board-panel" aria-label="Game board">
       <div className="pixel-world-decor" aria-hidden="true">
         <i className="tree tree-a" /><i className="tree tree-b" /><i className="tree tree-c" />
         <i className="ruin ruin-a" /><i className="ruin ruin-b" />
@@ -88,8 +88,8 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
         })}
       </div>
       <div className="pixel-board-footer">
-        <span>FELT {displayPos}/{CONFIG.trackLength}</span>
-        <span>{Math.max(0, CONFIG.trackLength - displayPos)} FELTER TIL BOSSEN</span>
+        <span>TILE {displayPos}/{CONFIG.trackLength}</span>
+        <span>{Math.max(0, CONFIG.trackLength - displayPos)} TILES TO THE BOSS</span>
         <span>SEED {state.seed}</span>
       </div>
     </section>

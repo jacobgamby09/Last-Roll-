@@ -17,8 +17,10 @@ Producér og registrér **2 consumable-ikoner** — id'er og navne i `src/core/i
 
 | Fil (`src/assets/pixel/consumables/`) | Item | Effekt | Visuel identitet |
 |---|---|---|---|
-| `armor-solder-v1.png` | Panserlod | +1 ARM på din rustning | loddekolbe/metallod + plade-motiv — "smedearbejde på rustning"; må gerne have en varm glød-tone i spidsen |
-| `wool-lining-v1.png` | Uldfór | +8 max HP på din rustning | blødt uld-/stof-bundt eller fór-stykke — varme, komfort; dæmpede naturfarver |
+| `armor-solder-v1.png` | Armor Solder (tidl. Panserlod) | +1 ARM på din rustning | loddekolbe/metallod + plade-motiv — "smedearbejde på rustning"; må gerne have en varm glød-tone i spidsen |
+| `wool-lining-v1.png` | Wool Lining (tidl. Uldfór) | +8 max HP på din rustning | blødt uld-/stof-bundt eller fór-stykke — varme, komfort; dæmpede naturfarver |
+
+> **OBS (2026-09-02):** Hele spillet er konverteret til engelsk — alle item-navne og alt-tekster i koden er nu engelske. Skriv de to nye alt-tekster på engelsk (samme stil som de øvrige i `consumableAssets.ts`).
 
 De skal læses som **håndværks-materialer, man påfører udstyr** — beslægtede med Slibestenens udtryk, tydeligt adskilt fra flasker/bomber.
 

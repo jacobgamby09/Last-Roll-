@@ -29,7 +29,7 @@ export function TrackView({ state }: { state: GameState }) {
     if (i === landing) classes.push('tile-landing');
     else if (alts.includes(i)) classes.push('tile-alt');
     cells.push(
-      <div key={i} className={classes.join(' ')} title={`Felt ${i}: ${meta.label}`}>
+      <div key={i} className={classes.join(' ')} title={`Tile ${i}: ${meta.label}`}>
         <span className="tile-num">{i}</span>
         <span className="tile-icon">{i === state.pos ? '🧙' : meta.icon}</span>
         {chip && <span className="tile-chip">{chip.text}</span>}
@@ -41,7 +41,7 @@ export function TrackView({ state }: { state: GameState }) {
     <div className="track-wrap">
       {state.pos === 0 && <div className="tile tile-start tile-hero"><span className="tile-num">S</span><span className="tile-icon">🧙</span></div>}
       <div className="track">{cells}</div>
-      {to < L && <div className="track-more">… {L - to} felter til bossen</div>}
+      {to < L && <div className="track-more">… {L - to} tiles to the boss</div>}
     </div>
   );
 }

@@ -7,14 +7,14 @@ interface PixelTileMeta {
 }
 
 export const PIXEL_TILE_META: Record<TileType, PixelTileMeta> = {
-  blank: { color: '#61556f', label: 'Stille vej', shortLabel: 'VEJ' },
-  enemy: { color: '#ff3b4d', label: 'Kamp', shortLabel: 'KAMP' },
+  blank: { color: '#61556f', label: 'Quiet road', shortLabel: 'ROAD' },
+  enemy: { color: '#ff3b4d', label: 'Fight', shortLabel: 'FIGHT' },
   elite: { color: '#ff2bd6', label: 'Elite', shortLabel: 'ELITE' },
-  gold: { color: '#ffd84a', label: 'Guld', shortLabel: 'GULD' },
-  treasure: { color: '#ffb52e', label: 'Skat', shortLabel: 'SKAT' },
-  camp: { color: '#39ff88', label: 'Lejr', shortLabel: 'LEJR' },
+  gold: { color: '#ffd84a', label: 'Gold', shortLabel: 'GOLD' },
+  treasure: { color: '#ffb52e', label: 'Treasure', shortLabel: 'CHEST' },
+  camp: { color: '#39ff88', label: 'Camp', shortLabel: 'CAMP' },
   shop: { color: '#25d9ff', label: 'Shop', shortLabel: 'SHOP' },
   event: { color: '#a66bff', label: 'Event', shortLabel: 'EVENT' },
-  trap: { color: '#df6cff', label: 'Fælde', shortLabel: 'FÆLDE' },
+  trap: { color: '#df6cff', label: 'Trap', shortLabel: 'TRAP' },
   boss: { color: '#fff2df', label: 'Boss', shortLabel: 'BOSS' },
 };

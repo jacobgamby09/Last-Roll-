@@ -31,6 +31,6 @@ describe('ConsumableIcon presentation contract', () => {
     expect(decorative).toContain('aria-hidden="true"');
     expect(decorative).not.toContain('role="img"');
     expect(named).toContain('role="img"');
-    expect(named).toContain('aria-label="Røgbombe"');
+    expect(named).toContain('aria-label="Smoke Bomb"');
   });
 });

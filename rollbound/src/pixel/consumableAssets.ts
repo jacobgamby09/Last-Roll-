@@ -13,16 +13,16 @@ export interface ConsumableAsset {
 // Partial: 'armor-solder' og 'wool-lining' (item-buff-batchen 2026-09-02)
 // afventer ikoner og bruger glyf-fallback indtil da.
 const ART_DESCRIPTIONS: Partial<Record<ConsumableId, string>> = {
-  elixir: 'En lille flaske med helbredende eliksir',
-  'grand-elixir': 'En stor, rigt udsmykket eliksirflaske',
-  bomb: 'En rund jernbombe med lunte',
-  'thunder-flask': 'En kolbe med cyan lynmotiv',
-  'smoke-bomb': 'En røgbombe i dæmpede røgfarver',
-  whetstone: 'En slidt slibesten',
-  'fate-stone': 'En violet skæbnesten',
-  'gold-pouch': 'En snøret læderpose med guld',
-  'fate-die': 'En terning med skæbnens farvede pixel-highlights',
-  'teleport-scroll': 'En pergamentrulle med runemotiv',
+  elixir: 'A small bottle of healing elixir',
+  'grand-elixir': 'A large, richly ornamented elixir bottle',
+  bomb: 'A round iron bomb with a fuse',
+  'thunder-flask': 'A flask with a cyan lightning motif',
+  'smoke-bomb': 'A smoke bomb in muted smoky colors',
+  whetstone: 'A worn whetstone',
+  'fate-stone': 'A violet fate stone',
+  'gold-pouch': 'A drawstring leather pouch of gold',
+  'fate-die': 'A die with fate-colored pixel highlights',
+  'teleport-scroll': 'A parchment scroll with a rune motif',
 };
 
 const sources = import.meta.glob<string>('../assets/pixel/consumables/*-v1.png', {

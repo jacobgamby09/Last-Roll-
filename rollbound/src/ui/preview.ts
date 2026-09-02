@@ -27,39 +27,39 @@ export function describeDest(s: GameState, steps: number): DestInfo {
   const posTo = Math.min(s.pos + steps, CONFIG.trackLength);
   const type = s.track[posTo];
   const meta = TILE_META[type];
-  const base: DestInfo = { posTo, type, title: `Felt ${posTo} · ${meta.label}`, detail: '' };
+  const base: DestInfo = { posTo, type, title: `Tile ${posTo} · ${meta.label}`, detail: '' };
 
   switch (type) {
     case 'enemy':
     case 'elite':
     case 'boss': {
       const enemy = enemyForTile(posTo, type);
-      base.title = `Felt ${posTo} · ${enemy.name}`;
+      base.title = `Tile ${posTo} · ${enemy.name}`;
       base.detail = approxEnemyStats(enemy);
       break;
     }
     case 'camp': {
       const gain = Math.min(CONFIG.camp.heal, s.hero.maxHp - s.hero.hp);
-      base.detail = gain > 0 ? `Heler +${gain} HP` : 'Heler (du er på fuld HP)';
+      base.detail = gain > 0 ? `Heals +${gain} HP` : 'Heals (you are at full HP)';
       break;
     }
     case 'gold':
-      base.detail = `+${CONFIG.goldTile} guld`;
+      base.detail = `+${CONFIG.goldTile} gold`;
       break;
     case 'treasure':
-      base.detail = 'Vælg 1 af 3 skatte';
+      base.detail = 'Choose 1 of 3 treasures';
       break;
     case 'shop':
-      base.detail = `Køb for guld (du har ${s.hero.gold})`;
+      base.detail = `Buy with gold (you have ${s.hero.gold})`;
       break;
     case 'event':
-      base.detail = `50/50: +${CONFIG.event.gold} guld eller −${CONFIG.event.hpLoss} HP`;
+      base.detail = `50/50: +${CONFIG.event.gold} gold or −${CONFIG.event.hpLoss} HP`;
       break;
     case 'trap':
-      base.detail = `50/50: −${CONFIG.trap.hpLoss} HP eller −${CONFIG.trap.goldLoss} guld`;
+      base.detail = `50/50: −${CONFIG.trap.hpLoss} HP or −${CONFIG.trap.goldLoss} gold`;
       break;
     case 'blank':
-      base.detail = 'Ingen hændelse — et sikkert felt';
+      base.detail = 'No event — a safe tile';
       break;
   }
   return base;

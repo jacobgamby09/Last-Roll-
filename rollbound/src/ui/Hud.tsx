@@ -17,7 +17,7 @@ function Bar({ value, max, cls }: { value: number; max: number; cls: string }) {
 export function Hud({ state }: { state: GameState }) {
   const h = state.hero;
   const need = xpToNext(h.level);
-  const nextBonus = CONFIG.levelUpMode === 'rotation' ? PICK_LABEL[rotationPick(h.level + 1)] : 'valg mellem 3';
+  const nextBonus = CONFIG.levelUpMode === 'rotation' ? PICK_LABEL[rotationPick(h.level + 1)] : 'choice of 3';
 
   return (
     <div className="hud">
@@ -28,7 +28,7 @@ export function Hud({ state }: { state: GameState }) {
         </div>
         <div className="stat wide">
           <label>
-            Level {h.level} · næste: {nextBonus}
+            Level {h.level} · next: {nextBonus}
           </label>
           <Bar value={h.xp} max={need} cls="xp" />
         </div>
@@ -36,14 +36,14 @@ export function Hud({ state }: { state: GameState }) {
       <div className="hud-row">
         <div className="stat">⚔️ {h.dmgMin}-{h.dmgMax} <small>DMG</small></div>
         <div className="stat">🛡️ {h.armor} <small>ARMOR</small></div>
-        <div className="stat">💰 {h.gold} <small>GULD</small></div>
+        <div className="stat">💰 {h.gold} <small>GOLD</small></div>
         <div className="stat">👉 {h.nudges} <small>NUDGE</small></div>
         <div className="stat">🎲 {h.rerolls} <small>REROLL</small></div>
         <div className="stat">📍 {state.pos}/{CONFIG.trackLength}</div>
       </div>
       {state.phase.t !== 'over' && (
         <div className="boss-banner ok">
-          🐉 {CONFIG.boss.name} venter på felt {CONFIG.trackLength}: {approxEnemyStats(CONFIG.boss)}
+          🐉 {CONFIG.boss.name} awaits on tile {CONFIG.trackLength}: {approxEnemyStats(CONFIG.boss)}
         </div>
       )}
     </div>

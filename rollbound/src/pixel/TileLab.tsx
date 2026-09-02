@@ -16,7 +16,7 @@ const TILE_SAMPLES: readonly TileSample[] = [
   { label: 'Blank B', pos: 31, type: 'blank' },
   { label: 'Blank C', pos: 32, type: 'blank' },
   { label: 'Combat', pos: 40, type: 'enemy' },
-  { label: 'Camp · telt', pos: 40, type: 'camp' },
+  { label: 'Camp · tent', pos: 40, type: 'camp' },
   { label: 'Camp · bedroll', pos: 41, type: 'camp' },
   { label: 'Treasure', pos: 50, type: 'treasure' },
   { label: 'Shop', pos: 51, type: 'shop' },
@@ -32,15 +32,15 @@ export function TileLab() {
     <main className="pixel-page tile-lab-page">
       <div className="tile-lab">
         <header className="pixel-header tile-lab-header">
-          <div><small>ASSET-KONTRAKT · 88×88 TILE</small><h1>TILE LAB</h1></div>
-          <div className="pixel-header-actions"><a href="?">← TIL SPILLET</a></div>
+          <div><small>ASSET CONTRACT · 88×88 TILE</small><h1>TILE LAB</h1></div>
+          <div className="pixel-header-actions"><a href="?">← BACK TO GAME</a></div>
         </header>
 
-        <section className="tile-lab-contract" aria-label="Asset-kontrakt">
-          <b>64×64 CANVAS</b><span>48×48 NORMAL</span><span>56×56 BOSS</span><span>FÆLLES BASELINE</span>
+        <section className="tile-lab-contract" aria-label="Asset contract">
+          <b>64×64 CANVAS</b><span>48×48 NORMAL</span><span>56×56 BOSS</span><span>SHARED BASELINE</span>
         </section>
 
-        <section className="tile-lab-grid" aria-label="Alle tiletyper">
+        <section className="tile-lab-grid" aria-label="All tile types">
           {TILE_SAMPLES.map(sample => (
             <article className="tile-lab-sample" key={sample.label}>
               <div className="tile-lab-tile-wrap">
@@ -56,11 +56,11 @@ export function TileLab() {
         <section className="tile-lab-detail-row">
           <article>
             <small>DESTINATION CARD · CAMP 0</small>
-            <div className="tile-lab-card"><PixelTileArt type="camp" variant={0} /><b>LEJR</b></div>
+            <div className="tile-lab-card"><PixelTileArt type="camp" variant={0} /><b>CAMP</b></div>
           </article>
           <article>
             <small>DESTINATION CARD · CAMP 1</small>
-            <div className="tile-lab-card"><PixelTileArt type="camp" variant={1} /><b>LEJR</b></div>
+            <div className="tile-lab-card"><PixelTileArt type="camp" variant={1} /><b>CAMP</b></div>
           </article>
           <article>
             <small>HERO ANCHOR · 32×48</small>

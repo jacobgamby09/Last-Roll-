@@ -20,60 +20,60 @@ export interface TileAsset {
 }
 
 const BLANK_ASSETS: readonly TileAsset[] = [
-  { alt: 'Stenvej med en klippe og græs', id: 'blank-a', src: blankA },
-  { alt: 'Ruiner på en mørk stenvej', id: 'blank-b', src: blankB },
-  { alt: 'Stenvej med lilla svamp', id: 'blank-c', src: blankC },
+  { alt: 'Stone road with a rock and grass', id: 'blank-a', src: blankA },
+  { alt: 'Ruins on a dark stone road', id: 'blank-b', src: blankB },
+  { alt: 'Stone road with a purple mushroom', id: 'blank-c', src: blankC },
 ];
 
 const CAMP_ASSETS: readonly TileAsset[] = [
-  { alt: 'Lejr med telt og bål', id: 'camp-tent', src: campTent },
-  { alt: 'Lejr med bedroll, gryde og bål', id: 'camp-bedroll', src: campBedroll },
+  { alt: 'Camp with a tent and campfire', id: 'camp-tent', src: campTent },
+  { alt: 'Camp with a bedroll, pot and campfire', id: 'camp-bedroll', src: campBedroll },
 ];
 
 const COMBAT_ASSET: TileAsset = {
-  alt: 'Krydsede sværd på rød kampgrund',
+  alt: 'Crossed swords on red battle ground',
   id: 'combat',
   src: combat,
 };
 
 const GOLD_ASSET: TileAsset = {
-  alt: 'Møntbunke på en mørk stenplatform',
+  alt: 'Pile of coins on a dark stone platform',
   id: 'gold',
   src: gold,
 };
 
 const TREASURE_ASSET: TileAsset = {
-  alt: 'Lukket skattekiste på en mørk stenplatform',
+  alt: 'Closed treasure chest on a dark stone platform',
   id: 'treasure',
   src: treasure,
 };
 
 const SHOP_ASSET: TileAsset = {
-  alt: 'Handelsbod med cyan markise og eliksirer',
+  alt: 'Market stall with a cyan awning and elixirs',
   id: 'shop',
   src: shop,
 };
 
 const EVENT_ASSET: TileAsset = {
-  alt: 'Violet portal i en brudt stenbue',
+  alt: 'Violet portal in a broken stone arch',
   id: 'event',
   src: event,
 };
 
 const ELITE_ASSET: TileAsset = {
-  alt: 'Hornet dæmonmaske over krydsede klinger',
+  alt: 'Horned demon mask above crossed blades',
   id: 'elite',
   src: elite,
 };
 
 const TRAP_ASSET: TileAsset = {
-  alt: 'Mørk faldgrube med store pigge',
+  alt: 'Dark pitfall with large spikes',
   id: 'trap',
   src: trap,
 };
 
 const BOSS_ASSET: TileAsset = {
-  alt: 'Hornet bossport med kranie og rød afgrund',
+  alt: 'Horned boss gate with a skull and red abyss',
   id: 'boss',
   src: boss,
 };
