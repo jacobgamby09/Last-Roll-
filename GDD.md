@@ -11,6 +11,19 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-02 · Damage-ranges for både hero og fjender (beslutning)
+
+Al damage bliver ranges i stedet for flade tal — fx start-våben 7-12 i stedet for 10, og tilsvarende for fjender. **Variansen er en bevidst design-akse:** nogle våben/items og fjender har brede ranges (vilde, gamble-agtige), andre smalle (pålidelige). Items skal støtte op om aksen som en del af deres identitet.
+
+- Konverteringen fra flade tal skal være EV-bevarende; derefter kalibreres via sim (varians sænker win rate ved samme gennemsnit, fordi død er absorberende — skal måles, ikke gættes).
+- Stadig ingen miss chance, dodge, crit-systemer eller tilfældig initiative — et lavt slag rammer stadig. Ranges er den godkendte form for combat-RNG (jf. v0.1 sektion 19, nu med bredere spillerum end "8-10").
+- Damage-rolls trækkes af run'ets seedede RNG inde i combat-scriptet → runs forbliver reproducerbare pr. seed.
+- Rækkefølge: implementeres EFTER combat screen (flad damage er sand indtil da) og EFTER sim er porteret til den rigtige engine, så effekten kan måles samme dag.
+
+### 2026-09-02 · Alle interaktive skærme er fullscreen-scener (beslutning)
+
+Combat, post-combat loot (drops/Equip-Keep), treasure, shop og level-up-valg renderes alle som fullscreen-takeovers over boardet — bygget på én fælles scene-skal (baggrund, topbjælke med board-kontekst, ens enter/exit-transitions, skip/reduced-motion-regler). Boardet forbliver mountet nedenunder. Rytme-værn: hurtige transitions; en scene må aldrig trække tiden.
+
 ### 2026-09-02 · Eksakt combat-pris fjernes (beslutning)
 
 Den eksakte HP-pris pr. kamp ("koster ~9 HP") var en prototype-feature muliggjort af fuldt deterministisk combat. **Den skal helt væk**, når det rigtige combat-flow (combat screen) kommer ind:

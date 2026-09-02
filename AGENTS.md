@@ -374,21 +374,24 @@ Prototype combat should focus on:
 * Damage
 * Armor
 
-Damage may use a small range.
+Damage uses ranges for both hero and enemies (decided 2026-09-02).
 
 Example:
 
-`7–10 Damage`
+`7–12 Damage` (starter weapon)
 
-Board RNG should be significantly higher than combat RNG.
+Variance is a deliberate, data-driven design axis: some weapons, items, and enemies have wide ranges (volatile), others narrow (reliable). Range width is part of an item's or enemy's identity and lives in config data, never hardcoded. Damage rolls draw from the run's seeded RNG inside the combat script, so runs stay reproducible per seed. Conversions from flat values are expected-value-preserving and must be revalidated in the simulation (variance lowers win rate at equal EV).
 
-Avoid excessive:
+Board RNG should still be higher than combat RNG overall.
+
+Damage ranges are the only sanctioned form of combat randomness. Avoid:
 
 * miss chance
 * dodge chance
 * random initiative
-* extreme crit variance
-* large damage swings
+* crit systems
+
+A low roll still hits; combat never whiffs.
 
 Design principle:
 
