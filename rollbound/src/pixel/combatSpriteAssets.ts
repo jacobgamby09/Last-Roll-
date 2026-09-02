@@ -1,20 +1,30 @@
 // Combat-sprite-manifest til fullscreen-kampscenen.
 // Kontrakt: ../design/combat-sprite-contract-v1.md
-// Manifestet er bevidst tomt indtil sprite-batchen er produceret — scenen
-// falder eksplicit tilbage til fjendens tile-diorama (asset-agnostisk mønster
-// som PixelTileArt). Udfyld med imports, når normaliserede assets lander:
-//   import goblin from '../assets/pixel/combat/goblin-v1.png';
-//   ... COMBAT_SPRITES.goblin = goblin;
+// Syv normaliserede 64×80-sprites; scenens tile-fallback bevares til
+// ukendte fjender og fremtidige assets, der endnu ikke er produceret.
 
 import { CONFIG } from '../core/config';
 import type { EnemyDef, TileType } from '../core/types';
+import goblin from '../assets/pixel/combat/goblin-v1.png';
+import bandit from '../assets/pixel/combat/bandit-v1.png';
+import ogre from '../assets/pixel/combat/ogre-v1.png';
+import eliteEarly from '../assets/pixel/combat/elite-early-v1.png';
+import eliteMid from '../assets/pixel/combat/elite-mid-v1.png';
+import eliteLate from '../assets/pixel/combat/elite-late-v1.png';
+import boss from '../assets/pixel/combat/boss-v1.png';
 
 export type CombatSpriteId =
   | 'goblin' | 'bandit' | 'ogre'
   | 'elite-early' | 'elite-mid' | 'elite-late'
   | 'boss';
 
-export const COMBAT_SPRITES: Partial<Record<CombatSpriteId, string>> = {};
+export const COMBAT_SPRITES: Partial<Record<CombatSpriteId, string>> = {
+  goblin, bandit, ogre,
+  'elite-early': eliteEarly,
+  'elite-mid': eliteMid,
+  'elite-late': eliteLate,
+  boss,
+};
 
 const SPRITE_BY_ENEMY = new Map<EnemyDef, CombatSpriteId>([
   [CONFIG.enemies.early, 'goblin'],

@@ -1,12 +1,12 @@
 # Rollbound — progress and agent handoff
 
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
 This file is the current operational handoff for Claude, Codex, or another contributor. Read `AGENTS.md` first for the game design constraints, then this file for the latest implementation state. Update this document after material code, balance, asset, or design changes.
 
 ## Current status
 
-Rollbound is a playable Vite + React + TypeScript prototype. The UI-free game engine and balance configuration are preserved from the first prototype; the active workstream is a new pixel-art presentation built on top of that core.
+Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. The seven-enemy combat sprite batch is complete; simulation on the real engine is the next implementation workstream.
 
 The current visual direction has been approved by the user:
 
@@ -24,8 +24,8 @@ Design decision 2026-09-02 (IMPLEMENTED same day): **the exact HP-cost preview f
 
 - Branch: `main`
 - Remote: `https://github.com/jacobgamby09/Last-Roll-.git`
-- Pushed commits: `17d9cac` initial prototype, `63ccee7` pixel UI + equipment slice, `e71713b` dice presentation, `5466d70` hero-status HUD.
-- Local uncommitted changes: the hero-status design correction (no portrait card/diamond/overlapping badge, continuous bars) in `PixelHud.tsx`, `pixel.css`, `AGENTS.md`, the hero-status contract, plus the v0.9 simulation revalidation (sim/, config comment, this file).
+- Upstream baseline for this batch: `66b61de` (approved boss concept, elite height bands and mobile 4:5 aspect), after `2ea5597` (fullscreen scenes) and `6b6665c` (combat script).
+- The earlier hero-status correction and v0.9 simulation revalidation are already in repository history, not pending local work. This change adds the seven combat sprites, their manifest registration, normalization/verification scripts and handoff notes.
 - Preserve all existing local changes. Do not reset or overwrite the worktree.
 
 ## Run and QA
@@ -37,7 +37,11 @@ npm install
 npm run dev
 npm run lint
 npm run build
+npm test
+python scripts/verify_combat_assets.py
 ```
+
+The optional asset verification command requires Pillow; the runtime app does not depend on Python.
 
 Useful routes:
 
@@ -51,6 +55,9 @@ Latest verification:
 
 - `npm run lint` passes.
 - `npm run build` passes.
+- `npm test` passes (2 files, 5 tests).
+- Combat sprites: all seven verified in the live seed 2 combat scene at `1280 × 800` and `390 × 844`, including attack, hit and fallen states; reduced-motion verified on mobile. Non-Goblin art was temporarily aliased onto the seed 2 Goblin for QA, then restored to the canonical mapping. No fallback, overflow, browser error or warning detected.
+- Combat PNG contract verification passes `7/7`: `64 × 80` RGBA, binary alpha, bottom baseline and tier height bands. See `rollbound/design/combat-sprite-batch-v1.md` for exact prompts, normalization and the existing scene floor-offset observation.
 - Tile Lab reports `13/13 ASSETS MAPPED`.
 - Gear Lab reports `6/6 ASSETS MAPPED`.
 - Resource Lab reports `7/7 ASSETS MAPPED`.
@@ -90,7 +97,7 @@ Latest verification:
 - Pixel UI is the default; Classic UI remains available.
 - Hero movement is animated field-by-field in the UI while the reducer remains deterministic and UI-free.
 - Combat resolves through a combat script: `simulateFight` in `src/core/combat.ts` produces the blow-by-blow event list, the reducer applies its result atomically and stores it as `state.lastCombat` (with `state.combatSeq` as the new-fight signal for the UI, since structuredClone breaks reference identity). Equivalence with the old closed-form math, run determinism, and the dice-peek contract are locked by `npm test` (vitest: `combat.test.ts`, `engine.test.ts`).
-- Fullscreen scene system (2026-09-02): every interactive phase renders as a takeover on the shared `SceneShell` (`src/pixel/SceneShell.tsx`) — combat playback (`CombatScene.tsx`, driven 1:1 by `lastCombat`: intro → accelerating exchange → outcome → payout inside the scene, click/space skips, reduced-motion jumps to the static result, timing in `presentation.ts`), plus treasure, equipment comparison, shop, level-up and game over via `ScenePhases.tsx`. Victory payout shows XP/gold/drop deltas, rotation level-up fanfares, and embeds the drop Equip/Keep comparison; defeat ends inside the scene. The bottom action panel now only owns idle/rolled/movement/roll-fx. Enemy art falls back to tile dioramas until the sprite batch lands (`combatSpriteAssets.ts` + `combat-sprite-contract-v1.md`).
+- Fullscreen scene system (2026-09-02): every interactive phase renders as a takeover on the shared `SceneShell` (`src/pixel/SceneShell.tsx`) — combat playback (`CombatScene.tsx`, driven 1:1 by `lastCombat`: intro → accelerating exchange → outcome → payout inside the scene, click/space skips, reduced-motion jumps to the static result, timing in `presentation.ts`), plus treasure, equipment comparison, shop, level-up and game over via `ScenePhases.tsx`. Victory payout shows XP/gold/drop deltas, rotation level-up fanfares, and embeds the drop Equip/Keep comparison; defeat ends inside the scene. The bottom action panel now only owns idle/rolled/movement/roll-fx. All seven configured enemies now use dedicated combat sprites; tile-diorama fallback remains for unknown/unmapped enemies and failed asset loads (`combatSpriteAssets.ts` + `combat-sprite-contract-v1.md`).
 - Equipment is now a reducer-owned offer flow for Treasure, combat drops, and Shops with explicit Equip/Keep actions.
 - Equipment effects replace the effect in one slot rather than stacking permanent bonuses; equipped upgrades are removed from future loot and disabled in Shops.
 - The first upgrade effects are Slebet klinge `+3 Damage`, Jernplade `+1 Armor`, and Stivinderstøvler `1 free Nudge charge`.
@@ -106,6 +113,10 @@ Important files:
 - `rollbound/src/pixel/PixelTile.tsx` — logical tile cell, metadata overlays and hero anchor.
 - `rollbound/src/pixel/PixelTileArt.tsx` — generated-asset renderer plus an explicit missing-manifest fallback.
 - `rollbound/src/pixel/tileAssets.ts` — runtime tile asset manifest.
+- `rollbound/src/pixel/combatSpriteAssets.ts` — seven-enemy combat sprite manifest; reference/name matching and tile fallback logic unchanged.
+- `rollbound/scripts/normalize_combat_asset.py` — targeted alpha cleanup and bottom-aligned nearest-neighbor `64 × 80` normalization.
+- `rollbound/scripts/verify_combat_assets.py` — seven-asset canvas, alpha, baseline and height-band regression checks.
+- `rollbound/design/combat-sprite-batch-v1.md` — generation provenance, exact prompts, normalization settings, live QA and layout observations.
 - `rollbound/src/pixel/equipmentAssets.ts` — equipment icon manifest and semantic mapping.
 - `rollbound/src/pixel/EquipmentIcon.tsx` — shared icon renderer with explicit error fallback.
 - `rollbound/src/pixel/EquipmentLoadout.tsx` — three-slot HUD renderer driven by the hero's visual loadout IDs.
@@ -140,6 +151,8 @@ Current normalized `64 × 64` RGBA tile assets:
 - `boss-v1.png`
 
 Hero assets are four normalized `32 × 48` RGBA frames in `rollbound/src/assets/pixel/hero/`.
+
+Enemy combat assets are seven normalized `64 × 80` RGBA single-frame sprites in `rollbound/src/assets/pixel/combat/`: Goblin, Bandit, Ogre, Goblin-høvding, Skyggeridder, Trold-konge and Boss. Visible heights are respectively `56 / 62 / 68 / 68 / 72 / 76 / 80 px`. Every sprite faces left and ends at canvas row `79`; no per-sprite sizing, ground platforms or backgrounds. Desktop rendering is `96 × 120`, mobile `72 × 90`.
 
 The HUD also uses `hero-portrait-v1.png`, a dedicated normalized `80 × 80` RGBA bust matching the board hero.
 
@@ -225,6 +238,13 @@ The primary roll control uses `rollbound/src/assets/pixel/dice/die-body-v1.png`,
 55. Removed the portrait card, diamond sigil, scanline and overlapping Level badge so the transparent hero bust stands directly against the HUD.
 56. Moved Level and the next upgrade into one compact vitals heading, and replaced segmented bars with continuous fills plus external `current / max` values.
 57. Preserved reducer-derived damage/heal/XP/level feedback and verified the redesign at desktop and `390 × 844` with no overflow or browser warnings.
+58. Claude added core combat scripts plus tests for formula equivalence, run determinism and the dice-peek contract.
+59. Claude replaced exact combat-price previews with approximate enemy-stat inspection and added fullscreen scenes for combat and interactive choices, including combat payout.
+60. Claude approved the ceremonial ivory/red fate-ruler boss, elite heights of 85–95%, and corrected mobile combat sprites to `72 × 90` before the art batch.
+61. Generated all seven enemy combat sprites with built-in ImageGen, first validating Goblin and Ogre as the smallest/largest normal silhouettes.
+62. Removed baked checkerboard backgrounds, normalized with nearest-neighbor to `64 × 80` true-alpha canvases, and registered all seven sprites without changing mapping/fallback logic, core, CSS or scene playback.
+63. Verified every sprite in the live combat scene at desktop/mobile sizes, including attack/hit/fallen states and a reduced-motion mobile run; restored every temporary QA alias.
+64. Added repeatable normalization and asset-contract checks, documented exact prompts/provenance and the existing floor/hero baseline discrepancy, and passed lint, build and all five engine tests.
 
 The historical file `rollbound/design/rollbound-pixel-ui-mockup-v1-prompt.md` mentions visible tile frames. Treat it only as the origin mockup. The newer rules in `AGENTS.md` and `tile-asset-contract-v1.md` supersede that part of the prompt.
 
@@ -234,23 +254,21 @@ The board, first functional equipment slice, and first non-equipment resource fa
 
 Formal playtesting is deliberately deferred until the playtest gate is reached: combat screen + first item batch + consumables (decided 2026-09-02).
 
-Next work (combat script AND the fullscreen scene system + combat screen are DONE, 2026-09-02 — see "Game implementation" below):
+Next work (combat script, fullscreen scenes, combat screen AND the seven enemy sprites are DONE, 2026-09-02):
 
-1. Enemy combat sprites: produce the seven `64 × 80` sprites per `rollbound/design/combat-sprite-contract-v1.md` and register them in `src/pixel/combatSpriteAssets.ts`; the scene currently uses tile-diorama fallbacks.
-2. Port the simulation to run on the real engine reducer so rule changes are measured without drift — required before damage ranges land.
-3. Damage ranges for hero and enemies (decided 2026-09-02, see `GDD.md` changelog and `AGENTS.md` Combat Stats): `simulateFight` uses its reserved rng parameter, config converts flat values EV-preserving, range width becomes a data-driven identity axis for weapons/items/enemies, and the sim recalibrates win rates the same day. No miss/dodge/crit — a low roll still hits.
-4. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers, range width) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow. New combat effects extend the `CombatEvent.kind` union.
-5. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
+1. Port the simulation to run on the real engine reducer so rule changes are measured without drift — required before damage ranges land.
+2. Damage ranges for hero and enemies (decided 2026-09-02, see `GDD.md` changelog and `AGENTS.md` Combat Stats): `simulateFight` uses its reserved rng parameter, config converts flat values EV-preserving, range width becomes a data-driven identity axis for weapons/items/enemies, and the sim recalibrates win rates the same day. No miss/dodge/crit — a low roll still hits.
+3. Data-driven item system + effect vocabulary (armor penetration, first strike, lifesteal, camp triggers, range width) to prepare for many items per slot and consumables; keep the shop inventory deliberately narrow. New combat effects extend the `CombatEvent.kind` union.
+4. Differentiate the Boots effect from a raw Nudge (e.g. recharge the Boots charge at each Camp, per the GDD's Traveler's Boots) so the slot is a board-build choice rather than an expensive consumable.
 
 ## Known limitations
 
 - Event content remains placeholder-like and needs actual trade-off design later.
-- The exact-price UI (combat tile chips, destination HP forecasts, deadly flags, boss-price panel) is still live in code but is decided removed; it goes away with the combat-flow slice.
-- Combat is communicated by result/log rather than an animated encounter scene.
+- Combat sprites share their canvas baseline, but the existing scene's floor rule sits below it (26px duel padding + 2px border), and the existing hero's visible feet are higher due to transparent art padding. Mobile stacks the duel. This was documented, not compensated with per-enemy CSS or altered assets; a scene/hero layout pass is separate from this batch.
+- Enemy art has one frame per character; hit/attack/fallen feedback uses existing CSS. Additional frames and backdrops remain future scope.
 - No sound pass exists.
 - There is deliberately no inventory, rarity, selling, or duplicate conversion; equipped upgrades are filtered instead.
 - Balance is revalidated for the non-stacking ruleset (v0.9: balanced 55.7%), but the sim bot approximates the Boots charge as +1 Nudge and always equips strict upgrades; human decision patterns may differ.
-- The hero-status design correction and the v0.9 simulation work are local and not yet committed or pushed.
 
 ## Guardrails for the next contributor
 
