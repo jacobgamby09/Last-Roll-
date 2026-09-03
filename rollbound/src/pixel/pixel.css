@@ -782,13 +782,15 @@
   opacity: 0.88;
 }
 
+/* Markerede destinationer er statiske (ingen puls, 2026-09-03) —
+   markeringen bæres af løft + outline + lysstyrke alene */
 .pixel-tile.is-reachable {
   transform: translateY(-3px) scale(var(--tile-scale));
-  animation: tile-candidate 900ms steps(2, end) infinite;
 }
 
 .pixel-tile.is-reachable .px-art {
   filter:
+    brightness(1.18)
     drop-shadow(0 1px 0 #4dff98)
     drop-shadow(0 -1px 0 #4dff98)
     drop-shadow(1px 0 0 #4dff98)
@@ -798,16 +800,38 @@
 
 .pixel-tile.is-primary {
   transform: translateY(-5px) scale(var(--tile-scale));
-  animation: tile-primary 700ms steps(2, end) infinite;
 }
 
 .pixel-tile.is-primary .px-art {
   filter:
+    brightness(1.22)
     drop-shadow(0 1px 0 var(--px-ivory))
     drop-shadow(0 -1px 0 var(--px-ivory))
     drop-shadow(1px 0 0 var(--px-ivory))
     drop-shadow(-1px 0 0 var(--px-ivory))
     drop-shadow(0 0 6px var(--tile-accent));
+}
+
+/* Road-dioramaer er mørkere end de øvrige og har en svag accent (#61556f),
+   så de skal løftes ekstra for at matche de andre felters markering */
+.pixel-tile.tile-blank.is-reachable .px-art {
+  filter:
+    brightness(1.55) saturate(1.15)
+    drop-shadow(0 1px 0 #4dff98)
+    drop-shadow(0 -1px 0 #4dff98)
+    drop-shadow(1px 0 0 #4dff98)
+    drop-shadow(-1px 0 0 #4dff98)
+    drop-shadow(0 0 5px #4dff98);
+}
+
+.pixel-tile.tile-blank.is-primary .px-art {
+  filter:
+    brightness(1.6) saturate(1.15)
+    drop-shadow(0 1px 0 var(--px-ivory))
+    drop-shadow(0 -1px 0 var(--px-ivory))
+    drop-shadow(1px 0 0 var(--px-ivory))
+    drop-shadow(-1px 0 0 var(--px-ivory))
+    drop-shadow(0 0 7px var(--px-ivory));
 }
 
 .pixel-tile.is-current::before {
@@ -961,14 +985,6 @@
   font-size: var(--text-micro);
   font-weight: 900;
   letter-spacing: 1px;
-}
-
-@keyframes tile-candidate {
-  50% { filter: brightness(1.25); }
-}
-
-@keyframes tile-primary {
-  50% { filter: brightness(1.35); }
 }
 
 /* Tile dioramas */
