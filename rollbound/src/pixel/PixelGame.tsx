@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../core/config';
 import { newGame, peekRoll, reducer, type Action } from '../core/engine';
 import type { GameState } from '../core/types';
@@ -72,7 +72,7 @@ function PhaseScene({ dispatch, state }: { dispatch: (a: Action) => void; state:
 }
 
 export function PixelGame() {
-  const [state, dispatch] = useReducer(reducer, undefined, () => newGame(initialSeed()));
+  const [state, setState] = useState(() => newGame(initialSeed()));
   const [displayPos, setDisplayPos] = useState(state.pos);
   const [movementSteps, setMovementSteps] = useState<number | null>(null);
   const [rollFx, setRollFx] = useState<DiceRollFx>({ stage: 'idle', value: 1 });
@@ -80,31 +80,34 @@ export function PixelGame() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const movementTimer = useRef<number | null>(null);
   const rollFxTimers = useRef<number[]>([]);
-  const prevStateRef = useRef(state);
+  // stateRef vedligeholdes af dispatch (init her) — timeouts (beginMovement)
+  // skal altid reducere fra NYESTE state, ikke deres closure-snapshot
+  const stateRef = useRef(state);
   const moving = movementSteps !== null;
   const rolling = rollFx.stage !== 'idle';
   const presentationBusy = moving || rolling || combatView !== null;
 
-  // Combat-detektion: reduceren har afgjort kampen og lagt scriptet i
-  // lastCombat — scenen afspiller bagefter fra prev-snapshot + script.
-  useEffect(() => {
-    const prev = prevStateRef.current;
-    prevStateRef.current = state;
-    if (state.seed !== prev.seed) {
+  // Dispatch kører reduceren og sætter combat-scenen SYNKRONT i samme
+  // React-batch: HUD'ens post-combat-tal (XP/HP) og scene-overlayet lander i
+  // samme paint, så spilleren aldrig ser resultatet flashe før kampen.
+  // (Tidligere satte en useEffect scenen ét paint senere — deraf XP-flash.)
+  const dispatch = (action: Action) => {
+    const prev = stateRef.current;
+    const next = reducer(prev, action);
+    stateRef.current = next;
+    if (next.seed !== prev.seed) {
       setCombatView(null);
       setInventoryOpen(false);
-      return;
-    }
-    if (state.lastCombat && state.combatSeq !== prev.combatSeq) {
-      setCombatView({ script: state.lastCombat, heroBefore: prev.hero, pos: state.pos, seq: state.combatSeq });
+    } else if (next.lastCombat && next.combatSeq !== prev.combatSeq) {
+      setCombatView({ script: next.lastCombat, heroBefore: prev.hero, pos: next.pos, seq: next.combatSeq });
       setInventoryOpen(false);
     }
     // Teleport-rulle/Skæbneterning skifter fase: aflever spilleren direkte i vælgeren
-    if (inventoryOpen && (state.phase.t === 'teleport' || state.phase.t === 'chooseRoll')) {
+    if (next.phase.t === 'teleport' || next.phase.t === 'chooseRoll') {
       setInventoryOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+    setState(next);
+  };
 
   // Tastaturgenvej: I åbner/lukker inventory
   useEffect(() => {

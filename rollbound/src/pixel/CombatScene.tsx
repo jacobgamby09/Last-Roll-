@@ -3,7 +3,7 @@
 // Beats: intro → udveksling (accelererende) → outcome → payout i scenen.
 // Ét klik/space springer til payout; reduced-motion starter direkte dér.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CONFIG } from '../core/config';
 import { PICK_LABEL, rotationPick } from '../core/engine';
 import type { Action } from '../core/engine';
@@ -86,8 +86,17 @@ export function CombatScene({ dispatch, onClose, state, view }: Props) {
     return () => window.clearTimeout(timer);
   }, [cursor, stage, isBoss, events.length]);
 
+  // Skip-guard: scenen mounter under spillerens cursor lige efter destinations-
+  // klikket, så et dobbeltklik ville ellers springe HELE kampen over med det
+  // samme — hvilket læses som et umuligt "one-shot".
+  const skipArmed = useRef(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { skipArmed.current = true; }, 500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const skip = () => {
-    if (stage !== 'play') return;
+    if (stage !== 'play' || !skipArmed.current) return;
     setCursor(events.length - 1);
     setStage('payout');
   };
