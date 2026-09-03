@@ -11,6 +11,10 @@ Dette dokument er GDD v0.1 (originalteksten nederst) plus en løbende ændringsl
 
 ## Ændringslog — besluttede afvigelser fra v0.1
 
+### 2026-09-03 · Fuldt board med fog-of-war — brikken flytter sig, ikke boardet (IMPLEMENTERET)
+
+Playtest-fund: follow-kameraet re-mappede vinduet ved hvert træk, så helten stod visuelt stille mens verden gled forbi ("man kommer ingen vegne"), og walk-animationens fremdrift blev "taget tilbage" af snappet. **Beslutning: hele tracket ligger nu fast i verdensrum** som en slange (6 felter pr. række, ~12 rækker, bossen øverst), og BRIKKEN rejser gennem det. Kameraet er et 3-rækkers viewport, der glider blødt (620 ms; slået fra ved reduced-motion) og holder heltens række i midten. Feltstørrelsen er uændret (88×88), og board-panelet fylder det samme som før. Felter uden for `visibleAhead` renderes face-down (mørk kortbagside — typen lækkes aldrig, heller ikke i aria); besøgte felter forbliver afsløret bag dig. Synlighed er dermed en SYNLIG mekanik: Scout Boots flipper bogstaveligt flere kort. Rent præsentationslag — engine og informationsregler uændrede.
+
 ### 2026-09-02 · Kiste-inspektion er gratis: Keep går tilbage til kisten (IMPLEMENTERET)
 
 Playtest-fund: at klikke et gear-kort i en skattekiste førte til Equip/Keep-skærmen, men Keep smed hele valget væk — spilleren kunne ikke gå tilbage og tage en af de andre muligheder. Det var i konflikt med shoppens kontrakt, hvor Equip/Keep-skærmen allerede er gratis inspektion ("BACK TO SHOP"). **Beslutning: Equip/Keep-skærmen er ALTID en inspektion, aldrig en fælde.** Vælges et gear-kort i en kiste, husker equipment-fasen kisten som resume; Keep ("KEEP CURRENT · BACK TO CHEST") returnerer til kisten med alle 3 muligheder intakte. Først Equip (eller valg af et ikke-gear-kort) forbruger kisten. Engine-test pinner kontrakten; sim-botten er loop-sikret (tager tilbuddet, hvis kisten intet bedre alternativ har). Sim uændret: balanced 56,0 % (10k).

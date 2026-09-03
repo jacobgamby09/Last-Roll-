@@ -1,41 +1,54 @@
+// Fuldt board med fog-of-war (beslutning 2026-09-03): alle 70 felter ligger
+// fast i en slange i verdensrum — BRIKKEN flytter sig, boardet gør ikke.
+// Kameraet er et 3-rækkers viewport, der glider efter helten. Felter uden for
+// visibleAhead renderes face-down (typen må ALDRIG lækkes — heller ikke i
+// aria/klasser); besøgte felter forbliver afsløret bag dig.
+
 import type { CSSProperties } from 'react';
 import { CONFIG } from '../core/config';
 import { availableNudges } from '../core/equipment';
 import { visibleAhead } from '../core/engine';
 import type { GameState, TileType } from '../core/types';
 import { tileChip } from '../ui/preview';
-import { PixelTile } from './PixelTile';
+import { FacedownTile, PixelTile } from './PixelTile';
+
+// Slange-geometri: 6 felter pr. række (matcher den hidtidige board-bredde),
+// nederste række først, boustrofedon opad mod bossen. Rækketrin = 94px celle
+// + 12px gap = 106px — SKAL matche .pixel-path-grid og connect-up i pixel.css.
+const COLS = 6;
+const ROW_STEP = 106;
+const TILE_COUNT = CONFIG.trackLength + 1; // inkl. startfeltet S
+const ROWS = Math.ceil(TILE_COUNT / COLS);
+const VIEWPORT_ROWS = 3;
 
 type Direction = 'right' | 'left' | 'up';
 
-interface PathSlot {
-  column: number;
+interface WorldSlot {
+  column: number; // 1-baseret CSS grid-kolonne
+  row: number;    // 1-baseret CSS grid-række (1 = øverst)
   next?: Direction;
-  row: number;
 }
 
-const PATH_SLOTS: PathSlot[] = [
-  { column: 1, row: 3, next: 'right' },
-  { column: 2, row: 3, next: 'right' },
-  { column: 3, row: 3, next: 'right' },
-  { column: 4, row: 3, next: 'right' },
-  { column: 5, row: 3, next: 'right' },
-  { column: 6, row: 3, next: 'up' },
-  { column: 6, row: 2, next: 'left' },
-  { column: 5, row: 2, next: 'left' },
-  { column: 4, row: 2, next: 'left' },
-  { column: 3, row: 2, next: 'left' },
-  { column: 2, row: 2, next: 'up' },
-  { column: 2, row: 1, next: 'right' },
-  { column: 3, row: 1, next: 'right' },
-  { column: 4, row: 1, next: 'right' },
-  { column: 5, row: 1 },
-];
+function worldSlot(pos: number): WorldSlot {
+  const r = Math.floor(pos / COLS); // 0 = nederste række
+  const indexInRow = pos % COLS;
+  const leftToRight = r % 2 === 0;
+  const column = leftToRight ? indexInRow + 1 : COLS - indexInRow;
+  const row = ROWS - r;
+  if (pos >= CONFIG.trackLength) return { column, row };
+  const next: Direction = indexInRow === COLS - 1 ? 'up' : leftToRight ? 'right' : 'left';
+  return { column, row, next };
+}
+
+// Kameraet holder heltens række i midten, clampet til boardets ender
+function cameraScroll(heroPos: number): number {
+  const heroRow = Math.floor(heroPos / COLS);
+  const target = (ROWS - 2 - heroRow) * ROW_STEP;
+  return Math.max(0, Math.min((ROWS - VIEWPORT_ROWS) * ROW_STEP, target));
+}
 
 export function PixelBoard({ state, displayPos = state.pos, moving = false, suppressTargets = false }: { state: GameState; displayPos?: number; moving?: boolean; suppressTargets?: boolean }) {
-  const start = Math.max(0, state.pos - 2);
-  const end = Math.min(CONFIG.trackLength, state.pos + visibleAhead(state), start + PATH_SLOTS.length - 1);
-  const positions = Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  const revealedTo = state.pos + visibleAhead(state);
   const rolledPhase = !moving && !suppressTargets && state.phase.t === 'rolled' ? state.phase : null;
   const roll = rolledPhase?.roll ?? null;
   const primaryTarget = roll === null ? -1 : Math.min(state.pos + roll, CONFIG.trackLength);
@@ -46,6 +59,11 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
     if (roll < 6) altTargets.add(Math.min(state.pos + roll + 1, CONFIG.trackLength));
   }
 
+  const worldStyle = {
+    gridTemplateRows: `repeat(${ROWS}, 94px)`,
+    transform: `translateY(${-cameraScroll(displayPos)}px)`,
+  } as CSSProperties;
+
   return (
     <section className="pixel-board-panel" aria-label="Game board">
       <div className="pixel-world-decor" aria-hidden="true">
@@ -53,39 +71,46 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
         <i className="ruin ruin-a" /><i className="ruin ruin-b" />
         <i className="ember ember-a" /><i className="ember ember-b" />
       </div>
-      <div className="pixel-path-grid" role="list">
-        {positions.map((pos, index) => {
-          const slot = PATH_SLOTS[index];
-          const type: TileType = pos === 0 ? 'blank' : state.track[pos];
-          const chip = pos === 0 ? null : tileChip(state, pos);
-          const slotStyle = { gridColumn: slot.column, gridRow: slot.row } as CSSProperties;
-          const connectorState = !slot.next
-            ? ''
-            : moving && pos >= state.pos && pos < displayPos
-              ? 'path-moving'
-              : pos < displayPos
-                ? 'path-traveled'
-                : 'path-upcoming';
-          return (
-            <div
-              className={`pixel-path-slot ${slot.next ? `connect-${slot.next} ${connectorState}` : ''}`}
-              style={slotStyle}
-              key={pos}
-              role="presentation"
-            >
-              <PixelTile
-                chip={chip}
-                current={pos === displayPos}
-                heroMoving={moving}
-                pos={pos}
-                primary={pos === primaryTarget}
-                reachable={altTargets.has(pos)}
-                type={type}
-                visited={pos < displayPos}
-              />
-            </div>
-          );
-        })}
+      <div className="pixel-board-viewport">
+        <div className="pixel-path-grid" role="list" style={worldStyle}>
+          {Array.from({ length: TILE_COUNT }, (_, pos) => {
+            const slot = worldSlot(pos);
+            const revealed = pos <= revealedTo;
+            const slotStyle = { gridColumn: slot.column, gridRow: slot.row } as CSSProperties;
+            const connectorState = !slot.next
+              ? ''
+              : moving && pos >= state.pos && pos < displayPos
+                ? 'path-moving'
+                : pos < displayPos
+                  ? 'path-traveled'
+                  : 'path-upcoming';
+            const type: TileType = pos === 0 ? 'blank' : state.track[pos];
+            const chip = pos === 0 || !revealed ? null : tileChip(state, pos);
+            return (
+              <div
+                className={`pixel-path-slot ${slot.next ? `connect-${slot.next} ${connectorState}` : ''}`}
+                style={slotStyle}
+                key={pos}
+                role="presentation"
+              >
+                {revealed ? (
+                  <PixelTile
+                    chip={chip}
+                    current={pos === displayPos}
+                    heroMoving={moving}
+                    pos={pos}
+                    primary={pos === primaryTarget}
+                    reachable={altTargets.has(pos)}
+                    type={type}
+                    visited={pos < displayPos}
+                  />
+                ) : (
+                  <FacedownTile pos={pos} />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <div className="pixel-board-footer">
         <span>TILE {displayPos}/{CONFIG.trackLength}</span>

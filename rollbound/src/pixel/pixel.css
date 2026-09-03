@@ -609,18 +609,33 @@
 .ember-a { left: 6%; bottom: 34%; }
 .ember-b { right: 7%; top: 36%; }
 
-.pixel-path-grid {
+/* Fog-of-war-board (2026-09-03): hele tracket ligger i .pixel-path-grid
+   (verdensrum); .pixel-board-viewport klipper til 3 rækker, og kameraet er
+   en translateY på grid'et (sat inline af PixelBoard). Rækketrin = 94 + 12
+   = 106px — SKAL matche ROW_STEP i PixelBoard.tsx og connect-up-højden. */
+.pixel-board-viewport {
   position: relative;
   z-index: 2;
   width: min(100%, 720px);
-  min-height: 300px;
+  height: 310px;
   margin: 0 auto;
+  overflow: hidden;
+  /* blød kant, så verden "fortsætter" ud af viewporten */
+  mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 10px), transparent 100%);
+}
+
+.pixel-path-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(6, 88px);
-  grid-template-rows: repeat(3, 94px);
   justify-content: center;
-  align-content: center;
   gap: 12px 32px;
+  transition: transform 620ms cubic-bezier(0.22, 0.9, 0.3, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-path-grid { transition: none; }
 }
 
 .pixel-path-slot {
@@ -865,6 +880,35 @@
 .pixel-tile.tile-blank .pixel-tile-label {
   color: #d3c5da;
   border-color: #6e5f79;
+}
+
+/* Face-down-felt uden for synlighed: mørk "kort-bagside" — ingen type-info */
+.pixel-tile-facedown::before {
+  background: rgba(20, 13, 28, 0.9);
+  opacity: 0.5;
+}
+
+.pixel-tile-facedown .pixel-tile-number {
+  color: #5c4f68;
+  box-shadow: inset 0 0 0 1px #241a2e;
+}
+
+.pixel-facedown-card {
+  position: absolute;
+  inset: 14px 12px 12px;
+  display: grid;
+  place-items: center;
+  color: #473a54;
+  font-size: 16px;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 7px, rgba(70, 49, 73, 0.28) 7px 9px),
+    repeating-linear-gradient(-45deg, transparent 0 7px, rgba(70, 49, 73, 0.2) 7px 9px),
+    #150e1d;
+  box-shadow:
+    inset 0 0 0 2px #241a2e,
+    inset 0 -6px 0 #0d0813,
+    0 3px 0 #08050d;
+  image-rendering: pixelated;
 }
 
 .pixel-board-footer {
@@ -1629,7 +1673,6 @@
     gap: 12px;
   }
   .pixel-board-panel { min-height: 355px; padding-inline: 8px; }
-  .pixel-path-grid { transform: none; margin-block: 0; }
 }
 
 @media (max-width: 720px) {
@@ -1646,7 +1689,7 @@
   .pixel-stats-grid { grid-column: 1 / -1; min-height: 70px; }
   .pixel-boss-readiness { grid-column: 1 / -1; }
   .pixel-board-panel { overflow-x: auto; }
-  .pixel-path-grid { width: 688px; transform: none; margin: 0 auto; }
+  .pixel-board-viewport { width: 688px; margin: 0 auto; }
   .pixel-action-panel.is-idle { grid-template-columns: 1fr; }
   .pixel-roll-button { width: 100%; min-width: 0; }
   .pixel-roll-rule { min-width: 0; }

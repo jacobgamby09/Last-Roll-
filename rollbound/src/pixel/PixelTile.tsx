@@ -28,6 +28,17 @@ export function PixelHero({ moving = false }: { moving?: boolean }) {
   );
 }
 
+// Face-down-felt uden for synlighed (fog-of-war, 2026-09-03). Typen må ALDRIG
+// lækkes her — ingen tile-klasse, meta-label, chip eller enemy-tooltip.
+export function FacedownTile({ pos }: { pos: number }) {
+  return (
+    <div aria-label={`Tile ${pos}: unrevealed`} className="pixel-tile pixel-tile-facedown" role="listitem">
+      <span className="pixel-tile-number">{pos}</span>
+      <span className="pixel-facedown-card" aria-hidden="true">✦</span>
+    </div>
+  );
+}
+
 export function PixelTile({ chip, current = false, heroMoving = false, pos, primary = false, reachable = false, type, visited = false }: PixelTileProps) {
   const meta = PIXEL_TILE_META[type];
   const style = { '--tile-accent': meta.color } as CSSProperties;
