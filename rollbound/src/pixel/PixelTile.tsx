@@ -9,17 +9,20 @@ import { PixelTileArt } from './PixelTileArt';
 interface PixelTileProps {
   chip?: { text: string } | null;
   current?: boolean;
+  heroFacing?: 'left' | 'right';
   pos: number;
   primary?: boolean;
   reachable?: boolean;
   heroMoving?: boolean;
+  tipBelow?: boolean;
   type: TileType;
   visited?: boolean;
 }
 
-export function PixelHero({ moving = false }: { moving?: boolean }) {
+// Sprite-arket vender mod højre; spejlvend i venstre-gående slangerækker
+export function PixelHero({ facing = 'right', moving = false }: { facing?: 'left' | 'right'; moving?: boolean }) {
   return (
-    <span className={`pixel-hero ${moving ? 'is-walking' : ''}`} aria-label="Your hero" role="img">
+    <span className={`pixel-hero ${moving ? 'is-walking' : ''} ${facing === 'left' ? 'is-facing-left' : ''}`} aria-label="Your hero" role="img">
       <img alt="" className="hero-frame hero-idle-a" draggable={false} src={HERO_FRAMES.idleA} />
       <img alt="" className="hero-frame hero-idle-b" draggable={false} src={HERO_FRAMES.idleB} />
       <img alt="" className="hero-frame hero-walk-a" draggable={false} src={HERO_FRAMES.walkA} />
@@ -45,7 +48,7 @@ export function FacedownTile({ depth, pos }: { depth: number; pos: number }) {
   );
 }
 
-export function PixelTile({ chip, current = false, heroMoving = false, pos, primary = false, reachable = false, type, visited = false }: PixelTileProps) {
+export function PixelTile({ chip, current = false, heroFacing = 'right', heroMoving = false, pos, primary = false, reachable = false, tipBelow = false, type, visited = false }: PixelTileProps) {
   const meta = PIXEL_TILE_META[type];
   const style = { '--tile-accent': meta.color } as CSSProperties;
   // Inspektion (AGENTS.md 2026-09-02): combat-felter viser mob-type og ca. stats
@@ -78,11 +81,11 @@ export function PixelTile({ chip, current = false, heroMoving = false, pos, prim
     >
       <span className="pixel-tile-number">{pos === 0 ? 'S' : pos}</span>
       <PixelTileArt type={type} variant={pos} />
-      {current ? <PixelHero moving={heroMoving} /> : null}
+      {current ? <PixelHero facing={heroFacing} moving={heroMoving} /> : null}
       {chip ? <span className="pixel-tile-chip">{chip.text}</span> : null}
       <span className="pixel-tile-label">{meta.shortLabel}</span>
       {enemy ? (
-        <span className="pixel-tile-tip" role="tooltip">
+        <span className={`pixel-tile-tip ${tipBelow ? 'is-below' : ''}`} role="tooltip">
           <b>{enemy.name}</b>
           <span>{approxEnemyStats(enemy)}</span>
         </span>

@@ -65,6 +65,13 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
     transform: `translateY(${-cameraScroll(displayPos)}px)`,
   } as CSSProperties;
 
+  // Ulige slangerækker løber mod venstre — spejlvend helten dér
+  const heroRow = Math.floor(displayPos / COLS);
+  const heroFacing: 'left' | 'right' = heroRow % 2 === 1 ? 'left' : 'right';
+  // Viewportens øverste række: dér skal tooltips flippe NED, ellers klippes
+  // de af viewportens overflow-kant
+  const topVisibleRow = Math.min(Math.max(heroRow, 0), ROWS - VIEWPORT_ROWS) + VIEWPORT_ROWS - 1;
+
   return (
     <section className="pixel-board-panel" aria-label="Game board">
       <div className="pixel-world-decor" aria-hidden="true">
@@ -98,10 +105,12 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
                   <PixelTile
                     chip={chip}
                     current={pos === displayPos}
+                    heroFacing={heroFacing}
                     heroMoving={moving}
                     pos={pos}
                     primary={pos === primaryTarget}
                     reachable={altTargets.has(pos)}
+                    tipBelow={Math.floor(pos / COLS) >= topVisibleRow}
                     type={type}
                     visited={pos < displayPos}
                   />
