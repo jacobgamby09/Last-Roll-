@@ -30,11 +30,17 @@ export function PixelHero({ moving = false }: { moving?: boolean }) {
 
 // Face-down-felt uden for synlighed (fog-of-war, 2026-09-03). Typen må ALDRIG
 // lækkes her — ingen tile-klasse, meta-label, chip eller enemy-tooltip.
-export function FacedownTile({ pos }: { pos: number }) {
+// `depth` = afstand til synlighedskanten; tågen fortættes med afstanden.
+export function FacedownTile({ depth, pos }: { depth: number; pos: number }) {
   return (
-    <div aria-label={`Tile ${pos}: unrevealed`} className="pixel-tile pixel-tile-facedown" role="listitem">
+    <div
+      aria-label={`Tile ${pos}: unrevealed`}
+      className="pixel-tile pixel-tile-facedown"
+      role="listitem"
+      style={{ '--fog-depth': depth } as CSSProperties}
+    >
       <span className="pixel-tile-number">{pos}</span>
-      <span className="pixel-facedown-card" aria-hidden="true">✦</span>
+      <span className="pixel-facedown-card" aria-hidden="true" />
     </div>
   );
 }

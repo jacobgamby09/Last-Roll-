@@ -882,33 +882,71 @@
   border-color: #6e5f79;
 }
 
-/* Face-down-felt uden for synlighed: mørk "kort-bagside" — ingen type-info */
+/* Fog-of-war: usynlige felter er tågede silhuet-platforme, der fortættes
+   med afstanden (--fog-depth sættes af FacedownTile) — ingen type-info.
+   Udtrykket skal læses som "tågen ligger over vejen", ikke "feltet mangler". */
+.pixel-tile-facedown {
+  --fog-fade: clamp(0.12, calc(1 - (var(--fog-depth, 1) - 1) * 0.16), 0.85);
+  opacity: var(--fog-fade);
+  transition: opacity 620ms ease;
+}
+
 .pixel-tile-facedown::before {
-  background: rgba(20, 13, 28, 0.9);
-  opacity: 0.5;
+  background: #17101f;
+  opacity: 0.8;
 }
 
 .pixel-tile-facedown .pixel-tile-number {
-  color: #5c4f68;
+  color: #695b76;
+  background: rgba(8, 5, 13, 0.6);
   box-shadow: inset 0 0 0 1px #241a2e;
 }
 
+/* Blød tåge-dis: mørk platform-silhuet med drivende dis henover */
 .pixel-facedown-card {
   position: absolute;
-  inset: 14px 12px 12px;
-  display: grid;
-  place-items: center;
-  color: #473a54;
-  font-size: 16px;
+  inset: 22px 10px 14px;
   background:
-    repeating-linear-gradient(45deg, transparent 0 7px, rgba(70, 49, 73, 0.28) 7px 9px),
-    repeating-linear-gradient(-45deg, transparent 0 7px, rgba(70, 49, 73, 0.2) 7px 9px),
-    #150e1d;
-  box-shadow:
-    inset 0 0 0 2px #241a2e,
-    inset 0 -6px 0 #0d0813,
-    0 3px 0 #08050d;
+    radial-gradient(120% 90% at 50% 20%, rgba(97, 85, 111, 0.22), transparent 62%),
+    linear-gradient(#1a1224, #120c1a);
+  clip-path: polygon(14% 0, 86% 0, 100% 45%, 100% 78%, 86% 100%, 14% 100%, 0 78%, 0 45%);
+  box-shadow: inset 0 -7px 0 rgba(8, 5, 13, 0.8);
   image-rendering: pixelated;
+}
+
+.pixel-facedown-card::after {
+  content: "";
+  position: absolute;
+  inset: -8px -6px auto;
+  height: 26px;
+  background:
+    radial-gradient(60% 100% at 30% 60%, rgba(120, 104, 138, 0.28), transparent 70%),
+    radial-gradient(50% 90% at 72% 40%, rgba(120, 104, 138, 0.2), transparent 70%);
+  filter: blur(3px);
+  animation: fog-drift 5200ms ease-in-out infinite alternate;
+}
+
+@keyframes fog-drift {
+  from { transform: translateX(-4px); opacity: 0.7; }
+  to { transform: translateX(5px); opacity: 1; }
+}
+
+/* Afsløring: nyligt flippede felter "træder frem af tågen".
+   :not-kæden må ikke overdøve is-primary/is-reachable-pulsene (animation-
+   property'en ville ellers erstatte dem permanent pga. højere specificitet). */
+.pixel-path-slot > .pixel-tile:not(.pixel-tile-facedown, .is-primary, .is-reachable, .is-current) {
+  animation: tile-reveal 340ms steps(4, end);
+}
+
+@keyframes tile-reveal {
+  from { opacity: 0.15; filter: brightness(0.4) saturate(0.3); }
+  to { opacity: 1; filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-path-slot > .pixel-tile:not(.pixel-tile-facedown) { animation: none; }
+  .pixel-facedown-card::after { animation: none; }
+  .pixel-tile-facedown { transition: none; }
 }
 
 .pixel-board-footer {

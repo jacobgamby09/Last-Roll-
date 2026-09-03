@@ -40,10 +40,11 @@ function worldSlot(pos: number): WorldSlot {
   return { column, row, next };
 }
 
-// Kameraet holder heltens række i midten, clampet til boardets ender
+// Kameraet lægger heltens række i BUNDEN af viewporten, så der altid er
+// ~2 rækker synlige fremad (beslutning 2026-09-03); clampet til boardets ender
 function cameraScroll(heroPos: number): number {
   const heroRow = Math.floor(heroPos / COLS);
-  const target = (ROWS - 2 - heroRow) * ROW_STEP;
+  const target = (ROWS - VIEWPORT_ROWS - heroRow) * ROW_STEP;
   return Math.max(0, Math.min((ROWS - VIEWPORT_ROWS) * ROW_STEP, target));
 }
 
@@ -105,7 +106,7 @@ export function PixelBoard({ state, displayPos = state.pos, moving = false, supp
                     visited={pos < displayPos}
                   />
                 ) : (
-                  <FacedownTile pos={pos} />
+                  <FacedownTile depth={pos - revealedTo} pos={pos} />
                 )}
               </div>
             );
