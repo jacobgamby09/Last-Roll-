@@ -52,7 +52,7 @@ function DestinationCard({ disabled, disabledReason, onSelect, primary, state, s
 
   return (
     <button
-      className={`pixel-destination ${primary ? 'primary' : ''}`}
+      className={`pixel-destination ${primary ? 'primary' : ''} ${disabled ? 'is-ghost' : ''}`}
       disabled={disabled}
       onClick={onSelect}
       style={style}
@@ -173,7 +173,7 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
         disabledReason: phase.roll <= 1 ? 'THE DIE CANNOT GO BELOW 1' : noNudgeReason,
         primary: false,
         steps: phase.roll - 1,
-        tag: bootsPay ? 'NUDGE −1 · BOOTS FREE' : 'NUDGE −1',
+        tag: bootsPay ? '‹ NUDGE −1 · BOOTS FREE' : '‹ NUDGE −1',
       },
       { action: { type: 'ACCEPT' } as Action, disabled: false, primary: true, steps: phase.roll, tag: `ACCEPT ${phase.roll}` },
       {
@@ -182,13 +182,25 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
         disabledReason: phase.roll >= 6 ? 'THE DIE CANNOT GO ABOVE 6' : noNudgeReason,
         primary: false,
         steps: phase.roll + 1,
-        tag: bootsPay ? 'NUDGE +1 · BOOTS FREE' : 'NUDGE +1',
+        tag: bootsPay ? 'NUDGE +1 · BOOTS FREE ›' : 'NUDGE +1 ›',
       },
     ];
 
     return (
       <section className="pixel-action-panel is-rolled">
-        <div className="pixel-roll-result"><PixelDie value={phase.roll} /><span>YOU ROLLED <b>{phase.roll}</b></span></div>
+        <div className="pixel-roll-dock">
+          <div className="pixel-roll-result"><PixelDie value={phase.roll} /><span>YOU ROLLED <b>{phase.roll}</b></span></div>
+          <span className="pixel-roll-dock-meta">NUDGE ×{nudgeCount} · REROLL ×{hero.rerolls}</span>
+          <button
+            className="pixel-secondary-button pixel-reroll-button"
+            disabled={hero.rerolls <= 0 || phase.wasReroll}
+            onClick={() => dispatch({ type: 'REROLL' })}
+            type="button"
+          >
+            <b>↻ REROLL</b>
+            <small>{phase.wasReroll ? 'ALREADY REROLLED' : hero.rerolls <= 0 ? 'NONE LEFT' : 'NEW RESULT IS FINAL'}</small>
+          </button>
+        </div>
         <div className="pixel-destinations">
           {candidates.map(candidate => (
             <DestinationCard
@@ -199,14 +211,6 @@ export function PixelActionPanel({ dispatch, movementSteps = null, onOpenInvento
             />
           ))}
         </div>
-        <button
-          className="pixel-secondary-button"
-          disabled={hero.rerolls <= 0 || phase.wasReroll}
-          onClick={() => dispatch({ type: 'REROLL' })}
-          type="button"
-        >
-          ↻ REROLL ({hero.rerolls}) — THE NEW RESULT IS FINAL
-        </button>
       </section>
     );
   }
