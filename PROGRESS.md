@@ -6,6 +6,8 @@ This file is the current operational handoff for Claude, Codex, or another contr
 
 ## Current status
 
+**Pivot exploration (2026-09-05):** a lap/board-building pivot (circular board, boss at Start per lap, post-boss drafting, die faces as a build axis) is being evaluated HEADLESS-FIRST in `src/laps/` + `scripts/simulate-laps.ts` — findings in `design/laps-pivot-sim-v1.md`. The playable track game is frozen at git tag **`track-prototype-v1`** and must not be modified as part of the pivot work until a decision is made. The lap prototype deliberately reuses `core/combat` and `core/rng` but nothing touches the existing game.
+
 Rollbound is a playable Vite + React + TypeScript prototype with a UI-free seeded engine, fullscreen encounter/choice scenes and a pixel-art presentation. Combat sprites, simulation on the real engine, damage ranges, the 30-item gear roster and 12 consumables with 2 slots are implemented. Icon coverage is complete: **30/30 gear + 12/12 consumables mapped**. The two latest additions are Armor Solder and Wool Lining; all previously approved icons are unchanged. **The playtest gate is reached; the next milestone is 5–10 human runs**, not another content or balance batch.
 
 **The game language is English (2026-09-02):** all player-facing strings — item/enemy names, effect texts, engine log, every scene, HUD, board labels, tooltips, aria/alt texts and labs — are direct English strings (no i18n framework). Code comments and dev tooling (sim output, test names) stay Danish. Danish → English name map examples: Slibesten → Whetstone, Panserlod → Armor Solder, Uldfór → Wool Lining, Skæbneterning → Fate Die, Røgbombe → Smoke Bomb. New player-facing text must be written in English.
